@@ -1,0 +1,195 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
+import '../css/InviteQueue.css';
+
+const InviteQueue = () => {
+    const [businesses, setBusinesses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchField, setSearchField] = useState('');
+
+    const [searchSecondaryField, setSearchSecondaryField] = useState('');
+    const [selectedCity, setSelectedCity] = useState('');
+    const [cities, setCities] = useState([]);
+    const [fields, setFields] = useState([]);
+    const [secondaryFields, setSecondaryFields] = useState([]);
+    const [showPrompt, setShowPrompt] = useState(false);
+    const location = useLocation();
+   
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchCities();
+        fetchFields();
+    }, []);
+
+    useEffect(() => {
+        if (location.state) {
+            const { domainName, cityName } = location.state;
+            if (domainName) {
+                setSearchField(domainName);
+                fetchSecondaryFields(domainName);
+                fetchBusinesses(domainName, cityName); // Optionally pass parameters if needed
+            }
+            if (cityName) {
+                setSelectedCity(cityName);
+            }
+        }
+    }, [location.state]);
+
+
+    const fetchCities = () => {
+        axios.get('http://localhost:8080/cities')
+            .then(response => {
+                setCities(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching cities:', error);
+            });
+    };
+
+    const fetchFields = () => {
+        axios.get('http://localhost:8080/domains/names')
+            .then(response => {
+                setFields(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching fields:', error);
+            });
+    };
+
+    const fetchSecondaryFields = (domain) => {
+        console.log("just do it");
+        axios.get(`http://localhost:8080/type_service/${domain}`)
+            .then(response => {
+                setSecondaryFields(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching secondary fields:', error);
+            });
+    };
+
+    const fetchBusinesses = () => {
+        if (!searchField || !searchSecondaryField) {
+            setShowPrompt(true);
+            return;
+        }
+
+        setLoading(true);
+        axios.get('http://localhost:8080/professionals/type_service', {
+            params: {
+                field: searchField,
+                type: searchSecondaryField,
+                city: selectedCity
+            }
+        })
+            .then(response => {
+                setBusinesses(response.data);
+                console.log("Buisness contain", response.data)
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error('Error fetching business data:', error);
+                setLoading(false);
+            });
+    };
+
+    const filteredBusinesses = businesses.filter(business => {
+        if (!selectedCity) {
+            return true;
+        } else {
+            return business.cityName === selectedCity;
+        }
+    });
+
+
+
+    const handleMoreDetails = (businessName) => {
+        navigate(`../searchBusinessOwner`, { replace: true, state: { name: businessName } });
+    };
+
+    const handleBookAppointment = (businessDetails) => {
+        navigate(`../InviteDate`, { replace: true, state: { businessDetails, type: searchSecondaryField } });
+    };
+
+
+    const handleFieldChange = (e) => {
+        const selectedField = e.target.value;
+        setSearchField(selectedField);
+        fetchSecondaryFields(selectedField);
+    };
+
+ 
+    return (
+        <div id="invite-queue">
+            <div id="search-section">
+                <div id="search-criteria">
+                    <p id="search12">Search for a business that suits you:</p>
+                    <input
+                        list="fields"
+                        placeholder="Field"
+                        value={searchField}
+                        onChange={handleFieldChange}
+                    />
+                    <datalist id="fields">
+                        {fields.map((field, index) => (
+                            <option key={index} value={field.domainName} />
+                        ))}
+                    </datalist>
+                    <input
+                        list="secondary-fields"
+                        placeholder="Secondary field"
+                        value={searchSecondaryField}
+                        onChange={(e) => setSearchSecondaryField(e.target.value)}
+                    />
+                    <datalist id="secondary-fields">
+                        {secondaryFields.map((field, index) => (
+                            <option key={index} value={field.typeName} />
+                        ))}
+                    </datalist>
+                    {showPrompt && <p className="prompt">Please fill both fields to search.</p>}
+                    <select
+                        value={selectedCity}
+                        onChange={(e) => setSelectedCity(e.target.value)}
+                    >
+                        <option value="">All Cities</option>
+                        {cities.map((city, index) => (
+                            <option key={index} value={city.CityName}>{city.CityName}</option>
+                        ))}
+                    </select>
+                    <button onClick={fetchBusinesses}>Search</button>
+                </div>
+            </div>
+            <h2 id="list-title">List of relevant businesses:</h2>
+            {filteredBusinesses.length > 0 ? (
+                <table id="business-table">
+                    <thead>
+                        <tr>
+                            <th>Business Name</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                            <th>More Details</th>
+                            <th>Book Appointment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredBusinesses.map((business, index) => (
+                            <tr key={index}>
+                                <td>{business.business_name}</td>
+                                <td>{business.phone}</td>
+                                <td>{business.cityName}</td>
+                                <td><button className="details-button" onClick={() => handleMoreDetails(business.business_name)}>More Details</button></td>
+                                <td><button className="book-button" onClick={() => handleBookAppointment(business)}>Save the date</button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <p className="no-results">No businesses found for the selected criteria.</p>
+            )}
+        </div>
+    );
+};
+
+export default InviteQueue;
+

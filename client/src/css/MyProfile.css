@@ -1,0 +1,101 @@
+.profile-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    /* Align items to the top of the container */
+    min-height: 100vh;
+    /* Ensure the container covers the full viewport height */
+}
+
+.profile-card {
+    max-width: 500px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.profile-header h1 {
+    margin: 0;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+}
+
+.edit-button,
+.cancel-button,
+.update-button {
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.edit-button {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.cancel-button {
+    background-color: #dc3545;
+    color: #fff;
+    margin-right: 10px;
+}
+
+.update-button {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.profile-body {
+    margin-top: 20px;
+}
+
+.profile-body label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.profile-body input,
+.profile-body p {
+    margin-bottom: 10px;
+}
+
+.profile-body input {
+    width: calc(100% - 16px);
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.profile-body p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.profile-card.edit-mode {
+    background-color: #f0f0f0;
+}
+
+.city-select {
+    width: calc(100% - 16px);
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    appearance: none;
+    background-color: #fff;
+    cursor: pointer;
+}

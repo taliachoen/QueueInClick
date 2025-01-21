@@ -1,0 +1,84 @@
+.recommendations-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px; /* Set a maximum width for better readability */
+    margin: 0 auto; /* Center the container on the page */
+}
+
+.recommendations-container h1 {
+    margin-bottom: 20px;
+    font-size: 2em;
+    color: #333;
+    text-align: center;
+}
+
+.rating {
+    font-size: 18px;
+    margin-bottom: 20px;
+    text-align: center; /* Center align the rating text */
+}
+
+.myRating {
+    text-align: center;
+    font-size: 2em; /* Adjust the size as needed */
+    color:black;
+    font-weight: bold;
+    text-shadow: 0 0 10px yellow, 0 0 20px yellow, 0 0 30px gold, 0 0 40px gold;
+    display: block; /* Ensure the span takes up the full width */
+    margin: 20px 0; /* Add some margin for spacing */
+}
+
+.comments-list {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column layout */
+    gap: 20px; /* Space between comments */
+}
+
+.comment-card {
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.comment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Center align items vertically */
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.comment-header span {
+    font-weight: bold;
+}
+
+.comment-content p {
+    margin: 0;
+    color: #555;
+    line-height: 1.5; /* Improve readability */
+}
+
+.comment-content span {
+    display: block;
+    margin-top: 10px;
+    color: #999;
+    font-size: 0.9em;
+}
+
+.filled-star {
+    color: gold;
+}
+
+.empty-star {
+    color: lightgray;
+}

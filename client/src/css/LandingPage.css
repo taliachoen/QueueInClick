@@ -1,0 +1,320 @@
+/* General Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    font-family: "Raleway", sans-serif;
+    color: #555;
+}
+
+ul,
+nav {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+    opacity: 0.75;
+    color: #fff;
+}
+
+a:hover {
+    opacity: 1;
+}
+
+img {
+    padding: 0px;
+    margin-bottom: 0px;
+}
+
+a.btn {
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-align: center;
+    background-color: #6a4b93;
+    transition: all 400ms;
+}
+
+a.btn:hover {
+    background-color: #563d7c;
+}
+
+.landing-section {
+    color: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 100px 80px;
+}
+
+.landing-section:not(.landing-hero):nth-child(even) {
+    background-color: #f5f5f5;
+}
+
+.landing-grid {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+hr {
+    width: 250px;
+    height: 3px;
+    background-color: #6a4b93;
+    border: 0;
+    margin-bottom: 50px;
+}
+
+.landing-image-1 {
+    background-image: url("https://images.unsplash.com/photo-1505852903341-fc8d3db10436?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1600&h=900&fit=crop&s=e2f72e62d5f4f04256dd9305d5f51f3c");
+}
+
+.landing-image-2 {
+    background-image: url("https://images.unsplash.com/photo-1475483768296-6163e08872a1?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1600&h=900&fit=crop&s=20b3b1c3caef8c619ac3c75c07a7eafb");
+}
+
+.landing-image-3 {
+    background-image: url("https://images.unsplash.com/photo-1490576198307-6ff97609a0cc?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1600&h=900&fit=crop&s=a0dbd168637edc2cfdac3715ab23d519");
+}
+
+.landing-image-4 {
+    background-image: url("https://images.unsplash.com/photo-1505483531331-fc3cf89fd382?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1600&h=900&fit=crop&s=4f305bbc0243f81f1bf6053a62d76297");
+}
+
+.landing-title {
+    text-transform: capitalize;
+    font: bold 48px "Amatic SC", sans-serif;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.landing-section p {
+    color: black;
+    max-width: 775px;
+    line-height: 1.7;
+    font-weight: 300;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.landing-section p a {
+    color: #3d3d3d;
+    text-decoration: underline;
+}
+
+.landing-section p a:hover {
+    color: #6a4b93;
+}
+
+.landing-grid.landing-packages {
+    justify-content: space-around;
+}
+
+.landing-grid.landing-packages li {
+    margin: 20px;
+    text-align: center;
+}
+
+.landing-grid.landing-packages h4 {
+    font: 24px "Amatic SC", sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #6a4b93;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.landing-grid.landing-packages p {
+    margin: 0;
+}
+
+.landing-grid.landing-destinations {
+    max-width: 800px;
+}
+
+.landing-grid.landing-destinations li {
+    margin: 5px;
+    width: calc(50% - 10px);
+    height: 250px;
+    background-color: #e5e5e5;
+    background-size: cover;
+    background-position: center;
+    transition: transform 300ms;
+}
+
+.landing-grid.landing-destinations li:hover {
+    transform: scale(1.1);
+}
+
+.landing-small {
+    flex: 1 1 200px;
+}
+
+.landing-large {
+    flex: 2 1 400px;
+}
+
+.landing-buttons-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.landing-buttons-container button {
+    margin: 20px;
+    padding: 15px 40px;
+    background-color: #6a4b93;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 300ms;
+}
+
+.landing-buttons-container button:hover {
+    background-color: #563d7c;
+}
+
+.landing-footer {
+    text-align: center;
+    background-color: #222;
+    color: #ddd;
+    padding: 40px 20px;
+}
+
+.landing-footer ul {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.landing-footer ul li {
+    margin: 0 10px;
+}
+
+.landing-footer ul li a {
+    font-size: 2em;
+    transition: opacity 300ms;
+}
+
+.landing-footer ul li a:hover {
+    opacity: 1;
+}
+
+/* Specific Styles for LandingPage */
+
+.landing-header {
+    display: flex;
+    padding: 20px;
+    background-color: #6a4b93;
+}
+
+.landing-button-container {
+    display: flex;
+}
+
+.landing-button-container button {
+    margin-left: 10px;
+    padding: 10px 20px;
+    background-color: #fff;
+    color: #6a4b93;
+    border: 1px solid #6a4b93;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 300ms, color 300ms;
+}
+
+.landing-button-container button:hover {
+    background-color: #6a4b93;
+    color: #fff;
+}
+
+.landing-main-content {
+    flex: 1;
+}
+
+
+
+.landing-dropdown button:hover {
+    background-color: #6a4b93;
+    color: #fff;
+}
+
+.landing-hero img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.landing-white-section {
+    background-color: #fff;
+}
+
+.landing-colored-section {
+    background-color: #f5f5f5;
+}
+
+#optionProff {
+    margin: 10px;
+    /* background-color: #fff; */
+    border: 1px solid #6a4b93;
+    border-radius: 4px rgb(137, 137, 250);
+
+}
+
+#optionProff button {
+    display: block;
+    width: 100%;
+    /* padding: 10px; */
+    /* background-color: #fff; */
+    color: #6a4b93;
+    background-color: #3fd0f8;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 300ms;
+
+}
+
+#optionCust {
+    margin: 10px;
+    /* background-color: #fff; */
+    border: 1px solid #6a4b93;
+    border-radius: 4px rgb(137, 137, 250);
+}
+
+#optionCust button {
+    display: block;
+    width: 100%;
+    /* padding: 10px; */
+    background-color: #3fd0f8;
+    color: #6a4b93;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 300ms;
+
+}
+
+/* 
+.landing-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #fff;
+    color: #6a4b93;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 300ms;
+} */
