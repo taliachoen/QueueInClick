@@ -8,7 +8,6 @@ const CustomerMenu = () => {
   const navigate = useNavigate();
   const {user} = useContext(UserContext);
 
-
   const handleLogout = () => {
     localStorage.clear();
     navigate('/landingPage');
