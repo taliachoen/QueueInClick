@@ -10,8 +10,6 @@ import type_services from './routes/type_services.js'
 import schedule from './routes/schedules.js'
 import domains from './routes/domains.js'
 
-
-
 import cors from 'cors'
 
 const app = express();

@@ -1,44 +1,63 @@
+/* מכולה כללית */
 .profile-container {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    /* Align items to the top of the container */
     min-height: 100vh;
-    /* Ensure the container covers the full viewport height */
+    background-color: #f8f9fa;
+    /* צבע רקע עדין */
+    padding: 20px;
 }
 
+/* כרטיס פרופיל */
 .profile-card {
-    max-width: 500px;
+    max-width: 700px;
+    /* הרחבת הטופס */
     background-color: #fff;
     border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin: 20px;
+    border-radius: 12px;
+    /* קצוות מעוגלים יותר */
+    padding: 10px;
+    /* הגדלת ריווח פנימי */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    /* צל מודגש */
+    margin: 10px;
 }
 
+/* כותרת הכרטיס */
 .profile-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    /* רווח נוסף */
 }
 
 .profile-header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 28px;
+    /* גופן גדול יותר */
     display: flex;
     align-items: center;
+    font-family: 'Arial', sans-serif;
+    /* שינוי גופן */
+    color: #343a40;
+    /* צבע כהה */
 }
 
+/* כפתורים */
 .edit-button,
 .cancel-button,
 .update-button {
-    padding: 8px 16px;
+    padding: 10px 18px;
+    /* ריווח נוח יותר */
     border: none;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
+    /* קצוות מעוגלים */
     font-size: 16px;
+    font-family: 'Arial', sans-serif;
+    /* גופן אחיד */
 }
 
 .edit-button {
@@ -57,44 +76,56 @@
     color: #fff;
 }
 
+/* גוף הכרטיס */
 .profile-body {
     margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr;
+    /* פריסה עמודתית */
+    row-gap: 15px;
+    /* ריווח בין השדות */
 }
 
+/* תוויות ושדות */
 .profile-body label {
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: block;
+    font-size: 16px;
+    /* גופן אחיד */
+    color: #495057;
 }
 
 .profile-body input,
-.profile-body p {
+.profile-body p,
+.city-select {
     margin-bottom: 10px;
-}
-
-.profile-body input {
-    width: calc(100% - 16px);
-    padding: 8px;
+    width: 100%;
+    padding: 12px;
+    /* ריווח פנימי גדול יותר */
     border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 6px;
+    /* קצוות מעוגלים */
+    font-size: 16px;
+    font-family: 'Arial', sans-serif;
+    /* גופן אחיד */
+    box-sizing: border-box;
 }
 
+/* תצוגת טקסט */
 .profile-body p {
     margin: 0;
     font-size: 16px;
+    color: #495057;
 }
 
+/* עריכת טופס */
 .profile-card.edit-mode {
     background-color: #f0f0f0;
 }
 
+/* תפריט בחירת עיר */
 .city-select {
-    width: calc(100% - 16px);
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
     appearance: none;
     background-color: #fff;
     cursor: pointer;

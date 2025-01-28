@@ -1,4 +1,5 @@
-import React, { useContext, useEffect } from 'react';
+
+import React, { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../userContex';
 import { useNavigate, Outlet } from 'react-router-dom';
 import icon from '../image/logo.png';
@@ -6,10 +7,9 @@ import '../css/customerMenu.css';
 
 const ProfessionalMenu = () => {
     const navigate = useNavigate();
-    const {user} = useContext(UserContext);
-    // const location = useLocation();
-    // // const { user } = location.state || {}; // Get user from state
-    // // console.log(user);
+    const { user } = useContext(UserContext);
+    const [activeButton, setActiveButton] = useState('AppointmentsPage'); // מצב של הכפתור הנבחר
+
     useEffect(() => {
         navigate('AppointmentsPage');
     }, []);
@@ -19,19 +19,45 @@ const ProfessionalMenu = () => {
         navigate('/landingPage');
     };
 
-    return <>
-        <div className='sticky-menu'>
-            <img src={icon} alt="User Icon" className="user-icon" />
-            <h2>Hi, {user ? user.firstName : 'Guest'}</h2>
-            <button className="btn" onClick={() => navigate('myProfile')}>My Profile</button>
-            <button className="btn" onClick={() => navigate('myCalendar')}>My Calendar</button>
-            <button className="btn" onClick={() => navigate('AppointmentsPage')}>My Appointments</button>
-            <button className="btn" onClick={() => navigate('myRecommendations')}>My Recommendations</button>
+    const handleNavigation = (page) => {
+        setActiveButton(page); // עדכון מצב הכפתור הנבחר
+        navigate(page);
+    };
 
-            <button className="btn" onClick={handleLogout}>Logout</button>
-        </div>
-        <Outlet />
-    </>
-}
+    return (
+        <>
+            <div className='sticky-menu'>
+                <img src={icon} alt="User Icon" className="user-icon" />
+                <h2>Hi, {user ? user.firstName : 'Guest'}</h2>
+                <button
+                    className={`btn ${activeButton === 'myProfile' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('myProfile')}
+                >
+                    My Profile
+                </button>
+                <button
+                    className={`btn ${activeButton === 'myCalendar' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('myCalendar')}
+                >
+                    My Calendar
+                </button>
+                <button
+                    className={`btn ${activeButton === 'AppointmentsPage' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('AppointmentsPage')}
+                >
+                    My Appointments
+                </button>
+                <button
+                    className={`btn ${activeButton === 'myRecommendations' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('myRecommendations')}
+                >
+                    My Recommendations
+                </button>
 
+                <button className="btn" onClick={handleLogout}>Logout</button>
+            </div>
+            <Outlet />
+        </>
+    );
+};
 export default ProfessionalMenu;
