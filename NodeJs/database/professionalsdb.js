@@ -134,3 +134,10 @@ export async function getProfessionalServiceCode(professionalId, serviceTypeCode
         return null; // במידה ואין תוצאה
     }
 }
+
+
+// export const getProfessionalById = async (idProfessional) => {
+//     const query = 'SELECT * FROM professionals WHERE idProfessional = ?';
+//     const [rows] = await pool.query(query, [idProfessional]);
+//     return rows.length > 0 ? rows[0] : null;
+// };

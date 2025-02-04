@@ -8,14 +8,25 @@ export async function getType_services() {
     return type_services;
 }
 
-export async function getType_serviceById(id) {
-    const [type_service] = await pool.query(`
+
+export async function getType_serviceByDomainId(id) {
+    const [rows] = await pool.query(`
         SELECT typeCode, typeName, domainCode 
         FROM type_service 
         WHERE domainCode = ?
     `, [id]);
-    return type_service;
+    return rows;
 }
+
+export async function getType_serviceById(id) {
+    const [rows] = await pool.query(`
+        SELECT typeCode, typeName, domainCode 
+        FROM type_service 
+        WHERE typeCode = ?
+    `, [id]);
+    return rows.length > 0 ? rows[0] : null;
+}
+
 
 // פונקציה המוסיפה סוג טיפול חדש
 export async function postType_service(typeName, domainCode) {
@@ -23,8 +34,19 @@ export async function postType_service(typeName, domainCode) {
         INSERT INTO type_service(typeName, domainCode) 
         VALUES (?, ?)
     `, [typeName, domainCode]);
-    return await getType_serviceById(insertId);
+    const type_service = await getType_serviceById(insertId);
+    if (!type_service) {
+        throw new Error("Failed to retrieve newly inserted service type.");
+    }
+
+    return {
+        typeCode: type_service.typeCode,
+        domainCode: type_service.domainCode,
+    };
 }
+
+
+
 
 // פונקציה למחיקת סוג טיפול לפי מספר זיהוי
 export async function deleteType_service(typeCode) {

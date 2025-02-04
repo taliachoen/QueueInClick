@@ -1,10 +1,11 @@
 import pool from './database.js'
 
-//פונקציה המחזירה את כל לקוחות
+// פונקציה המחזירה את כל לקוחות
 export async function getCities() {
     const [cities] = await pool.query(`SELECT * FROM cities `);
     return cities;
 }
+
 
 
 //פונקציה המחזירה מספר זהות של לקוח??????

@@ -1,196 +1,10 @@
-// import React, { useState, useContext } from 'react';
-// import { UserContext } from '../App' ;
-// import { useNavigate } from 'react-router-dom';
-// import axios from 'axios';
-// import Swal from 'sweetalert2';
-// import '../css/BusinessRegistrationStep3.css';
-
-// const daysOfWeek = [
-//   { name: 'Sunday', key: 'sunday' },
-//   { name: 'Monday', key: 'monday' },
-//   { name: 'Tuesday', key: 'tuesday' },
-//   { name: 'Wednesday', key: 'wednesday' },
-//   { name: 'Thursday', key: 'thursday' },
-//   { name: 'Friday', key: 'friday' },
-//   { name: 'Saturday', key: 'saturday' },
-// ];
-
-// const BusinessRegistrationStep3 = () => {
-//   const navigate = useNavigate();
-//   const userData = useContext(UserContext);
-
-//   const [workingHours, setWorkingHours] = useState({
-//     sunday: { start: '', end: '', isWorking: false },
-//     monday: { start: '', end: '', isWorking: false },
-//     tuesday: { start: '', end: '', isWorking: false },
-//     wednesday: { start: '', end: '', isWorking: false },
-//     thursday: { start: '', end: '', isWorking: false },
-//     friday: { start: '', end: '', isWorking: false },
-//     saturday: { start: '', end: '', isWorking: false },
-//   });
-//   const [passwordProff, setPasswordProff] = useState('');
-//   const [formErrors, setFormErrors] = useState({
-//     workingHours: {},
-//     passwordProff: '',
-//   });
-
-//   const handleChange = (day, field, value) => {
-//     setWorkingHours({
-//       ...workingHours,
-//       [day]: {
-//         ...workingHours[day],
-//         [field]: value,
-//       },
-//     });
-//     // Clear error message when valid input is entered
-//     if (formErrors.workingHours[day]) {
-//       setFormErrors({
-//         ...formErrors,
-//         workingHours: {
-//           ...formErrors.workingHours,
-//           [day]: '',
-//         },
-//       });
-//     }
-//   };
-
-//   const handleCheckboxChange = (day) => {
-//     setWorkingHours({
-//       ...workingHours,
-//       [day]: {
-//         ...workingHours[day],
-//         isWorking: !workingHours[day].isWorking,
-//       },
-//     });
-//   };
-
-//   const handleChangePassword = (event) => {
-//     setPasswordProff(event.target.value);
-//     // Clear error message when valid input is entered
-//     if (formErrors.passwordProff) {
-//       setFormErrors({
-//         ...formErrors,
-//         passwordProff: '',
-//       });
-//     }
-//   };
-
-//   const validateForm = () => {
-//     let isValid = true;
-//     const newErrors = { workingHours: {}, passwordProff: '' };
-
-//     // Validate working hours
-//     Object.keys(workingHours).forEach(day => {
-//       if (workingHours[day].isWorking && (!workingHours[day].start || !workingHours[day].end)) {
-//         newErrors.workingHours[day] = 'Start and end time are required';
-//         isValid = false;
-//       }
-//     });
-
-//     // Validate password
-//     if (!passwordProff) {
-//       newErrors.passwordProff = 'Please enter a password';
-//       isValid = false;
-//     }
-
-//     setFormErrors(newErrors);
-//     return isValid;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (!validateForm()) {
-//       return;
-//     }
-
-//     try {
-//       // Get all registration data from Local Storage
-//       const formData = { ...userData, passwordProff, workingHours };
-
-//       // Example: Sending formData to the server
-//       const response = await axios.post('http://localhost:8080/professionals/registerBusiness', formData);
-//       console.log('Registration successful:', response.data);
-//       // Clear local storage after successful registration
-//       Swal.fire({
-//         icon: 'success',
-//         title: 'Registration Successful',
-//         text: `Welcome, ${formData.firstName} ${formData.lastName}!`,
-//         showConfirmButton: false,
-//         timer: 1500
-//       });
-//       navigate(`/professionalMenu/${formData.firstName}`);
-//     } catch (error) {
-//       console.error('Error registering business:', error);
-//     }
-//   };
-
-//   return (
-//     <div className="registration-step3-container">
-//       <h2>Set Days and Hours of Operation</h2>
-//       <form onSubmit={handleSubmit}>
-//         {daysOfWeek.map((day) => (
-//           <div key={day.key} className="form-group">
-//             <label>
-//               <input
-//                 type="checkbox"
-//                 checked={workingHours[day.key].isWorking}
-//                 onChange={() => handleCheckboxChange(day.key)}
-//               />
-//               {day.name}
-//             </label>
-//             {workingHours[day.key].isWorking && (
-//               <div className="time-inputs">
-//                 <input
-//                   type="time"
-//                   value={workingHours[day.key].start}
-//                   onChange={(e) => handleChange(day.key, 'start', e.target.value)}
-//                 />
-//                 <input
-//                   type="time"
-//                   value={workingHours[day.key].end}
-//                   onChange={(e) => handleChange(day.key, 'end', e.target.value)}
-//                 />
-//                 {formErrors.workingHours[day.key] && (
-//                   <p className="error-message">{formErrors.workingHours[day.key]}</p>
-//                 )}
-//               </div>
-//             )}
-//           </div>
-//         ))}
-//         <div className="form-group">
-//           <p>Please enter your password to complete registration</p>
-//           <label>Password:</label>
-//           <input
-//             type="password"
-//             name="passwordProff"
-//             value={passwordProff}
-//             onChange={handleChangePassword}
-//           />
-//           {formErrors.passwordProff && (
-//             <p className="error-message">{formErrors.passwordProff}</p>
-//           )}
-//         </div>
-//         <div className="form-buttons">
-//           <button className='btn' type="submit">Next</button>
-//           <button className='btn' type="button" onClick={() => navigate('/BusinessRegistrationStep2')}>Back</button>
-//         </div>
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default BusinessRegistrationStep3;
-
-
-
-import React, { useState, useContext ,useEffect} from 'react';
-// import { UserContext } from '../userContex';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import '../css/BusinessRegistrationStep3.css';
 import { FormContext } from './FormProvider';
+import { UserContext } from '../userContex';
 
 const daysOfWeek = [
   { name: 'Sunday', key: 'sunday' },
@@ -203,11 +17,10 @@ const daysOfWeek = [
 ];
 
 const BusinessRegistrationStep3 = () => {
+  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
-  const { step3, setStep3 } = useContext(FormContext)
-  // const {user} = useContext(UserContext);
-  // const [formData, setFormData] = useState(step3);
-  const [workingHours, setWorkingHours] = useState({step3});
+  const { step3, setStep3, step1, step2 } = useContext(FormContext);
+  const [workingHours, setWorkingHours] = useState(step3.workingHours); 
   const [passwordProff, setPasswordProff] = useState('');
   const [formErrors, setFormErrors] = useState({
     workingHours: {},
@@ -215,9 +28,8 @@ const BusinessRegistrationStep3 = () => {
   });
 
   useEffect(() => {
-    setWorkingHours(step3);
-  }, []);
-
+    setWorkingHours(step3.workingHours); 
+  }, [step3]);
 
   const handleChange = (day, field, value) => {
     setWorkingHours({
@@ -227,7 +39,6 @@ const BusinessRegistrationStep3 = () => {
         [field]: value,
       },
     });
-    // Clear error message when valid input is entered
     if (formErrors.workingHours[day]) {
       setFormErrors({
         ...formErrors,
@@ -251,7 +62,6 @@ const BusinessRegistrationStep3 = () => {
 
   const handleChangePassword = (event) => {
     setPasswordProff(event.target.value);
-    // Clear error message when valid input is entered
     if (formErrors.passwordProff) {
       setFormErrors({
         ...formErrors,
@@ -264,7 +74,6 @@ const BusinessRegistrationStep3 = () => {
     let isValid = true;
     const newErrors = { workingHours: {}, passwordProff: '' };
 
-    // Validate working hours
     Object.keys(workingHours).forEach(day => {
       if (workingHours[day].isWorking && (!workingHours[day].start || !workingHours[day].end)) {
         newErrors.workingHours[day] = 'Start and end time are required';
@@ -272,7 +81,6 @@ const BusinessRegistrationStep3 = () => {
       }
     });
 
-    // Validate password
     if (!passwordProff) {
       newErrors.passwordProff = 'Please enter a password';
       isValid = false;
@@ -282,71 +90,89 @@ const BusinessRegistrationStep3 = () => {
     return isValid;
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       return;
     }
-
     try {
-      // Get all registration data from Local Storage
-      const formData = { ...step3, passwordProff, workingHours };
-
-      // Example: Sending formData to the server
+      const formData = { step1, step2, passwordProff, workingHours };
       const response = await axios.post('http://localhost:8080/professionals/registerBusiness', formData);
       console.log('Registration successful:', response.data);
-      // Clear local storage after successful registration
+      const user = response.data;
+      setUser({
+        id: user.idProfessional,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        domainCode: user.domainCode,
+        domainName: user.domainName,
+        startDate: user.startDate,
+        email: user.email,
+        cityCode: user.cityCode,
+        cityName: user.cityName,
+        address: user.address,
+        phone: user.phone,
+        business_name: user.business_name,
+        userType: 'professionals'
+      });
+
       Swal.fire({
         icon: 'success',
         title: 'Registration Successful',
-        text: `Welcome, ${formData.firstName} ${formData.lastName}!`,
+        text: `Welcome, ${user.firstName}!`,
         showConfirmButton: false,
         timer: 1500
       });
-      setStep3(workingHours);
-      navigate(`/professionalMenu/${formData.firstName}`);
+
+      setStep3({ ...step3, workingHours });
+      navigate(`/professionalMenu/${user.firstName}`);
     } catch (error) {
       console.error('Error registering business:', error);
     }
   };
 
+
   return (
     <div id="registration-step3-container">
       <h2 id="registration-step3-title">Set Days and Hours of Operation</h2>
       <form onSubmit={handleSubmit}>
-        {daysOfWeek.map((day) => (
-          <div key={day.key} className="registration-step3-form-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={workingHours[day.key].isWorking}
-                onChange={() => handleCheckboxChange(day.key)}
-                className="registration-step3-checkbox"
-              />
-              {day.name}
-            </label>
-            {workingHours[day.key].isWorking && (
-              <div className="registration-step3-time-inputs">
+        {daysOfWeek.map((day) => {
+          const dayData = workingHours[day.key];
+          return (
+            <div key={day.key} className="registration-step3-form-group">
+              <label>
                 <input
-                  type="time"
-                  value={workingHours[day.key].start}
-                  onChange={(e) => handleChange(day.key, 'start', e.target.value)}
-                  className="registration-step3-time-input"
+                  type="checkbox"
+                  checked={dayData.isWorking}
+                  onChange={() => handleCheckboxChange(day.key)}
+                  className="registration-step3-checkbox"
                 />
-                <input
-                  type="time"
-                  value={workingHours[day.key].end}
-                  onChange={(e) => handleChange(day.key, 'end', e.target.value)}
-                  className="registration-step3-time-input"
-                />
-                {formErrors.workingHours[day.key] && (
-                  <p className="registration-step3-error-message">{formErrors.workingHours[day.key]}</p>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+                {day.name}
+              </label>
+              {dayData.isWorking && (
+                <div className="registration-step3-time-inputs">
+                  <input
+                    type="time"
+                    value={dayData.start}
+                    onChange={(e) => handleChange(day.key, 'start', e.target.value)}
+                    className="registration-step3-time-input"
+                  />
+                  <input
+                    type="time"
+                    value={dayData.end}
+                    onChange={(e) => handleChange(day.key, 'end', e.target.value)}
+                    className="registration-step3-time-input"
+                  />
+                  {formErrors.workingHours[day.key] && (
+                    <p className="registration-step3-error-message">{formErrors.workingHours[day.key]}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
         <div className="registration-step3-form-group">
           <p>Please enter your password to complete registration</p>
           <label>Password:</label>
@@ -362,8 +188,7 @@ const BusinessRegistrationStep3 = () => {
           )}
         </div>
         <div className="registration-step3-form-buttons">
-          <button className="registration-step3-btn back-button" type="button" onClick={() => navigate('/BusinessRegistrationStep2')}>Back</button>
-          <button className="registration-step3-btn" type="submit">Next</button>
+          <button className="registration-step3-btn" type="submit">Save</button>
         </div>
       </form>
     </div>

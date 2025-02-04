@@ -20,6 +20,7 @@ const FormProvider = () => {
     passwordProff: '',
     business_name: '',
     phone: '',
+    logo: '',
     useType: 'professionals'
   });
   const [step2, setStep2] = useState({

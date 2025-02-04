@@ -110,3 +110,101 @@ form {
   justify-content: space-between;
   margin-top: 20px;
 }
+
+
+.service-table {
+  width: 100%;
+  border-collapse: collapse; /* מסיר את הרווחים בין התאים */
+  background-color: #f0f8ff; /* רקע בהיר בצבע תכלת */
+  color: #333; /* טקסט כהה לקריאות טובה יותר */
+  text-align: left; /* יישור טקסט לשמאל */
+}
+
+.service-table th, .service-table td {
+  padding: 10px;
+  border: 1px solid #b0e0e6; /* גבול עדין בגוון תכלת בהיר */
+}
+
+.service-table th {
+  background-color: #add8e6; /* צבע רקע בהיר לכותרות */
+  font-weight: bold;
+}
+
+.service-table tr:nth-child(even) {
+  background-color: #e0f7fa; /* רקע בהיר יותר לשורות זוגיות */
+}
+
+.service-table tr:hover {
+  background-color: #b2ebf2; /* שינוי צבע שורה בעת ריחוף בגוון תכלת בהיר */
+}
+
+.service-type-container {
+  display: flex;
+  align-items: center;
+}
+
+.add-service-button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.add-service-button:hover {
+  background-color: #0056b3;
+}
+
+/* עיצוב למודל (חלון קופץ) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.modal-button {
+  padding: 10px;
+  margin: 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.modal-button:hover {
+  opacity: 0.8;
+}
+
+.close-button {
+  background-color: red;
+  color: white;
+}
+
+.modal-button:not(.close-button) {
+  background-color: green;
+  color: white;
+}

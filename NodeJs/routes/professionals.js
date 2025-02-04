@@ -1,7 +1,7 @@
 
 
 import express from 'express';
-import { getAllProfessionals, postProfessional, getProfessionalByEmailAndPassword, getAllBuisnessNames, getProfessionalsByDomainAndType, getProfessionalByName, getProfessionalDetails, updateProfessional } from '../database/professionalsdb.js';
+import { getAllProfessionals, postProfessional, getProfessionalByEmailAndPassword, getAllBuisnessNames, getProfessionalById, getProfessionalsByDomainAndType, getProfessionalByName, getProfessionalDetails, updateProfessional } from '../database/professionalsdb.js';
 import { postProfessionalService } from '../database/professional_servicesdb.js';
 import { postSchedule } from '../database/scheduledb.js';
 const route = express.Router();
@@ -10,7 +10,26 @@ const route = express.Router();
 route.post('/registerBusiness', async (req, res) => {
     try {
         const {
-            idProfessional,
+            step1: {
+                idProfessional,
+                firstName,
+                lastName,
+                domainCode,
+                startDate,
+                address,
+                cityCode,
+                email,
+                business_name,
+                phone,
+                logo,
+
+            },
+            step2: { services },
+            passwordProff,
+            workingHours
+        } = req.body;
+
+        console.log("000", idProfessional,
             firstName,
             lastName,
             domainCode,
@@ -21,10 +40,10 @@ route.post('/registerBusiness', async (req, res) => {
             passwordProff,
             business_name,
             phone,
-            logo, // הוספת שדה הלוגו
+            logo,
             services,
-            workingHours,
-        } = req.body;
+            workingHours,);
+
 
         // הוספת מקצוען חדש לטבלת professionals
         const professionalId = await postProfessional(
@@ -39,22 +58,19 @@ route.post('/registerBusiness', async (req, res) => {
             passwordProff,
             business_name,
             phone,
-            logo // הוספת שדה הלוגו
+            logo
         );
 
         // הוספת שירותים לטבלת professional_services
         for (const service of services) {
             await postProfessionalService(professionalId, service.serviceType, service.price, service.duration);
         }
-
         // הוספת שעות עבודה לטבלת schedules
         for (const dayOfWeek in workingHours) {
             if (workingHours[dayOfWeek].isWorking) {
                 await postSchedule(professionalId, dayOfWeek, workingHours[dayOfWeek].start, workingHours[dayOfWeek].end);
             }
         }
-        console.log(444);
-
         res.json({ ProfessionalId: professionalId, message: 'Business registered successfully' });
     } catch (error) {
         console.error('Error registering business:', error);
@@ -102,6 +118,22 @@ route.post('/login', async (req, res) => {
     } catch (error) {
         res.status(500).send('Error querying the database');
         console.error('Error in login route:', error);
+    }
+});
+
+// בדיקה אם תעודת הזהות קיימת במערכת
+route.get('/id_check/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const professional = await getProfessionalById(id);
+
+        if (professional) {
+            return res.json({ exists: true });
+        }
+        res.json({ exists: false });
+    } catch (error) {
+        console.error('Error checking ID existence:', error);
+        res.status(500).json({ message: error.message });
     }
 });
 

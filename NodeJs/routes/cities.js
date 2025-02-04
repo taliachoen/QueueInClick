@@ -3,7 +3,6 @@ import express from 'express'
 import { getCities, getCityById, postCity, updateCity } from '../database/citiesdb.js'
 
 const route = express.Router();
-//החזרת בעל מקצועים מבסיס הנתונים
 route.get('/', async (req, res) => {
     try {
         const cities = await getCities();
@@ -13,6 +12,8 @@ route.get('/', async (req, res) => {
         res.status(500).json({ messege: error.messege })
     }
 });
+
+
 
 //החזרת בעל מקצוע לפי מספר מזהה
 route.get('/:cityId', async (req, res) => {

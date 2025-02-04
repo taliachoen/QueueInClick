@@ -5,6 +5,7 @@ import {
     postType_service,
     updateType_service,
     deleteType_service,
+    getType_serviceByDomainId,
     getType_servicesByDomain // הוספנו את הפונקציה החדשה כאן
 } from '../database/type_servicedb.js';
 
@@ -14,7 +15,7 @@ const route = express.Router();
 route.get('/type/:type_serviceId', async (req, res) => {
     try {
         const { type_serviceId } = req.params;
-        const type_service = await getType_serviceById(type_serviceId);
+        const type_service = await getType_serviceByDomainId(type_serviceId);
         if (!type_service) {
             return res.status(404).json({ message: 'type_service not found.' });
         }
@@ -38,7 +39,6 @@ route.get('/', async (req, res) => {
 // החזרת סוגי טיפול לפי תחום
 route.get('/:domainName', async (req, res) => {
     try {
-        console.log("work!!")
         const { domainName } = req.params;
         const type_services = await getType_servicesByDomain(domainName);
         res.json(type_services);
@@ -62,11 +62,29 @@ route.get('/:domainName', async (req, res) => {
 // });
 
 // הכנסת סוג טיפול חדש
+
+
+// route.post('/', async (req, res) => {
+//     try {
+//         const { typeName, domainCode } = req.body;
+//         const type_service = await postType_service(typeName, domainCode);
+//         res.json({ type_service, message: 'type_service added successfully' });
+
+//     } catch (error) {
+//         res.status(201).json({ message: error.message });
+//     }
+// });
+
+
+
 route.post('/', async (req, res) => {
     try {
         const { typeName, domainCode } = req.body;
         const type_service = await postType_service(typeName, domainCode);
-        res.json({ type_service, message: 'type_service added successfully' });
+        res.json({
+            typeCode: type_service.typeCode,
+            message: 'type_service added successfully'
+        });
     } catch (error) {
         res.status(201).json({ message: error.message });
     }
