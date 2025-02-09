@@ -4,7 +4,46 @@ import express from 'express';
 import { getAllProfessionals, postProfessional, getProfessionalByEmailAndPassword, getAllBuisnessNames, getProfessionalById, getProfessionalsByDomainAndType, getProfessionalByName, getProfessionalDetails, updateProfessional } from '../database/professionalsdb.js';
 import { postProfessionalService } from '../database/professional_servicesdb.js';
 import { postSchedule } from '../database/scheduledb.js';
+import { getCityById } from '../database/citiesdb.js';
+import { getDomain } from '../database/domainsdb.js';
+import pool from '../database/db.js';
+
 const route = express.Router();
+
+
+
+// נתיב שמחזיר את המידע של בעל המקצוע כולל העיר והתחום
+route.get('/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // שליפת בעל המקצוע מהטבלה
+        const [[professional]] = await pool.query(`
+            SELECT idProfessional, firstName, lastName, cityCode, domainCode
+            FROM professionals
+            WHERE idProfessional = ?`, [userId]);
+
+        if (!professional) {
+            return res.status(404).json({ message: 'Professional not found' });
+        }
+
+        // שליפת שם העיר ושם התחום לפי הקודים
+        const city = await getCityById(professional.cityCode);
+        const domain = await getDomain(professional.domainCode);
+
+        // החזרת המידע עם שמות במקום קודים
+        res.json({
+            ...professional,
+            cityName: city?.cityName || "Unknown",
+            domainName: domain?.domainName || "Unknown"
+        });
+
+    } catch (error) {
+        console.error("Error fetching professional data:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 // רישום עסק חדש
 route.post('/registerBusiness', async (req, res) => {
@@ -78,6 +117,24 @@ route.post('/registerBusiness', async (req, res) => {
     }
 });
 
+// // המסלול הנכון לקבלת בעל מקצוע לפי ID
+// route.get('/:id', async (req, res) => {
+//     console.log("shira")
+//     try {
+//         const { id } = req.params;  // הפוך את המפתח ל-idProfessional (לא id)
+//         const professional = await getProfessionalById(id);
+
+//         if (professional) {
+//             return res.json(professional);  // החזר את המידע על בעל המקצוע
+//         }
+//         res.status(404).json({ message: 'Professional not found' });
+//     } catch (error) {
+//         console.error('Error checking ID existence:', error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
+
+
 // קבלת כל המקצוענים
 route.get('/', async (req, res) => {
     try {
@@ -121,21 +178,7 @@ route.post('/login', async (req, res) => {
     }
 });
 
-// בדיקה אם תעודת הזהות קיימת במערכת
-route.get('/id_check/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const professional = await getProfessionalById(id);
 
-        if (professional) {
-            return res.json({ exists: true });
-        }
-        res.json({ exists: false });
-    } catch (error) {
-        console.error('Error checking ID existence:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
 
 // קבלת כל שמות בעלי העסק הקיימים
 route.get('/business_name', async (req, res) => {
@@ -188,15 +231,59 @@ route.get('/:business_name', async (req, res) => {
 });
 
 // עדכון פרטי מקצוען
+// route.put('/:userId', async (req, res) => {
+//     try {
+//         const { userId } = req.params;
+//         console.log("Updating user:", userId, req.body);
+//         const updatedUser = await updateProfessional(userId, req.body);
+//         console.log(updatedUser, "lala");
+//         res.json(updatedUser, { message: 'Professional updated successfully' });
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// });
+// route.put('/:userId', async (req, res) => {
+//     try {
+//         const { userId } = req.params; // הגדרת userId לפני השימוש בו
+//         console.log("Updating user:", userId, req.body);
+
+//         const updatedUser = await updateProfessional(userId, req.body);
+//         console.log(updatedUser, "lala");
+
+//         res.json({ updatedUser, message: 'Professional updated successfully' });
+//     } catch (error) {
+//         console.error("Error updating user:", error);
+//         res.status(400).json({ message: error.message });
+//     }
+// });
 route.put('/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+        console.log("🔄 עדכון בעל מקצוע:", userId, req.body);
+
         const updatedUser = await updateProfessional(userId, req.body);
-        console.log(updatedUser, "lala");
-        res.json(updatedUser, { message: 'Professional updated successfully' });
+        console.log("✅ נתונים מעודכנים שמוחזרים:", updatedUser);
+
+        res.json(updatedUser);
     } catch (error) {
+        console.error("❌ שגיאה בעדכון:", error);
         res.status(400).json({ message: error.message });
     }
 });
 
+
+route.get('/id_check/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const professional = await getProfessionalById(id);
+
+        if (professional) {
+            return res.json({ exists: true });
+        }
+        res.json({ exists: false });
+    } catch (error) {
+        console.error('Error checking ID existence:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
 export default route;

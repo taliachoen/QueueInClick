@@ -76,8 +76,8 @@ route.get('/:customerId', async (req, res) => {
 //הכנסת לקוח חדש  
 route.post('/', async (req, res) => {
     try {
-        const { idCustomer, firstName, lastName, address, cityCode, email,phone, passwordCust } = req.body;
-        const customer = await postCustomer(idCustomer, firstName, lastName, address, cityCode, email,phone, passwordCust);
+        const { idCustomer, firstName, lastName, address, cityCode, email, phone, passwordCust } = req.body;
+        const customer = await postCustomer(idCustomer, firstName, lastName, address, cityCode, email, phone, passwordCust);
         res.json({ customer, message: 'customer added successfully' });
     }
     catch (error) {
