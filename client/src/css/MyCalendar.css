@@ -1,62 +1,25 @@
 
-.business-appointments-page {
-  align-items: center;
-  font-family: 'Arial', sans-serif;
-  padding: 20px;
-
-
-}
-
-.calendar-container {
-  width: 100%;
-  max-width: 1200px;
-  margin-bottom: 20px;
-
-}
-
-.react-calendar {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 500px;
-}
 
 .react-calendar__navigation {
-  background-color: #f0f0f0;
-  color: black;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  font-size: 1.2rem;
-  display: flex;
+  margin-left: 35%;
 }
 
 .react-calendar__navigation button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  background-color: white;
-  border-radius: 15px;
-
+  background-color: #007bff;
+  margin: 0 3px;
+  border-radius: 4px;
 }
 
 .react-calendar__month-view__weekdays {
-  justify-content: space-around;
-  background-color: papayawhip;
+  background-color: rgb(213, 234, 255);
   font-weight: bold;
   text-align: center;
   padding: 10px 0;
-
 }
 
 .react-calendar__month-view__days__day {
-  height: 80px;
-  font-size: 1.1rem;
-  padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  position: relative;
+  height: 75px;
 }
 
 .react-calendar__month-view__days__day--neighboringMonth {
@@ -64,12 +27,10 @@
 }
 
 .react-calendar__tile--active {
-  background-color: papayawhip;
-  color: black;
 }
 
 .calendar-appointment {
-  width: 20;
+  width: 20px;
   padding: 5px;
   background-color: #f9f9f9;
   border-left: 3px solid #007bff;
@@ -145,9 +106,7 @@
 
 .next-month-booking-button:hover {
   background-color: #4840e67c;
-  ;
 }
-
 
 .calendar-appointment {
   height: 15px;
@@ -158,12 +117,9 @@
   border-radius: 15px;
 }
 
-
-
 .appointments-list {
   flex-wrap: nowrap;
 }
-
 
 .business-appointments-page {
   display: flex;
@@ -209,8 +165,6 @@
   order: 0;
 }
 
-
-
 .daysOff {
   width: 100%;
   height: 100%;
@@ -220,12 +174,10 @@
   left: 0;
 }
 
-
 .holiday-marker {
   width: 8px;
   height: 8px;
   background-color: #f00;
-  /* Red marker */
   border-radius: 50%;
   position: absolute;
   top: 50%;
@@ -233,19 +185,14 @@
   transform: translate(-50%, -50%);
 }
 
-
-/* Add styles for current day and hover effect */
 .business-calendar .react-calendar__tile--now {
   background-color: yellow;
-  /* Style for current day */
 }
 
 .business-calendar .react-calendar__tile:hover {
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-  /* Shining effect on hover */
 }
 
-/* MyCalendar.css */
 .day-off {
   background-color: gray;
   color: white;
@@ -293,3 +240,6 @@
 .cancel-confirmation button:hover {
   background-color: lightblue;
 }
+
+
+0

@@ -64,7 +64,7 @@ const LandingPage = () => {
                 </div>
             </header>
             <div className="landing-main-content">
-                <img id="Logo" src={logo} alt="Logo" />
+                <img id="LogoQuick" src={logo} alt="Logo" />
                 <Section title="About us" className="landing-white-section">
                     <p>
                         Effortlessly Schedule Your Appointments!

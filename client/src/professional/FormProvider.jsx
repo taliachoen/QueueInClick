@@ -42,24 +42,16 @@ const FormProvider = () => {
     step1,
     step2,
     step3,
-    setStep1(data) {
-      setStep1(data);
-    },
-    setStep2(data) {
-      setStep2(data);
-    },
-    setStep3(data) {
-      setStep3(data);
-    },
+    setStep1,
+    setStep2,
+    setStep3,
 
     fullData: {
       ...step1,
       ...step2,
       ...step3
     }
-
-  }
-
+  };
 
   return (
     <FormContext.Provider value={data}>

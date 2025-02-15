@@ -9,7 +9,6 @@ html {
     font-size: 16px;
     font-family: "Raleway", sans-serif;
     color: #004d61;
-    /* Dark turquoise for text */
 }
 
 ul,
@@ -21,7 +20,6 @@ a {
     text-decoration: none;
     opacity: 0.75;
     color: #0288d1;
-    /* Light turquoise */
     transition: opacity 300ms;
 }
 
@@ -35,13 +33,11 @@ a.btn {
     font-weight: bold;
     text-align: center;
     background-color: #00796b;
-    /* Turquoise */
     transition: background-color 400ms;
 }
 
 a.btn:hover {
     background-color: #004d40;
-    /* Dark turquoise */
 }
 
 /* Section Styles */
@@ -52,17 +48,14 @@ a.btn:hover {
     align-items: center;
     padding: 100px 80px;
     background-color: #e0f7fa;
-    /* Light turquoise background */
 }
 
 .landing-section:nth-child(even):not(.landing-hero) {
     background-color: #b2ebf2;
-    /* Even lighter turquoise */
 }
 
 .landing-section p {
     color: #004d61;
-    /* Dark turquoise */
     max-width: 775px;
     line-height: 1.7;
     font-weight: 300;
@@ -72,14 +65,12 @@ a.btn:hover {
 
 .landing-section p a {
     color: #00796b;
-    /* Turquoise */
     text-decoration: underline;
     transition: color 300ms;
 }
 
 .landing-section p a:hover {
     color: #004d40;
-    /* Dark turquoise */
 }
 
 .landing-title {
@@ -88,7 +79,6 @@ a.btn:hover {
     margin-bottom: 30px;
     text-align: center;
     color: #004d61;
-    /* Dark turquoise */
 }
 
 /* Grid Styles */
@@ -112,7 +102,6 @@ a.btn:hover {
     font: bold 24px "Amatic SC", sans-serif;
     text-transform: uppercase;
     color: #00796b;
-    /* Turquoise */
     margin: 10px 0 15px;
 }
 
@@ -129,7 +118,6 @@ a.btn:hover {
     width: calc(50% - 10px);
     height: 250px;
     background-color: #b2ebf2;
-    /* Light turquoise background */
     background-size: cover;
     background-position: center;
     transition: transform 300ms;
@@ -140,7 +128,6 @@ a.btn:hover {
 }
 
 /* Button Styles */
-
 .landing-button-container {
     display: flex;
     position: relative;
@@ -181,10 +168,29 @@ a.btn:hover {
     background-color: #f0f0f0;
 }
 
+#logo {
+    width: 100px;
+    height: auto; 
+    display: block; 
+    border-radius: 50px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
 
+#LogoQuick{
+    width: 25%;
+    height: 25%; 
+    /* display: block;  */
+    /* border-radius: 50px; */
+    margin-left: 38%;
+    padding: 1%;
+}
 
-
-
+.user-icon {
+    width: 70px; 
+    height: auto;
+    border-radius: 50%; 
+    margin-top: 10px; 
+}
 
 button,
 .landing-buttons-container button {
@@ -202,7 +208,6 @@ button,
 button:hover,
 .landing-buttons-container button:hover {
     background-color: #004d40;
-    /* Dark turquoise */
 }
 
 .landing-buttons-container {
@@ -212,7 +217,6 @@ button:hover,
     gap: 20px;
 }
 
-/* Header and Footer */
 .landing-header {
     display: flex;
     padding: 20px;
@@ -243,7 +247,6 @@ button:hover,
     opacity: 1;
 }
 
-/* Image Styles */
 .landing-image-1,
 .landing-image-2,
 .landing-image-3,
@@ -268,18 +271,10 @@ button:hover,
     background-image: url("https://images.unsplash.com/photo-1505483531331-fc3cf89fd382?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1600&h=900&fit=crop&s=4f305bbc0243f81f1bf6053a62d76297");
 }
 
-/* Utility Styles */
 hr {
     width: 250px;
     height: 3px;
     background-color: #004d61;
     border: none;
     margin-bottom: 50px;
-}
-
-#Logo {
-    max-width: 20%;
-    margin: 0 auto;
-    display: block;
-    padding: 1%;
 }

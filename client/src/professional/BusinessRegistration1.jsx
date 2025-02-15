@@ -105,10 +105,43 @@ const BusinessRegistration1 = () => {
   };
 
   // טיפול בשינוי קובץ הלוגו
-  const handleLogoChange = (e) => {
-    setLogo(e.target.files[0]);
-  };
+  // const handleLogoChange = (e) => {
+  //   setLogo(e.target.files[0]);
+  //   const { name, value } = e.target;
+  //   let updatedFormData = { ...formData, [name]: value };
+  //   setFormData(updatedFormData);
+  // };
 
+  // const handleLogoChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.readAsDataURL(file);
+  //     reader.onload = () => {
+  //       setFormData({
+  //         ...formData,
+  //         logo: reader.result,
+  //       });
+  //     };
+  //   }
+  // };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        setFormData({
+          ...formData,
+          logo: reader.result,
+        });
+      };
+    }
+  };
+  
+  
+  
   // טיפול בשליחת הטופס ובדיקת תקינות הנתונים
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -302,6 +335,7 @@ const BusinessRegistration1 = () => {
               id="logo"
               name="logo"
               accept="image/*"
+              // value={formData.logo}
               onChange={handleLogoChange}
             />
           </div>

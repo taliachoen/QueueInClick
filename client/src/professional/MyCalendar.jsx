@@ -8,7 +8,7 @@ import '../css/MyCalendar.css';
 const MyCalendar = () => {
   const { user } = useContext(UserContext);
   const [weekSchedule, setWeekSchedule] = useState([]);
-  const [nextMonthSchedule, setNextMonthSchedule] = useState([]); // Add state for next month's schedule
+  const [nextMonthSchedule, setNextMonthSchedule] = useState([]); 
   const [selectedDayAppointments, setSelectedDayAppointments] = useState([]);
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);

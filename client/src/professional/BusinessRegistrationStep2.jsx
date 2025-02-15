@@ -19,6 +19,7 @@ const BusinessRegistrationStep2 = () => {
 
   useEffect(() => {
     fetchServiceTypes();
+    console.log("formData.logo" , formDataStep1.logo, "formData" , formDataStep1);
   }, [formDataStep1.domainCode]);
 
   const fetchServiceTypes = async () => {

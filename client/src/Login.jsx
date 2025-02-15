@@ -30,6 +30,7 @@ const Login = () => {
         setFormErrors(errors);
         if (Object.keys(errors).length === 0) {
             const endpoint = userType === 'customer' ? 'http://localhost:8080/customers/login' : 'http://localhost:8080/professionals/login';
+//???????????? למה פוסט
             axios.post(endpoint, formUserData)
                 .then((response) => {
                     if (response.status === 200) {
@@ -60,6 +61,7 @@ const Login = () => {
                                     address: user.address,
                                     phone: user.phone,
                                     business_name: user.business_name,
+                                    logo: user.logo,
                                     userType: 'professionals'
                                 };
                             setUser(userContextData);

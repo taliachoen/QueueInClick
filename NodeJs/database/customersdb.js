@@ -2,7 +2,6 @@ import pool from './database.js'
 
 //פונקציה המחזירה את כל לקוחות
 export async function getCustomers() {
-    console.log('hi bro');
     const [customers] = await pool.query('select idCustomer, firstName,  lastName,  address,   cityCode,  email,phone from customers ');
     console.log(customers, "--", [customers], "---", pool)
     return customers;
