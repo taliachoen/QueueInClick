@@ -80,17 +80,12 @@ const MyProfile = () => {
             console.log('Profile updated successfully:', response.data);
             swal("Success", "Profile updated successfully", "success");
             setEditMode(false);
-            console.log(response.data.updatedUser)
-            // setUser(response.data.updatedUser); // Update the user state in the context
-            // setUser(prevUser => ({
-            //     ...prevUser,  // שומר על המידע הקודם
-            //     ...response.data.updatedUser, // מעדכן רק את השדות החדשים
-            // }));
+            console.log(response.data)
             setUser(prevUser => ({
                 ...prevUser,  // שומר על הנתונים הקודמים
-                ...response.data.updatedUser, // מוסיף/מעדכן את הנתונים שהתקבלו מהשרת
-                cityName: response.data.updatedUser.cityName || prevUser.cityName, // שומר על שם העיר
-                domainName: response.data.updatedUser.domainName || prevUser.domainName // שומר על שם התחום
+                ...response.data, // מוסיף/מעדכן את הנתונים שהתקבלו מהשרת
+                // cityName: response.data.updatedUser.cityName || prevUser.cityName, // שומר על שם העיר
+                // domainName: response.data.updatedUser.domainName || prevUser.domainName // שומר על שם התחום
             }));
 
         } catch (error) {
