@@ -120,7 +120,6 @@ export async function getProfessionalById(id) {
             p.email, 
             p.phone, 
             p.business_name, 
-            p.userType,
             p.cityCode, 
             c.cityName,  -- מצרפים את שם העיר לפי ה-cityCode
             p.domainCode, 
@@ -184,6 +183,7 @@ export async function updateProfessional(professionalID, professionalData) {
         }
 
         return await getProfessionalById(professionalID);
+
     } catch (error) {
         console.error("Error updating professional:", error);
         throw error;

@@ -6,7 +6,8 @@ import { postProfessionalService } from '../database/professional_servicesdb.js'
 import { postSchedule } from '../database/scheduledb.js';
 import { getCityById } from '../database/citiesdb.js';
 import { getDomain } from '../database/domainsdb.js';
-import pool from '../database/db.js';
+import pool from '../database/database.js';
+
 
 const route = express.Router();
 
