@@ -28,6 +28,8 @@ app.use('/type_service', type_services);
 app.use('/schedule', schedule);
 app.use('/domains', domains);
 
+
+
 app.listen(PORT, () => {
     console.log(`listen on PORT ${PORT}`);
 });

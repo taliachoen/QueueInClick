@@ -62,6 +62,17 @@
   /* Light Blue Border */
 }
 
+.logo-icon {
+  width: 120px;
+  /* התאם את הגודל שאתה רוצה */
+  height: 120px;
+  /* התאם את הגובה */
+  border-radius: 50%;
+  /* הופך את התמונה לעגולה */
+  object-fit: cover;
+  /* מוודא שהתמונה ממלאת את החלל */
+}
+
 /* Other Sections */
 section {
   padding: 80px 20px;

@@ -1,8 +1,12 @@
-
-
 .react-calendar__navigation {
   align-items: center;
   margin-left: 35%;
+}
+
+.selected-day {
+  background-color: #206ec1;
+  /* הצבע הרצוי */
+  color: white;
 }
 
 .react-calendar__navigation button {
@@ -26,8 +30,7 @@
   color: #999;
 }
 
-.react-calendar__tile--active {
-}
+.react-calendar__tile--active {}
 
 .calendar-appointment {
   width: 20px;
@@ -240,6 +243,3 @@
 .cancel-confirmation button:hover {
   background-color: lightblue;
 }
-
-
-0

@@ -15,9 +15,6 @@ import { postProfessionalService } from '../database/professional_servicesdb.js'
 import { postSchedule } from '../database/scheduledb.js';
 import { getCityById } from '../database/citiesdb.js';
 import { getDomain } from '../database/domainsdb.js';
-import { getCityById } from '../database/citiesdb.js';
-import { getDomain } from '../database/domainsdb.js';
-import pool from '../database/database.js';
 import pool from '../database/database.js';
 import multer from 'multer';
 import path from 'path';
@@ -35,6 +32,95 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+
+
+
+// route.get('/getLogo/:userId', async (req, res) => {
+
+//     const professionalId = req.params.userId;
+//     console.log('Fetching logo for ID:', professionalId);
+
+//     console.log("sund")
+//     const query = 'SELECT logo FROM professionals WHERE idProfessional = ?';
+//     pool.query(query, [professionalId], (err, result) => {
+//         console.log('Database result:', result);
+
+//         if (err) {
+//             console.log("55")
+//             // טיפול בשגיאה בזמן קריאה ל-DB
+//             console.error('Error fetching logo:', err);
+//             return res.status(500).json({ error: 'Error fetching logo' });
+//         }
+
+//         // אם לא נמצאו תוצאות
+//         if (result.length === 0) {
+//             console.log(`No logo found for ID: ${professionalId}`);
+//             return res.status(404).json({ error: 'Logo not found' });
+//         }
+
+//         // אם נמצאה תמונה
+//         const logoBuffer = result[0].logo;
+
+//         if (!logoBuffer) {
+//             // אם לא נמצא תוכן בשדה logo
+//             console.log(`Logo is empty for ID: ${professionalId}`);
+//             return res.status(404).json({ error: 'Logo is empty' });
+//         }
+
+//         try {
+//             console.log("66")
+//             // המרת הנתונים לבסיס64
+//             const base64Logo = Buffer.from(logoBuffer, 'binary').toString('base64');
+//             const dataUri = `data:image/png;base64,${base64Logo}`;
+//             console.log("Response before sending:", dataUri);
+//             res.json({ logo: dataUri });
+//         } catch (error) {
+//             // טיפול בשגיאה בזמן המרה לבסיס64
+//             console.error('Error converting logo to base64:', error);
+//             return res.status(500).json({ error: 'Error converting logo to base64' });
+//         }
+//     });
+// });
+
+route.get('/getLogo/:userId', async (req, res) => {
+    const professionalId = req.params.userId;
+    console.log('Fetching logo for ID:', professionalId);
+
+    const query = 'SELECT logo FROM professionals WHERE idProfessional = ?';
+
+    try {
+        // ביצוע השאילתה באופן אסינכרוני
+        const [result] = await pool.query(query, [professionalId]);
+
+        console.log('Database result:', result);
+
+        if (result.length === 0) {
+            console.log(`No logo found for ID: ${professionalId}`);
+            return res.status(404).json({ error: 'Logo not found' });
+        }
+
+        const logoBuffer = result[0].logo;
+
+        if (!logoBuffer) {
+            console.log(`Logo is empty for ID: ${professionalId}`);
+            return res.status(404).json({ error: 'Logo is empty' });
+        }
+
+        const base64Logo = Buffer.from(logoBuffer).toString('base64');
+        const dataUri = `data:image/png;base64,${base64Logo}`;
+
+        console.log("Response before sending:", dataUri);
+
+        return res.json({ logo: dataUri });
+
+    } catch (error) {
+        // טיפול בשגיאות קריאה לבסיס הנתונים
+        console.error('Error fetching logo:', error);
+        return res.status(500).json({ error: 'Error fetching logo' });
+    }
+});
+
+
 
 // נתיב שמחזיר את המידע של בעל המקצוע כולל העיר והתחום
 route.get('/:userId', async (req, res) => {

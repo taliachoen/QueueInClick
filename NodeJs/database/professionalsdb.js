@@ -1,5 +1,4 @@
 import pool from './database.js';
-import moment from 'moment';
 
 
 export async function postProfessional(idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, passwordProff, business_name, phone, logo) {
