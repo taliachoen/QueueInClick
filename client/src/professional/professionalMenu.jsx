@@ -82,7 +82,12 @@ const ProfessionalMenu = () => {
     const [loading, setLoading] = useState(false);  // מצב טעינה
 
     useEffect(() => {
-        navigate('/myProfile');
+        navigate('myProfile'); // מנווט לדף ברירת המחדל בעת טעינה
+    }, []); // רץ פעם אחת כשהקומפוננטה נטענת
+
+
+
+    useEffect(() => {
         if (user && user.id) {
             fetchLogo();
         }
