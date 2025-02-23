@@ -5,9 +5,16 @@
 
 .selected-day {
   background-color: #206ec1;
-  /* הצבע הרצוי */
   color: white;
 }
+
+.no-workday {
+  background-color: #f0f0f0; /* צבע רקע בהיר */
+  color: #706868; /* צבע טקסט כהה יותר */
+  border: 2px dashed #ccc; /* גבול דמוי קו מקוטע */
+}
+
+
 
 .react-calendar__navigation button {
   background-color: #007bff;
@@ -227,6 +234,23 @@
 
 .cancel-confirmation p {
   margin-bottom: 10px;
+}
+
+
+/* שינוי צבע הכפתור לביטול יום עבודה */
+.cancel-workday-button {
+  background-color: red;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.cancel-workday-button:hover {
+  background-color: darkred;
 }
 
 .cancel-confirmation button {

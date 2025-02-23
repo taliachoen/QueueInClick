@@ -186,7 +186,6 @@ export async function getQueuesByDateAndBusinessOwner(month, year, id) {
     }
 }
 
-
 //החזרת כל התורים של בעל העסק לפי ת.ז ולפי חודש
 export async function getAllQueuesByMonthAndBusinessOwner(date, businessOwnerName) {
     const query = `
@@ -370,3 +369,50 @@ async function openDailySchedule(professionalId, date, serviceTypeCode, startTim
         throw error;
     }
 }
+
+
+export async function openDaySchedule(professionalId, dayOfWeek, formattedDate) {
+    try {
+      // שלב 1: חיפוש שעות העבודה של בעל העסק
+      const scheduleQuery = `SELECT * FROM Schedules WHERE professionalId = ? AND dayOfWeek = ?`;
+      const [schedules] = await pool.query(scheduleQuery, [professionalId, dayOfWeek]);
+  
+      if (schedules.length === 0) {
+        console.log('No working hours found for this professional on the selected day.');
+        return;
+      }
+  
+      // שלב 2: חיפוש סוגי הטיפולים שמוצעים ובדיקת משך הזמן
+      const servicesQuery = `SELECT * FROM Professional_Services WHERE idProfessional = ?`;
+      const [services] = await pool.query(servicesQuery, [professionalId]);
+  
+      // שלב 3: יצירת תורים בהתאם לשעות העבודה
+      for (const schedule of schedules) {
+        const { startTime } = schedule; // שעה התחלה של העבודה
+        const dayStart = new Date(formattedDate + ' ' + startTime); // נתון בתור תאריך ושעה
+        const endTime = new Date(dayStart.getTime() + (services[0].Duration * 60000)); // מוסיף את משך הזמן של הטיפול
+  
+        // יצירת תורים לפי משך זמן טיפול לכל סוג טיפול
+        for (const service of services) {
+          let currentStartTime = new Date(dayStart); // נתחיל מהשעה של לוח הזמנים
+  
+          while (currentStartTime < endTime) {
+            // נוסיף תור בטבלת ה-Queues
+            const query = `INSERT INTO Queues (Date, Hour, Status, ProfessionalServiceCode)
+                           VALUES (?, ?, 'available', ?)`;
+            await pool.query(query, [formattedDate, currentStartTime.toISOString().split('T')[1].slice(0, 5), service.ProffServiceID]);
+  
+            // הוסף את משך הזמן של הטיפול (למשל 30 דקות)
+            currentStartTime = new Date(currentStartTime.getTime() + (service.Duration * 60000));
+          }
+        }
+      }
+  
+      console.log('Day schedule opened successfully.');
+    } catch (error) {
+      console.error('Error opening day schedule:', error);
+      throw error;
+    }
+  }
+  
+  

@@ -1,4 +1,5 @@
 import pool from './database.js'
+import {getCustomer} from './customersdb.js'
 
 export async function getMessages() {
     try {
@@ -37,9 +38,8 @@ export async function getMessage(id) {
     return message;
 }
 
-//פונקציה המוסיפה לקוח חדשה
-export async function postMessage(queueCode, isRead, content, title) {
-    const [{ insertId }] = await pool.query(`insert into messages( queueCode,  isRead,  content,   title,message_date) VALUES (?,?,?,?,?)`, [queueCode, isRead, content, title, message_date]);
+export async function postMessage(queueCode, isRead, content, title, message_date) {
+    const [{ insertId }] = await pool.query(`insert into messages( queueCode,  isRead,  content, title , message_date) VALUES (?,?,?,?,?)`, [queueCode, isRead, content, title, message_date]);
     return await getCustomer(insertId);
 }
 

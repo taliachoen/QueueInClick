@@ -87,26 +87,26 @@ const ProfessionalMenu = () => {
 
 
 
-    useEffect(() => {
-        if (user && user.id) {
-            fetchLogo();
-        }
-    }, [user]); // קורא לפונקציה כל פעם שהמשתמש משתנה
+    // useEffect(() => {
+    //     if (user && user.id) {
+    //         fetchLogo();
+    //     }
+    // }, [user]); 
 
 
-    const fetchLogo = async () => {
-        try {
-            setLoading(true);  // מצב טעינה מתחיל
-            const userId = user.id;
-            const response = await axios.get(`http://localhost:8080/professionals/getLogo/${userId}`);
-            console.log('LogoHair@', response.data);
-            setBase64Logo(response.data.logo); // עדכון הסטייט עם הלוגו שנשלף
-            setLoading(false);  // מצב טעינה מסתיים
-        } catch (error) {
-            console.error('Error fetching logo:', error);
-            setLoading(false);  // מצב טעינה מסתיים גם במקרה של שגיאה
-        }
-    };
+    // const fetchLogo = async () => {
+    //     try {
+    //         setLoading(true);  // מצב טעינה מתחיל
+    //         const userId = user.id;
+    //         const response = await axios.get(`http://localhost:8080/professionals/getLogo/${userId}`);
+    //         console.log('LogoHair@', response.data);
+    //         setBase64Logo(response.data.logo); // עדכון הסטייט עם הלוגו שנשלף
+    //         setLoading(false);  // מצב טעינה מסתיים
+    //     } catch (error) {
+    //         console.error('Error fetching logo:', error);
+    //         setLoading(false);  // מצב טעינה מסתיים גם במקרה של שגיאה
+    //     }
+    // };
 
 
     const handleLogout = () => {

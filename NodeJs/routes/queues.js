@@ -2,6 +2,7 @@ import express from 'express';
 import { postMessage } from '../database/messagesdb.js';  // ייבוא הפונקציה המתאימה להוספת הודעה
 
 import {
+  openDaySchedule,
   getQueues,
   getQueuesByDateAndBusinessOwner,
   cancelQueueByCode,
@@ -24,6 +25,7 @@ const router = express.Router();
 // Cancel all appointments for a given day
 router.put('/cancel/:date/:userId', async (req, res) => {
   const { date, userId } = req.params;
+  console.log("selectedDay", date , userId);
   try {
     // שליפת כל התורים של בעל העסק לתאריך ספציפי
     const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);
@@ -41,8 +43,7 @@ router.put('/cancel/:date/:userId', async (req, res) => {
       const title = 'Appointment Cancellation';
       const queueCode = appointment.QueueCode;
       const isRead = false;
-
-      await postMessage(queueCode, isRead, content, title);
+      await postMessage(queueCode, isRead, content, title,appointment.date );
     }
 
     res.status(200).json({ message: 'All appointments for the day have been canceled and notifications sent.' });
@@ -80,17 +81,18 @@ router.get('/date/:formattedDate/:userid', async (req, res) => {
     }
 });
 
-// Get all queues for a specific month and year for a business owner
+
+//Get all queues for a specific month and year for a business owner
 router.get('/allQueue/:month/:year/:userid', async (req, res) => {
   const { month, year, userid } = req.params;
-  console.log(month, year, userid);
+  console.log(month, year, userid);  // לוודא שה-ID נשאב כראוי
   try {
       const queues = await getQueuesByDateAndBusinessOwner(month, year, userid);
-      res.json(queues);
-    } catch (error) {
-        console.error('Error fetching queues by date:', error);
-        res.status(500).json({ message: error.message });
-    }
+      res.json(queues);  // שולח את התורים חזרה
+  } catch (error) {
+      console.error('Error fetching queues by date:', error);
+      res.status(500).json({ message: error.message });
+  }
 });
 
 // Get queues by customer
@@ -190,5 +192,21 @@ router.post('/openNextMonthSchedule/:businessOwnerId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
+
+// פתיחת לוח זמנים עבור יום מסוים
+router.post('/openDaySchedule/:formattedDate', async (req, res) => {
+  const { formattedDate } = req.params;
+  try {
+    // פונקציה שתפתח את לוח הזמנים עבור היום שנמסר
+    await openDaySchedule(formattedDate);
+    res.json({ message: `Day schedule for ${formattedDate} has been opened successfully.` });
+  } catch (error) {
+    console.error('Error opening day schedule:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 export default router;
