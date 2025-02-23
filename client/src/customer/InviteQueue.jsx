@@ -15,7 +15,7 @@ const InviteQueue = () => {
     const [secondaryFields, setSecondaryFields] = useState([]);
     const [showPrompt, setShowPrompt] = useState(false);
     const location = useLocation();
-   
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,7 +29,7 @@ const InviteQueue = () => {
             if (domainName) {
                 setSearchField(domainName);
                 fetchSecondaryFields(domainName);
-                fetchBusinesses(domainName, cityName); // Optionally pass parameters if needed
+                fetchBusinesses(domainName, cityName);
             }
             if (cityName) {
                 setSelectedCity(cityName);
@@ -76,18 +76,15 @@ const InviteQueue = () => {
         }
 
         setLoading(true);
-        axios.get('http://localhost:8080/professionals/type_service', {
-            params: {
-                field: searchField,
-                type: searchSecondaryField,
-                city: selectedCity
-            }
+        console.log("field: ", searchField,
+            "type:", searchSecondaryField,
+            "city:", selectedCity);
+        axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}/${selectedCity}`, {
+        }).then(response => {
+            setBusinesses(response.data);
+            console.log("Buisness contain", response.data)
+            setLoading(false);
         })
-            .then(response => {
-                setBusinesses(response.data);
-                console.log("Buisness contain", response.data)
-                setLoading(false);
-            })
             .catch(error => {
                 console.error('Error fetching business data:', error);
                 setLoading(false);
@@ -112,14 +109,15 @@ const InviteQueue = () => {
         navigate(`../InviteDate`, { replace: true, state: { businessDetails, type: searchSecondaryField } });
     };
 
-
     const handleFieldChange = (e) => {
         const selectedField = e.target.value;
         setSearchField(selectedField);
+        setSearchSecondaryField('');
         fetchSecondaryFields(selectedField);
     };
 
- 
+
+
     return (
         <div id="invite-queue">
             <div id="search-section">
@@ -161,7 +159,9 @@ const InviteQueue = () => {
                 </div>
             </div>
             <h2 id="list-title">List of relevant businesses:</h2>
-            {filteredBusinesses.length > 0 ? (
+            {loading ? (
+                <p>Loading...</p>
+            ) : filteredBusinesses.length > 0 ? (
                 <table id="business-table">
                     <thead>
                         <tr>
