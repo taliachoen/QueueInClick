@@ -2,7 +2,8 @@
 import pool from './database.js';
 import { getProfessionalServicesById } from './professional_servicesdb.js';
 import { getDaysOff, getSchedulesByProfessionalIdAndServiceType } from './scheduledb.js';
-import { getProfessionalServiceCode } from './professionalsdb.js';
+import { getProfessionalServiceCode, getProfessionalAllDetails, getProfessionalByName } from './professionalsdb.js';
+import { getServiceDuration } from '../routes/professional_services.js';
 
 // פונקציה המחזירה את כל התורים
 export async function getQueues() {
@@ -12,26 +13,134 @@ export async function getQueues() {
     return queues;
 }
 
+// פונקציה שתבדוק אם מועד פנוי או לא
+export const checkSlotAvailability = (appointments, startTime, endTime) => {
+    // בודקת אם הזמן המבוקש חופף עם כל פגישה קיימת
+    for (const appointment of appointments) {
+        const existingStartTime = new Date(appointment.startTime).getTime();
+        const existingEndTime = new Date(appointment.endTime).getTime();
 
-//קבלת כל התורים עי  מספר זהות בעל מקצוע וסוג טיפול ואם התור זמין
-export async function getFilteredQueues(idProfessional, serviceTypeCode) {
-    const query = `
-        SELECT q.QueueCode, q.Date, q.Hour
-        FROM queues q
-        INNER JOIN professional_services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
-        WHERE ps.idProfessional = ? AND ps.ServiceTypeCode = ? AND q.Status = 'available'
-    `;
+        // אם המועד המבוקש חופף עם פגישה קיימת, מחזירים false
+        if (
+            (startTime >= existingStartTime && startTime < existingEndTime) ||
+            (endTime > existingStartTime && endTime <= existingEndTime) ||
+            (startTime <= existingStartTime && endTime >= existingEndTime)
+        ) {
+            return false; // הזמן תפוס
+        }
+    }
+
+    return true; // הזמן פנוי
+};
+
+async function getAppointmentsByBusinessName(businessName) {
     try {
-        const [details] = await pool.query(query, [idProfessional, serviceTypeCode]);
-        return details;
+        console.log(businessName, "businessId ");
+
+        const [appointments] = await pool.query(
+            `SELECT q.* 
+             FROM queues q
+             JOIN professional_services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
+             JOIN professionals b ON ps.idProfessional = b.idProfessional
+             WHERE b.business_name = ?`,
+            [businessName]
+        );
+        return appointments;
     } catch (error) {
-        console.error('Error executing SQL query:', error);
-        throw error; // Optional: Propagate the error for handling in the caller function
+        console.error('Error fetching appointments:', error);
+        throw new Error('Unable to fetch appointments.');
+    }
+}
+
+// שליפת נתונים מהדאטהבייס
+async function getAvailableDays(professionalBusinesName) {
+    try {
+        // Fetch professionalId based on business_name
+        const [professionalData] = await pool.query(
+            'SELECT idProfessional FROM professionals WHERE business_name = ?',
+            [professionalBusinesName]
+        );
+
+        if (professionalData.length === 0) {
+            throw new Error('Professional not found for the provided business name.');
+        }
+
+        const professionalId = professionalData[0].idProfessional;
+
+        // Fetch available days for the professionalId
+        const [availableDays] = await pool.query(
+            'SELECT dayDate, isAvailable FROM available_days WHERE professionalId = ?',
+            [professionalId]
+        );
+        return availableDays;
+    } catch (error) {
+        console.error('Error fetching available days:', error);
+        throw new Error('Unable to fetch available days.');
     }
 }
 
 
-// פונקציה המחזירה תור לפי מספר מזהה
+
+// פונקציה לקבלת שעות העבודה לפי שם העסק (בהתאם ל-ID של בעל המקצוע)
+async function getWorkingHoursByBusinessName(businessName) {
+    try {
+        // שליפת מזהה בעל המקצוע לפי שם העסק (אני מניח שאתה מחפש את ה-professionalId לפי שם העסק)
+        const [businessRows] = await pool.query(
+            `SELECT idProfessional FROM professionals WHERE business_name = ?`, [businessName]
+        );
+
+        if (!businessRows.length) {
+            throw new Error('Business not found');
+        }
+
+        const professionalId = businessRows[0].idProfessional;
+
+        // שליפת שעות העבודה לפי professionalId מתוך טבלת schedules
+        const [workingHoursRows] = await pool.query(
+            `SELECT dayOfWeek, startTime, endTime FROM schedules WHERE professionalId = ? ORDER BY dayOfWeek`, [professionalId]
+        );
+        if (!workingHoursRows.length) {
+            throw new Error('Working hours not found for this business');
+        }
+
+        // החזרת שעות העבודה
+        return workingHoursRows;
+
+    } catch (error) {
+        console.error('Error in getWorkingHoursByBusinessName:', error);
+        throw new Error('Unable to fetch working hours');
+    }
+}
+
+
+async function getAppointmentsByBusinessAndDate(professionalId, selectedDate) {
+
+    // שליפת קוד שירות של המקצוען לפי ה-professionalId
+    const [rows] = await pool.query(`
+        SELECT ProffServiceID FROM professional_services
+        WHERE idProfessional = ?`, [professionalId]);
+
+    // אם לא נמצאה תוצאה, מחזירים שגיאה
+    if (rows.length === 0) {
+        throw new Error('לא נמצאו שירותים עבור מקצוען זה');
+    }
+
+    const ProfessionalServiceCode = rows[0].ProffServiceID;
+
+    // שליפת הפגישות עבור השירות והיום המבוקש
+    const [appointments] = await pool.query(`
+        SELECT * FROM queues
+        WHERE ProfessionalServiceCode = ? AND date = ?`, [ProfessionalServiceCode, selectedDate]);
+    return appointments;
+}
+
+async function getServiceDurationForAppointment(ProfessionalServiceCode) {
+    const [duration] = await pool.query(`
+    SELECT Duration FROM professional_services
+    WHERE ProffServiceID = ?`, [ProfessionalServiceCode])    
+    return duration;
+}
+
 export async function getQueueById(id) {
     const [[queue]] = await pool.query(`select * from queues where queueCode=?`, [id]);
     return queue;
@@ -63,7 +172,7 @@ export async function getQueuesByProfessionalId(idProfessional) {
                ps.ServiceTypeCode, st.typeName AS serviceTypeName
         FROM queues q
         JOIN customers c ON q.CustomerCode = c.idCustomer
-        JOIN professional_services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
+        JOIN professional_services ps ON q.ProfessionalServiceCode  = ps.ProffServiceID
         JOIN type_service st ON ps.ServiceTypeCode = st.typeCode
         WHERE ps.idProfessional = ?
         ORDER BY q.Date, q.Hour
@@ -90,7 +199,7 @@ export async function isNextMonthAvailable(businessOwnerId) {
     JOIN professional_services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
     WHERE YEAR(q.Date) = ? AND MONTH(q.Date) = ? AND ps.idProfessional = ?
     `;
-    
+
     try {
         // מבצע את השאילתא לבדיקת כמות התורים לחודש הבא עבור בעל עסק מסוים
         const [result] = await pool.query(query, [year, month, businessOwnerId]);
@@ -102,7 +211,6 @@ export async function isNextMonthAvailable(businessOwnerId) {
         throw error;
     }
 }
-
 
 //עידכון תור
 export async function updateExistQueue(QueueCode, customerId, StatusQueue) {
@@ -145,21 +253,21 @@ export async function cancelQueueByCode(queueCode) {
     }
 }
 
-// פונקציה המוסיפה תור חדשה
-export async function postQueue(professionalServiceCode, customerCode, date, hour, status) {
-    console.log(999,  professionalServiceCode, customerCode, date, hour, status);
-    const [{ insertId }] = await pool.query(`insert into queues( professionalServiceCode, customerCode, date,hour ,status) VALUES (?,?,?,?,?)`, [professionalServiceCode, customerCode, date, hour, status]);
-    console.log(888, insertId);
-    return insertId;
-}
 
 // פונקציה למחיקת תור לפי מספר זיהוי
 export async function deleteQueue(id) {
     await pool.query(`DELETE FROM queues WHERE QueueCode = ?`, [id]);
 }
 
+const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 //החזרת התורים של בעל העסק לפי ת.ז ולפי תאריך ולפי תורים תפוסים
-export async function getQueuesByDateAndBusinessOwner(month, year, id) {
+export async function getQueuesByDateAndBusinessOwner(month, year, id) {    
     const query = `
       SELECT q.QueueCode, q.Date, q.Hour, q.Status, c.firstName AS customerFirstName, c.lastName AS customerLastName, c.phone AS customerPhone,
              st.typeName AS serviceTypeName
@@ -168,7 +276,7 @@ export async function getQueuesByDateAndBusinessOwner(month, year, id) {
       JOIN professional_services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
       JOIN type_service st ON ps.ServiceTypeCode = st.typeCode
       JOIN professionals bo ON ps.idProfessional = bo.idProfessional
-      WHERE MONTH(q.Date) = ? AND YEAR(q.Date) = ? AND bo.idProfessional = ? AND q.Status IN ('waiting', 'finished', 'available')
+      WHERE MONTH(q.Date) = ? AND YEAR(q.Date) = ? AND bo.idProfessional = ? AND q.Status IN ('waiting', 'finished', 'available', 'scheduled')
     `;
 
     try {
@@ -179,6 +287,8 @@ export async function getQueuesByDateAndBusinessOwner(month, year, id) {
             queue.Date = formatDate(localDate); // format to YYYY-MM-DD
             return queue;
         });
+        console.log("localQueues", localQueues);
+        
         return localQueues;
     } catch (error) {
         console.error('Error executing SQL query:', error);
@@ -216,13 +326,12 @@ export async function getAllQueuesByMonthAndBusinessOwner(date, businessOwnerNam
     }
 }
 
-
-const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
+// const formatDate = (date) => {
+//     const year = date.getFullYear();
+//     const month = String(date.getMonth() + 1).padStart(2, '0');
+//     const day = String(date.getDate()).padStart(2, '0');
+//     return `${year}-${month}-${day}`;
+// }
 
 export async function getQueuesByFullDateAndBusinessOwner(fullDate, id) {
     const query = `
@@ -252,6 +361,8 @@ export async function getQueuesByFullDateAndBusinessOwner(fullDate, id) {
 }
 
 
+
+
 export const updateEndedAppointments = async () => {
     try {
         const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -268,151 +379,412 @@ export const updateEndedAppointments = async () => {
 };
 
 
-
-
-
-
-
-// פונקציה לפתיחת לוח תורים לחודש הבא לפי תעודת הזהות של בעל העסק
-export async function openNextMonthSchedule(professionalId) {
-    // יצירת אובייקט תאריך לחודש הבא
-    const nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    const year = nextMonth.getFullYear();
-    const month = nextMonth.getMonth() + 1; // JavaScript מתחיל את החודשים מ-0 לכן נוסיף 1
-    
+export const postQueue = async (businessName, serviceType, customerId, date, startTime, status) => {
     try {
-        // בדיקה אם הלוח כבר פתוח לחודש הבא
-        const IsNotAvailable = await isNextMonthAvailable(professionalId);
-        if (IsNotAvailable) {
-            // שאילתא לקבלת כל השירותים של בעל העסק
-            const services = await getProfessionalServicesById(professionalId);
-            // פתיחת לוח התורים לכל יום בחודש הבא
-            for (let day = 1; day <= getDaysInMonth(year, month); day++) {
-                // בדיקה אם יום זה יום עבודה לבעל העסק
-                const workingDays = await getDaysOff(professionalId);
-                if (!workingDays.includes(day)) {
-                    // לולאה עבור כל שירות כדי לפתוח תורים
-                    for (const service of services) {
-                        const { serviceTypeCode, duration } = service;
-                        // קבלת זמני התחלה וסיום מתוך schedules לפי professionalId ולפי serviceTypeCode
-                        const schedules = await getSchedulesByProfessionalIdAndServiceType(professionalId, serviceTypeCode);
-                        // לולאה על כל ה-schedules שמתקבלים
-                        for (const schedule of schedules) {
-                            const { startTime, endTime } = schedule;
-                            // פתיחת תורים ליום זה עבור שירות זה
-                            const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                            await openDailySchedule(professionalId, date, serviceTypeCode, startTime, endTime, duration);
-                        }
-                    }
-                }
+        // שלב 1: הבאת ID של בעל העסק לפי שם העסק
+        const [professionalResult] = await pool.query(`
+            SELECT idProfessional 
+            FROM professionals 
+            WHERE business_name =  ?`, [businessName]);
+
+
+        if (professionalResult.length === 0) {
+            throw new Error('Business not found');
+        }
+        const professionalId = professionalResult[0].idProfessional;
+        const [serviceCode] = await pool.query(`
+            SELECT typeCode 
+            FROM type_service 
+            WHERE typeName = ?`, [serviceType]);
+
+        // שלב 2: הבאת קוד השירות מהטבלה professional_services לפי שם השירות ו-ID בעל העסק
+        const [serviceResult] = await pool.query(`
+            SELECT ProffServiceID 
+            FROM professional_services 
+            WHERE ServiceTypeCode = ? AND idProfessional = ?`, [serviceCode[0].typeCode, professionalId]);
+
+        if (serviceResult.length === 0) {
+            throw new Error('Service not found for this business');
+        }
+
+
+        console.log("result6", serviceResult);
+
+        if (!(startTime instanceof Date)) {
+            startTime = new Date(startTime);  // Convert if necessary
+        }
+
+        const startFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}:00`;
+
+        // שלב 3: הכנסת התור לטבלה queues
+        const [result] = await pool.query(`
+            INSERT INTO queues (ProfessionalServiceCode, CustomerCode, Date, Hour, Status)
+            VALUES (?, ?, ?, ?, ?)`, [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
+
+        console.log("result7", result, "77777", serviceResult[0].ProffServiceID, customerId, date, startFormatted, status);
+
+        if (result.affectedRows === 0) {
+            return null; // אם ההוספה נכשלה
+        }
+
+        return {
+            QueueCode: result.insertId,
+            ProfessionalServiceCode: serviceResult[0].ProffServiceID,
+            CustomerCode: customerId,
+            Date: date,
+            StartTime: startFormatted,
+            Status: status
+        };
+
+    } catch (error) {
+        console.error('Error in postQueue:', error);
+        throw error;
+    }
+}
+
+
+// פונקציה שתפתח את לוח הזמנים עבור היום שנמסר
+export async function openDaySchedule(formattedDate) {
+    try {
+        // כאן אנחנו מניחים ש- formattedDate יהיה בתצורת YYYY-MM-DD, לדוגמה "2025-05-06"
+
+        // נרצה לבדוק אם יום זה כבר קיים בתור
+        const result = await pool.query(
+            `SELECT * FROM available_days WHERE dayDate = $1`, [formattedDate]
+        );
+
+        if (result.rows.length > 0) {
+            // אם היום כבר קיים בתור, פשוט מחזירים הודעה שהיום כבר פתוח
+            console.log(`Schedule for ${formattedDate} is already opened.`);
+            return;
+        }
+
+        // אם היום לא קיים בתור, נפתח אותו על ידי הוספה לטבלה
+        await pool.query(
+            `INSERT INTO available_days (dayDate, isAvailable) VALUES ($1, true)`,
+            [formattedDate]
+        );
+        console.log(`Schedule for ${formattedDate} opened successfully.`);
+    } catch (error) {
+        console.error('Error opening day schedule:', error);
+        throw new Error('Error opening day schedule');
+    }
+};
+
+
+export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
+    // מערך שמות הימים בשבוע
+    const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+    try {
+        // קבלת פרטי העסק
+        const business = await getProfessionalAllDetails(businessName);
+        if (!business) throw new Error('Business not found.');
+
+        // קבלת משך זמן השירות
+        const serviceDuration = await getServiceDuration(businessName, serviceTypeName);
+        if (!serviceDuration) throw new Error('Service duration not found.');
+
+        // קבלת ימי החופש של בעל העסק
+        const daysOff = await getDaysOff(business.idProfessional);
+        const selectedDayNum = new Date(selectedDate).getDay();
+
+        // בדיקה אם היום הנבחר הוא יום חופש
+        if (daysOff.includes(selectedDayNum)) {
+            return { message: 'The selected day is a day off and no appointments can be booked.' };
+        }
+
+        // לשנות לפונקציה השולחת את היום ואת ת.ז בעל העסק ובודקת אם זמין ומחזירה אמת או שקר
+        const availableDays = await getAvailableDays(businessName);
+        const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
+        const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
+
+        // בדיקה אם היום פתוח להזמנות
+        console.log('Is the day available for appointments:', isDayAvailable);
+        if (!isDayAvailable) {
+            return { message: 'The selected day is not available for appointments.' };
+        }
+
+        // קבלת שעות העבודה של העסק
+        const workingHours = await getWorkingHoursByBusinessName(business.business_name);
+        const appointments = await getAppointmentsByBusinessAndDate(business.idProfessional, selectedDate);
+
+        // המרת משך זמן השירות לדקות
+        const timeParts = serviceDuration.split(':').map(Number);
+        const serviceDurationMinutes = (timeParts[0] * 60) + timeParts[1] + (timeParts[2] / 60);
+        let availableSlots = [];
+
+        // לולאה העוברת על שעות העבודה ומייצרת טווחי זמן פנויים
+        // במקום לעבור על כל הימים, נבדוק את היום הספציפי שנבחר
+        const workingDay = workingHours.find(({ dayOfWeek }) => dayOfWeek.toUpperCase() === dayNames[selectedDayNum]);
+
+        if (!workingDay) {
+            console.log('העסק לא עובד ביום הזה');
+            return { message: 'The selected day is a day off and no appointments can be booked.' };
+        }
+
+        // אם מצאנו יום עבודה תואם, נמשיך
+        // הסרת ה-Z כדי למנוע בעיות אזור זמן
+        let start = new Date(`${selectedDate}T${workingDay.startTime.slice(0, 5)}:00`);
+        let end = new Date(`${selectedDate}T${workingDay.endTime.slice(0, 5)}:00`);
+
+        // נקבל מראש את כל מידע הפגישות הקיימות לייעול
+        const existingAppointmentsInfo = [];
+        for (const appointment of appointments) {
+            const { Date: existingDate, Hour: existingHour, ProfessionalServiceCode } = appointment;
+            
+            // ודא שהשדה קיים ולא ריק
+            if (!existingDate || !existingHour) {
+                console.log("Invalid date or hour", existingDate, existingHour);
+                continue;
             }
-        } else {
-            return { message: 'לוח התורים לחודש הבא כבר פתוח.' };
+            
+            try {
+                // Format the date properly
+                const formattedDate = formatDate(existingDate);
+                
+                // Format the hour properly - ensure it has seconds
+                const formattedHour = formatTime(existingHour);
+                
+                // Debug logging
+                console.log(`Creating date with: ${formattedDate}T${formattedHour}`);
+                
+                // יצירת אובייקט Date עם תאריך ושעה מפורמטים
+                const existingStart = new Date(`${formattedDate}T${formattedHour}`);
+                
+                // Check if date is valid
+                if (isNaN(existingStart.getTime())) {
+                    console.error(`Invalid date created with: ${formattedDate}T${formattedHour}`);
+                    continue;
+                }
+                
+                // קבלת משך זמן הטיפול - באופן סינכרוני לטובת המבנה הקיים
+                const serviceDurationForAppointment = await getServiceDurationForAppointment(ProfessionalServiceCode);
+                
+                if (!serviceDurationForAppointment || !serviceDurationForAppointment[0]?.Duration) {
+                    console.log("Missing service duration for appointment", ProfessionalServiceCode);
+                    continue;
+                }
+                
+                const serviceDurationForAppointmentTime = serviceDurationForAppointment[0].Duration.split(':').map(Number);
+                const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 + 
+                                         serviceDurationForAppointmentTime[1] * 60 + 
+                                         serviceDurationForAppointmentTime[2]) * 1000;
+                
+                const existingEnd = new Date(existingStart.getTime() + durationInMillis);
+                
+                existingAppointmentsInfo.push({
+                    start: existingStart,
+                    end: existingEnd
+                });
+                
+                console.log("Added appointment:", {
+                    start: existingStart.toISOString(),
+                    end: existingEnd.toISOString()
+                });
+                
+            } catch (err) {
+                console.error("Error processing appointment:", err, "Data:", existingDate, existingHour);
+            }
+        }
+
+        console.log("existingAppointmentsInfo:", existingAppointmentsInfo.map(appt => ({
+            start: appt.start.toISOString(),
+            end: appt.end.toISOString()
+        })));
+
+        while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
+            const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
+            
+            // בדיקת זמינות ללא async בתוך some() שגורם לבעיות
+            const isAvailable = !existingAppointmentsInfo.some(appt => 
+                start < appt.end && slotEnd > appt.start
+            );
+
+            if (isAvailable) {
+                availableSlots.push({ 
+                    start: new Date(start), 
+                    end: slotEnd,
+                    // הוספת פורמט קריא של השעות
+                    startTime: start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+                    endTime: slotEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                });
+            }
+
+            start = new Date(start.getTime() + serviceDurationMinutes * 60000);
+        }
+
+        if (availableSlots.length === 0) {
+            console.log('No available slots found for this day');
+            return { message: 'No available appointments for the selected day.' };
+        }
+
+        return { availableSlots };
+    } catch (error) {
+        console.error('Error in getFilteredQueues:', error);
+        return { error: 'Unable to fetch filtered queues. Please try again later.' };
+    }
+}
+
+function formatTime(timeString) {
+    try {
+        // If there's no timeString or it's invalid, return a default
+        if (!timeString || typeof timeString !== 'string') {
+            console.warn(`Invalid time format: ${timeString}`);
+            return '00:00:00';
         }
         
-        return { message: 'לוח התורים לחודש הבא נפתח בהצלחה.' };
-    } catch (error) {
-        console.error('שגיאה בפתיחת לוח התורים לחודש הבא:', error);
-        throw error;
-    }
-}
-
-// פונקציה לקבלת מספר הימים בחודש
-function getDaysInMonth(year, month) {
-    return new Date(year, month, 0).getDate();
-}
-
-
-// פונקציה להמרת זמן בפורמט HH:mm:ss לשניות
-function timeToSeconds(time) {
-    const [hours, minutes, seconds] = time.split(':').map(Number);
-    return hours * 3600 + minutes * 60 + seconds;
-}
-
-function minutesToTime(minutes) {
-    const hours = Math.floor(minutes / 60).toString().padStart(2, '0');
-    const mins = (minutes % 60).toString().padStart(2, '0');
-    return `${hours}:${mins}:00`;
-}
-
-
-function timeToMinutes(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-
-// פונקציה לפתיחת לוח תורים ליום ספציפי
-async function openDailySchedule(professionalId, date, serviceTypeCode, startTime, endTime, duration) {
-    try {
-        // שליפת ProfessionalServiceCode לפי serviceTypeCode ו-professionalId
-        const ProfessionalServiceCode = await getProfessionalServiceCode(professionalId, serviceTypeCode);
-        if (!ProfessionalServiceCode) {
-            throw new Error(`לא נמצא ProfessionalServiceCode עבור serviceTypeCode ${serviceTypeCode} ו-professionalId ${professionalId}`);
+        // If time is in format HH:MM, add seconds
+        if (timeString.match(/^\d{1,2}:\d{2}$/)) {
+            return `${timeString}:00`;
         }
-
-        const startMinutes = timeToMinutes(startTime);
-        const endMinutes = timeToMinutes(endTime);
-        const durationMinutes = timeToMinutes(duration);
-
-        for (let currentMinutes = startMinutes; currentMinutes < endMinutes; currentMinutes += durationMinutes) {
-            const currentHour = minutesToTime(currentMinutes);
-            // יצירת תור חדש
-            await postQueue(ProfessionalServiceCode, null, date, currentHour, 'available');
+        
+        // If time already has seconds, return as is
+        if (timeString.match(/^\d{1,2}:\d{2}:\d{2}$/)) {
+            return timeString;
         }
-
-        const formattedDate = new Date(date).toLocaleDateString('en-GB');
-        return { message: `לוח תורים נפתח בהצלחה ליום ${formattedDate}` };
+        
+        // Try to parse the time from various formats
+        const timeParts = timeString.split(':');
+        if (timeParts.length >= 2) {
+            const hours = timeParts[0].padStart(2, '0');
+            const minutes = timeParts[1].padStart(2, '0');
+            const seconds = timeParts[2] ? timeParts[2].padStart(2, '0') : '00';
+            return `${hours}:${minutes}:${seconds}`;
+        }
+        
+        console.warn(`Unrecognized time format: ${timeString}`);
+        return timeString;
     } catch (error) {
-        console.error(`שגיאה בפתיחת לוח תורים יומי עבור תאריך ${date}:`, error);
-        throw error;
+        console.error(`Error formatting time ${timeString}:`, error);
+        return timeString;
     }
 }
 
 
-export async function openDaySchedule(professionalId, dayOfWeek, formattedDate) {
-    try {
-      // שלב 1: חיפוש שעות העבודה של בעל העסק
-      const scheduleQuery = `SELECT * FROM Schedules WHERE professionalId = ? AND dayOfWeek = ?`;
-      const [schedules] = await pool.query(scheduleQuery, [professionalId, dayOfWeek]);
-  
-      if (schedules.length === 0) {
-        console.log('No working hours found for this professional on the selected day.');
-        return;
-      }
-  
-      // שלב 2: חיפוש סוגי הטיפולים שמוצעים ובדיקת משך הזמן
-      const servicesQuery = `SELECT * FROM Professional_Services WHERE idProfessional = ?`;
-      const [services] = await pool.query(servicesQuery, [professionalId]);
-  
-      // שלב 3: יצירת תורים בהתאם לשעות העבודה
-      for (const schedule of schedules) {
-        const { startTime } = schedule; // שעה התחלה של העבודה
-        const dayStart = new Date(formattedDate + ' ' + startTime); // נתון בתור תאריך ושעה
-        const endTime = new Date(dayStart.getTime() + (services[0].Duration * 60000)); // מוסיף את משך הזמן של הטיפול
-  
-        // יצירת תורים לפי משך זמן טיפול לכל סוג טיפול
-        for (const service of services) {
-          let currentStartTime = new Date(dayStart); // נתחיל מהשעה של לוח הזמנים
-  
-          while (currentStartTime < endTime) {
-            // נוסיף תור בטבלת ה-Queues
-            const query = `INSERT INTO Queues (Date, Hour, Status, ProfessionalServiceCode)
-                           VALUES (?, ?, 'available', ?)`;
-            await pool.query(query, [formattedDate, currentStartTime.toISOString().split('T')[1].slice(0, 5), service.ProffServiceID]);
-  
-            // הוסף את משך הזמן של הטיפול (למשל 30 דקות)
-            currentStartTime = new Date(currentStartTime.getTime() + (service.Duration * 60000));
-          }
-        }
-      }
-  
-      console.log('Day schedule opened successfully.');
-    } catch (error) {
-      console.error('Error opening day schedule:', error);
-      throw error;
-    }
-  }
-  
-  
+
+
+
+
+
+
+
+
+
+
+
+
+// export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
+//     // מערך שמות הימים בשבוע
+//     const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+//     try {
+//         // קבלת פרטי העסק
+//         const business = await getProfessionalAllDetails(businessName);
+//         if (!business) throw new Error('Business not found.');
+
+//         // קבלת משך זמן השירות
+//         const serviceDuration = await getServiceDuration(businessName, serviceTypeName);
+//         if (!serviceDuration) throw new Error('Service duration not found.');
+
+//         // קבלת ימי החופש של בעל העסק
+//         const daysOff = await getDaysOff(business.idProfessional);
+//         const selectedDayNum = new Date(selectedDate).getDay();
+
+//         // בדיקה אם היום הנבחר הוא יום חופש
+//         if (daysOff.includes(selectedDayNum)) {
+//             return { message: 'The selected day is a day off and no appointments can be booked.' };
+//         }
+
+//         //לשנות לפונקציה השולחת את היום ואת ת.ז בעל העסק ובודקת האם זמין ומחזירה אמת או שקר
+//         const availableDays = await getAvailableDays(businessName);
+//         const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
+//         const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
+
+//         // בדיקה אם היום פתוח להזמנות
+//         console.log('Is the day available for appointments:', isDayAvailable);
+//         if (!isDayAvailable) {
+//             return { message: 'The selected day is not available for appointments.' };
+//         }
+
+//         // קבלת שעות העבודה של העסק
+//         const workingHours = await getWorkingHoursByBusinessName(business.business_name);
+//         const appointments = await getAppointmentsByBusinessAndDate(business.idProfessional, selectedDate);
+
+//         // המרת משך זמן השירות לדקות
+//         const timeParts = serviceDuration.split(':').map(Number);
+//         const serviceDurationMinutes = (timeParts[0] * 60) + timeParts[1] + (timeParts[2] / 60);
+//         let availableSlots = [];
+
+//         // לולאה העוברת על שעות העבודה ומייצרת טווחי זמן פנויים
+//         // במקום לעבור על כל הימים, נבדוק את היום הספציפי שנבחר
+//         const workingDay = workingHours.find(({ dayOfWeek }) => dayOfWeek.toUpperCase() === dayNames[selectedDayNum]);
+
+//         if (!workingDay) {
+//             console.log('העסק לא עובד ביום הזה');
+//             return { message: 'The selected day is a day off and no appointments can be booked.' };
+//         }
+
+//         // אם מצאנו יום עבודה תואם, נמשיך
+//         let start = new Date(`${selectedDate}T${workingDay.startTime.slice(0, 5)}:00Z`);
+//         let end = new Date(`${selectedDate}T${workingDay.endTime.slice(0, 5)}:00Z`);
+//         console.log(`שעת התחלה: ${start}, שעת סיום: ${end}`);
+
+//         while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
+//             const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
+//             console.log("appointments", appointments);
+            
+//             const isAvailable = !appointments.some(async ({ Date: existingDate, Hour: existingHour, ProfessionalServiceCode }) => {
+//                 // הדפסת הערכים כדי לבדוק את התוקף שלהם
+//                 console.log('existingDate:', existingDate, 'existingHour:', existingHour);
+                
+//                 // ודא שהשדה קיים ולא ריק
+//                 if (!existingDate || !existingHour) {
+//                     console.log("Invalid date or hour", existingDate, existingHour);
+//                     return false; // אם הערכים לא תקינים, נחזיר false (לא נמצא חפיפות)
+//                 }
+            
+//                 // כאן אתה לוקח את משך הזמן של הטיפול הספציפי
+//                 const serviceDurationForAppointment = await getServiceDurationForAppointment(ProfessionalServiceCode); // משך זמן טיפול לפי הקוד של השירות
+//                 console.log('serviceDurationForAppointment', existingHour, serviceDurationForAppointment[0].Duration);
+
+//                 // המרת existingHour לאובייקט Date
+//                 const existingTime = existingHour.split(':').map(Number); // פיצול השעה, דקה ושנייה למערך
+//                 const existingStart = new Date(0, 0, 0, existingTime[0], existingTime[1], existingTime[2]); // יצירת אובייקט Date
+//                 console.log("existingStart:", existingStart);
+
+//                 // המרת משך זמן טיפול מ-`TIME` לדקות
+//                 const serviceDurationForAppointmentTime = serviceDurationForAppointment[0].Duration.split(':').map(Number);
+//                 console.log(serviceDurationForAppointmentTime, "serviceDurationForAppointmentTime");
+                
+//                 const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 + serviceDurationForAppointmentTime[1] * 60 + serviceDurationForAppointmentTime[2]) * 1000; // חישוב מילישניות
+//                 console.log(durationInMillis, "durationInMillis", serviceDurationForAppointmentTime);
+                
+//                 const existingEnd = new Date(existingStart.getTime() + durationInMillis); 
+
+//                 // חישוב זמן סיום של הפגישה החדשה
+//                 const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
+//                 console.log("existingHour-", existingHour, "existingEnd-", existingEnd, "start-", start, "slotEnd-", slotEnd);
+            
+//                 // בדיקה אם הפגישה החדשה חופפת לפגישה קיימת
+//                 return start < existingEnd && slotEnd > existingStart;
+//             });
+
+//             if (isAvailable) {
+//                 availableSlots.push({ start: new Date(start), end: slotEnd });
+//             }
+
+//             start = new Date(start.getTime() + serviceDurationMinutes * 60000);
+//         }
+
+//         if (availableSlots.length === 0) {
+//             console.log('No available slots found for this day');
+//             return { message: 'No available appointments for the selected day.' };
+//         }
+
+//         return { availableSlots };
+//     } catch (error) {
+//         console.error('Error in getFilteredQueues:', error);
+//         return { error: 'Unable to fetch filtered queues. Please try again later.' };
+//     }
+// }

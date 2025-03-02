@@ -9,13 +9,15 @@ export async function getSchedules() {
 }
 
 export async function getDaysOff(userId) {
-  try {
+  try {    
     // שאילתת SQL כדי לשלוף את ימי השבוע שבהם המקצוען אינו עובד
     const [rows] = await pool.query(`
-          SELECT dayOfWeek 
-          FROM schedules 
-          WHERE professionalId = ?
-      `, [userId]);
+      SELECT dayOfWeek
+      FROM schedules
+      WHERE professionalId = ?
+      AND (startTime = '00:00:00' AND endTime = '00:00:00')
+  `, [userId]);  
+  
     // ממפה את השורות כדי לחלץ רק את ערכי dayOfWeek לתוך מערך
     const daysOff = rows.map(row => row.dayOfWeek);
     // מחזיר את המערך daysOff

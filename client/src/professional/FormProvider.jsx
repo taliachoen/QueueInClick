@@ -28,16 +28,16 @@ const FormProvider = () => {
   });
   const [step3, setStep3] = useState({
     workingHours: {
-      sunday: { start: '', end: '', isWorking: false },
-      monday: { start: '', end: '', isWorking: false },
-      tuesday: { start: '', end: '', isWorking: false },
-      wednesday: { start: '', end: '', isWorking: false },
-      thursday: { start: '', end: '', isWorking: false },
-      friday: { start: '', end: '', isWorking: false },
-      saturday: { start: '', end: '', isWorking: false },
+      Sunday: { start: '', end: '', isWorking: false },
+      Monday: { start: '', end: '', isWorking: false },
+      Tuesday: { start: '', end: '', isWorking: false },
+      Wednesday: { start: '', end: '', isWorking: false },
+      Thursday: { start: '', end: '', isWorking: false },
+      Friday: { start: '', end: '', isWorking: false },
+      Saturday: { start: '', end: '', isWorking: false },
     }
   });
-
+  
   const data = {
     step1,
     step2,

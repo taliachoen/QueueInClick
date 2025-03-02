@@ -47,9 +47,6 @@ const MyCalendar = () => {
   const tileClassName = ({ date }) => {
     const normalized = normalizeDate(date);
     const dayName = getDayName(date);
-    console.log("dayName", freeDays.includes(dayName));
-    console.log(" dayName", dayName);
-    console.log(`Checking date: ${normalized}, Day: ${dayName}, FreeDays:`, freeDays);
 
     if (freeDays.includes(dayName)) {
       return 'no-workday';  // אם זה יום חופשי, הוא יקבל רקע אפור
@@ -90,7 +87,9 @@ const MyCalendar = () => {
   const fetchAppointmentsFromServer = async (year, month) => {
     try {
       const response = await axios.get(`http://localhost:8080/queues/allQueue/${month}/${year}/${userId}`);
-      return response.data || [];
+      console.log("response.data", response.data);
+      
+      return response.data;
     } catch (error) {
       console.error('Error fetching appointments:', error);
       return [];
@@ -144,25 +143,44 @@ const MyCalendar = () => {
     }
   }, [currentMonth, currentYear]);
 
-  const handleDaySelection = async (day) => {
-    const selectedDate = normalizeDate(day); // השתמש בפונקציה לנרמל את התאריך
+  // const handleDaySelection = async (day) => {
+  //   const selectedDate = normalizeDate(day); // השתמש בפונקציה לנרמל את התאריך
 
+  //   setSelectedDay(selectedDate);
+
+  //   try {
+  //     const response = await axios.get(`http://localhost:8080/queues/date/${selectedDate}/${userId}`);
+  //     setSelectedDayAppointments(response.data);
+  //     setNoAppointmentsMessage(response.data.length === 0 ? `No appointments for ${selectedDate}` : '');
+  //   } catch (error) {
+  //     console.error('Error fetching day appointments:', error);
+  //     Swal.fire({
+  //       icon: 'error',
+  //       title: 'Error fetching appointments',
+  //       text: 'Please try again later.',
+  //     });
+  //   }
+  // };
+
+
+  const handleDaySelection = (day) => {
+    const selectedDate = normalizeDate(day);
     setSelectedDay(selectedDate);
-
-    try {
-      const response = await axios.get(`http://localhost:8080/queues/date/${selectedDate}/${userId}`);
-      setSelectedDayAppointments(response.data);
-      setNoAppointmentsMessage(response.data.length === 0 ? `No appointments for ${selectedDate}` : '');
-    } catch (error) {
-      console.error('Error fetching day appointments:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error fetching appointments',
-        text: 'Please try again later.',
-      });
+  
+    const month = day.getMonth() + 1;
+    const year = day.getFullYear();
+    const key = `${year}-${month}`;
+  
+    if (appointments[key]) {
+      const filteredAppointments = appointments[key].filter(appointment => normalizeDate(appointment.date) === selectedDate);
+      setSelectedDayAppointments(filteredAppointments);
+      setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDate}` : '');
+    } else {
+      setSelectedDayAppointments([]);
+      setNoAppointmentsMessage(`No appointments for ${selectedDate}`);
     }
   };
-
+  
 
 
   const cancelWorkday = async () => {

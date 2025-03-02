@@ -17,6 +17,34 @@ import { getDomain } from '../database/domainsdb.js';
 import pool from '../database/database.js';
 import multer from 'multer';
 import path from 'path';
+import { openInitialScheduleForNewProfessional } from '../index.js';
+
+// פונקציות לעבודה עם תורים
+export function calculateAvailableSlots(startTime, endTime, duration) {
+    const slots = [];
+    let currentSlot = startTime;
+
+    while (currentSlot < endTime) {
+        const nextSlot = addMinutesToTime(currentSlot, duration);
+        if (nextSlot > endTime) break;
+        slots.push({ start: currentSlot, end: nextSlot });
+        currentSlot = nextSlot;
+    }
+
+    return slots;
+}
+
+export function addMinutesToTime(timeString, minutes) {
+    const [hours, minutesPart] = timeString.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutesPart + minutes;
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMinutes = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+}
+
+export function isSlotOverlapping(existingSlot, newSlot) {
+    return (newSlot.start < existingSlot.end && newSlot.end > existingSlot.start);
+}
 
 const route = express.Router();
 
@@ -32,12 +60,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-
-
 // Register business with professional details and logo
 route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
-    console.log("111");
-
     try {
         const {
             step1: {
@@ -77,10 +101,17 @@ route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
             await postProfessionalService(professionalId, service.serviceType, service.price, service.duration);
         }
 
-        for (const dayOfWeek in workingHours) {
+        for (const dayOfWeek in workingHours) {            
             if (workingHours[dayOfWeek].isWorking) {
                 await postSchedule(professionalId, dayOfWeek, workingHours[dayOfWeek].start, workingHours[dayOfWeek].end);
             }
+        }
+
+        try {
+            // הפעלת הפונקציה לפתיחה אוטומטית של חודש ראשון
+            await openInitialScheduleForNewProfessional(professionalId);
+        } catch (error) {
+            res.status(500).json({ message: 'Error registering professional and opening schedule.', error: error.message });
         }
 
         res.json({ ProfessionalId: professionalId, message: 'Business registered successfully' });
@@ -196,9 +227,8 @@ route.get('/type_service/:searchField/:searchSecondaryField/:selectedCity', asyn
 });
 
 // Get professional details by business name and service type
-route.get('/details', async (req, res) => {
+route.get('/details/ByNameAndService', async (req, res) => {
     console.log("666");
-
     try {
         const { businessName, serviceType } = req.query;
         const details = await getProfessionalDetails(businessName, serviceType);
@@ -251,26 +281,17 @@ route.get('/id_check/:id', async (req, res) => {
         const { id } = req.params;
         const professional = await getProfessionalById(id);
         if (professional) {
-            res.json({ exists: true });
+            res.json(professional);
         } else {
-            res.json({ exists: false });
+            res.status(404).json({ message: 'Professional not found' });
         }
     } catch (error) {
-        console.error('Error checking professional ID:', error);
+        console.error('Error checking professional by ID:', error);
         res.status(500).json({ message: error.message });
     }
 });
 
 export default route;
-
-
-
-
-
-
-
-
-
 
 
 
@@ -296,8 +317,7 @@ export default route;
 //     getProfessionalByName,
 //     getProfessionalDetails,
 //     updateProfessional
-// }
-//     from '../database/professionalsdb.js';
+// } from '../database/professionalsdb.js';
 // import { postProfessionalService } from '../database/professional_servicesdb.js';
 // import { postSchedule } from '../database/scheduledb.js';
 // import { getCityById } from '../database/citiesdb.js';
@@ -305,6 +325,7 @@ export default route;
 // import pool from '../database/database.js';
 // import multer from 'multer';
 // import path from 'path';
+// import {openInitialScheduleForNewProfessional} from '../index.js'
 
 // const route = express.Router();
 
@@ -322,69 +343,7 @@ export default route;
 
 
 
-// route.get('/:userId', async (req, res) => {
-//     try {
-//         const { userId } = req.params;
-
-//         // שליפת בעל המקצוע מהטבלה
-//         const [[professional]] = await pool.query(`
-//             SELECT idProfessional, firstName, lastName, cityCode, domainCode
-//             FROM professionals
-//             WHERE idProfessional = ?`, [userId]);
-
-//         if (!professional) {
-//             return res.status(404).json({ message: 'Professional not found' });
-//         }
-
-//         // שליפת שם העיר ושם התחום לפי הקודים
-//         const city = await getCityById(professional.cityCode);
-//         const domain = await getDomain(professional.domainCode);
-
-//         // החזרת המידע עם שמות במקום קודים
-//         res.json({
-//             ...professional,
-//             cityName: city?.cityName || "Unknown",
-//             domainName: domain?.domainName || "Unknown"
-//         });
-
-//     } catch (error) {
-//         console.error("Error fetching professional data:", error);
-//         res.status(500).json({ message: error.message });
-//     }
-// });
-
-
-// route.get('/:userId', async (req, res) => {
-//     try {
-//         const { userId } = req.params;
-
-//         console.log(`Fetching professional data for userId: ${userId}`);
-//         const [[professional]] = await pool.query(`
-//             SELECT idProfessional, firstName, lastName, cityCode, domainCode
-//             FROM professionals
-//             WHERE idProfessional = ?`, [userId]);
-
-//         if (!professional) {
-//             console.log(`Professional not found for userId: ${userId}`);
-//             return res.status(404).json({ message: 'Professional not found' });
-//         }
-
-//         const city = await getCityById(professional.cityCode);
-//         const domain = await getDomain(professional.domainCode);
-
-//         console.log('Returning professional data with city and domain names');
-//         res.json({
-//             ...professional,
-//             cityName: city?.cityName || "Unknown",
-//             domainName: domain?.domainName || "Unknown"
-//         });
-
-//     } catch (error) {
-//         console.error("Error fetching professional data:", error);
-//         res.status(500).json({ message: error.message });
-//     }
-// });
-
+// // Register business with professional details and logo
 // route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
 //     try {
 //         const {
@@ -425,10 +384,17 @@ export default route;
 //             await postProfessionalService(professionalId, service.serviceType, service.price, service.duration);
 //         }
 
-//         for (const dayOfWeek in workingHours) {
+//         for (const dayOfWeek in workingHours) {            
 //             if (workingHours[dayOfWeek].isWorking) {
 //                 await postSchedule(professionalId, dayOfWeek, workingHours[dayOfWeek].start, workingHours[dayOfWeek].end);
 //             }
+//         }
+
+//         try {
+//             // הפעלת הפונקציה לפתיחה אוטומטית של חודש ראשון
+//             await openInitialScheduleForNewProfessional(professionalId);
+//         } catch (error) {
+//             res.status(500).json({ message: 'Error registering professional and opening schedule.', error: error.message });
 //         }
 
 //         res.json({ ProfessionalId: professionalId, message: 'Business registered successfully' });
@@ -438,9 +404,11 @@ export default route;
 //     }
 // });
 
+// // Get all professionals
 // route.get('/', async (req, res) => {
+//     console.log("222");
+
 //     try {
-//         console.log("Fetching all professionals");
 //         const professionals = await getAllProfessionals();
 //         res.json(professionals);
 //     } catch (error) {
@@ -449,11 +417,13 @@ export default route;
 //     }
 // });
 
+// // Login professional
 // route.post('/login', async (req, res) => {
+//     console.log("333");
+
 //     const { email, password } = req.body;
 
 //     try {
-//         console.log(`Logging in with email: ${email}`);
 //         const user = await getProfessionalByEmailAndPassword(email, password);
 
 //         if (user) {
@@ -472,10 +442,8 @@ export default route;
 //                 business_name: user.business_name,
 //                 logo: user.logo
 //             };
-//             console.log(`Login successful for userId: ${user.idProfessional}`);
 //             res.status(200).json(userContextData);
 //         } else {
-//             console.log(`Invalid credentials for email: ${email}`);
 //             res.status(401).json({ message: 'Invalid email or password' });
 //         }
 //     } catch (error) {
@@ -484,9 +452,11 @@ export default route;
 //     }
 // });
 
+// // Get all business names
 // route.get('/business_name', async (req, res) => {
-//     try {
-//         console.log("Fetching all business names00");
+//     console.log("444");
+
+//     try {        
 //         const business_names = await getAllBuisnessNames();
 //         res.json(business_names);
 //     } catch (error) {
@@ -495,7 +465,40 @@ export default route;
 //     }
 // });
 
+// // Get professional data by userId
+// route.get('/:userId', async (req, res) => {
+//     console.log("000");
+
+//     try {
+//         const { userId } = req.params;
+//         const [[professional]] = await pool.query(`
+//             SELECT idProfessional, firstName, lastName, cityCode, domainCode
+//             FROM professionals
+//             WHERE idProfessional = ?`, [userId]);
+
+//         if (!professional) {
+//             return res.status(404).json({ message: 'Professional not found' });
+//         }
+
+//         const city = await getCityById(professional.cityCode);
+//         const domain = await getDomain(professional.domainCode);
+
+//         res.json({
+//             ...professional,
+//             cityName: city?.cityName || "Unknown",
+//             domainName: domain?.domainName || "Unknown"
+//         });
+
+//     } catch (error) {
+//         console.error("Error fetching professional data:", error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
+
+// // Get professionals by domain and type of service
 // route.get('/type_service/:searchField/:searchSecondaryField/:selectedCity', async (req, res) => {
+//     console.log("555");
+
 //     try {
 //         const { searchField, searchSecondaryField, selectedCity } = req.params; 
 //         const professionals = await getProfessionalsByDomainAndType(searchField, searchSecondaryField);
@@ -506,13 +509,14 @@ export default route;
 //     }
 // });
 
-// route.get('/details', async (req, res) => {
+// // Get professional details by business name and service type
+// route.get('/detailsByIdName', async (req, res) => {
+//     console.log("666");
+
 //     try {
 //         const { businessName, serviceType } = req.query;
-//         console.log(`Fetching details for businessName: ${businessName}, serviceType: ${serviceType}`);
 //         const details = await getProfessionalDetails(businessName, serviceType);
 //         if (!details) {
-//             console.log(`Details not found for businessName: ${businessName}, serviceType: ${serviceType}`);
 //             return res.status(404).json({ message: 'Details not found.' });
 //         }
 //         res.json(details);
@@ -522,17 +526,14 @@ export default route;
 //     }
 // });
 
-// route.get('/:name', async (req, res) => {
+// // Get professional by business name
+// route.get('/name/:name', async (req, res) => {
+//     console.log("777");
+
 //     try {
-//         console.log(55555555);
-        
 //         const { name } = req.params;
-//         console.log(`Fetching professional by business name: ${name}`);
-//         var business_name = name;
-//         console.log(`Fetching professional by business name: ${business_name}`);
-//         const professional = await getProfessionalByName(business_name);
+//         const professional = await getProfessionalByName(name);
 //         if (!professional) {
-//             console.log(`Professional not found for business_name: ${business_name}`);
 //             return res.status(404).json({ message: 'Professional not found.' });
 //         }
 //         res.json(professional);
@@ -542,14 +543,13 @@ export default route;
 //     }
 // });
 
+// // Update professional details
 // route.put('/:userId', async (req, res) => {
+//     console.log("888");
+
 //     try {
 //         const { userId } = req.params;
-//         console.log("🔄 updating user", userId, req.body);
-
 //         const updatedUser = await updateProfessional(userId, req.body);
-//         console.log("✅ updated values that come back:", updatedUser);
-
 //         res.json(updatedUser);
 //     } catch (error) {
 //         console.error("❌ error in updating", error);
@@ -557,16 +557,16 @@ export default route;
 //     }
 // });
 
+// // Check if professional exists by ID
 // route.get('/id_check/:id', async (req, res) => {
+//     console.log("999");
+
 //     try {
 //         const { id } = req.params;
-//         console.log(`Checking if professional exists for ID: ${id}`);
 //         const professional = await getProfessionalById(id);
 //         if (professional) {
-//             console.log(`Professional exists for ID: ${id}`);
 //             res.json({ exists: true });
 //         } else {
-//             console.log(`Professional not found for ID: ${id}`);
 //             res.json({ exists: false });
 //         }
 //     } catch (error) {
@@ -576,6 +576,19 @@ export default route;
 // });
 
 // export default route;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

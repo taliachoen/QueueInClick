@@ -59,7 +59,6 @@ const InviteQueue = () => {
     };
 
     const fetchSecondaryFields = (domain) => {
-        console.log("just do it");
         axios.get(`http://localhost:8080/type_service/${domain}`)
             .then(response => {
                 setSecondaryFields(response.data);
@@ -76,13 +75,9 @@ const InviteQueue = () => {
         }
 
         setLoading(true);
-        console.log("field: ", searchField,
-            "type:", searchSecondaryField,
-            "city:", selectedCity);
         axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}/${selectedCity}`, {
         }).then(response => {
             setBusinesses(response.data);
-            console.log("Buisness contain", response.data)
             setLoading(false);
         })
             .catch(error => {

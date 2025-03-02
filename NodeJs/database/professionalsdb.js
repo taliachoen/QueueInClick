@@ -95,6 +95,20 @@ export async function getProfessionalDetails(businessName, serviceType) {
     const [[details]] = await pool.query(query, [businessName, serviceType]);
     return details;
 }
+
+export async function getProfessionalAllDetails(businessName) {
+    const query = `
+        SELECT p.idProfessional, p.business_name, p.firstName, p.lastName, p.phone, p.address, p.cityCode, c.cityName, ps.Duration, ps.Price
+        FROM professionals p
+        JOIN professional_services ps ON p.idProfessional = ps.idProfessional
+        JOIN type_service ts ON ps.ServiceTypeCode = ts.typeCode
+        JOIN cities c ON p.cityCode = c.cityCode
+        WHERE p.business_name = ? 
+    `;
+    const [[details]] = await pool.query(query, [businessName]);
+    return details;
+}
+
 export async function getProfessionalById(id) {
     console.log("shirshir")
     const query = `
@@ -116,9 +130,6 @@ export async function getProfessionalById(id) {
         LEFT JOIN domains d ON p.domainCode = d.idDomain
         WHERE p.idProfessional = ?
     `;
-
-    console.log("Executing query:", query, "with ID:", id);
-
     const [rows] = await pool.query(query, [id]);
 
     console.log("Query result:", rows);

@@ -3,6 +3,25 @@ import { getProfessionalServices,getProffServiceID, getProfessionalServicesById,
 
 const route = express.Router();
 
+
+export async function getServiceDuration(businessName, serviceTypeName) {
+    try {
+        // קבלת פרטי השירות
+        const profService = await getProfessionalServicesById(businessName, serviceTypeName);
+
+        if (!profService) {
+            throw new Error('Professional service not found.');
+        }
+        // מחזירים את משך הזמן של השירות
+        return profService[0].Duration;  // משך הזמן (בדקות) של השירות
+    } catch (error) {
+        console.error('Error in getServiceDuration:', error);
+        throw new Error('Unable to fetch service duration.');
+    }
+}
+
+
+
 // Route to get all professional services
 route.get('/', async (req, res) => {
     try {
