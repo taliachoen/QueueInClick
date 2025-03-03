@@ -27,6 +27,27 @@ export async function postProfessional(idProfessional, firstName, lastName, doma
     }
 }
 
+
+export async function postUser(userId, fullName, email, userType, password, userName, isActive) {
+    try {
+        console.log("נכנסתי להוספה")
+        const hashedPassword = await bcrypt.hash(password, 10);
+        console.log(hashedPassword)
+        console.log(userId, fullName, email, userType, password, userName, isActive)
+        const [insertid] = await pool.query(`insert into user (userId, fullName, email, userType, password, userName, isActive) VALUES(?, ?, ?, ?, ?, ?, 1)
+        `, [userId, fullName, email, userType, hashedPassword, userName, isActive]);
+        console.log(insertid)
+        return await getUser(insertid);
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+
+
+
+
 export const getProfessionalByEmailAndPassword = async (email, password) => {
     try {
         const query = 'SELECT * FROM professionals WHERE email = ? AND passwordProff = ?';
