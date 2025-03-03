@@ -7,6 +7,7 @@ route.get('/', async (req, res) => {
     try {
         const cities = await getCities();
         res.json(cities);
+        console.log('cities');
     }
     catch (error) {
         res.status(500).json({ messege: error.messege })

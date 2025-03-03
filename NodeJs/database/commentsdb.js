@@ -90,3 +90,20 @@ export async function getCommentsByProfessional(IdProfessional) {
     console.log("Comments fetched: ", comments);
     return comments;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

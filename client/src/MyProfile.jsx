@@ -20,7 +20,6 @@ const MyProfile = () => {
         axios.get('http://localhost:8080/cities')
             .then(response => {
                 setCities(response.data);
-                console.log(response.data);
             })
             .catch(error => {
                 console.error('Error fetching cities:', error);
@@ -46,7 +45,6 @@ const MyProfile = () => {
                     ...prevUser,
                     ...response.data, // מוסיף לעדכון את שם העיר והתחום
                 }));
-                console.log("AAA", response.data);
             } catch (error) {
                 console.error('Error fetching user data:', error);
             }
@@ -77,10 +75,8 @@ const MyProfile = () => {
         try {
             const userId = user.id;
             const response = await axios.put(`http://localhost:8080/${user.userType}/${userId}`, updatedUser);
-            console.log('Profile updated successfully:', response.data);
             swal("Success", "Profile updated successfully", "success");
             setEditMode(false);
-            console.log(response.data)
             setUser(prevUser => ({
                 ...prevUser,  // שומר על הנתונים הקודמים
                 ...response.data, // מוסיף/מעדכן את הנתונים שהתקבלו מהשרת

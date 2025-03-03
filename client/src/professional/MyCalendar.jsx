@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../userContex';
 import axios from 'axios';
 import Calendar from 'react-calendar';
@@ -7,277 +7,235 @@ import '../css/MyCalendar.css';
 
 const MyCalendar = () => {
   const { user } = useContext(UserContext);
-  const [weekSchedule, setWeekSchedule] = useState([]);
-  const [nextMonthSchedule, setNextMonthSchedule] = useState([]);
+  const [appointments, setAppointments] = useState({});
   const [selectedDayAppointments, setSelectedDayAppointments] = useState([]);
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
-  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const [cancelDayConfirmed, setCancelDayConfirmed] = useState(false);
-  const [nextMonthAvailable, setNextMonthAvailable] = useState(false);
-  const [date, setDate] = useState(new Date());
   const [noAppointmentsMessage, setNoAppointmentsMessage] = useState('');
-  const [daysOff, setDaysOff] = useState([]);
-  const [isDaySelected, setIsDaySelected] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [freeDays, setFreeDays] = useState([]);
+
   const userId = user.id;
 
   useEffect(() => {
-    fetchWeekSchedule();
-    checkNextMonthAvailability();
-    fetchDayAppointments(new Date());
-    fetchDaysOff();
-
-    // הצגת ההודעה רק בהתחלה
-    Swal.fire({
-      icon: 'info',
-      title: 'Click on a day to see the list of appointments',
-      showConfirmButton: false,
-      timer: 3000, // ההודעה תיסגר אחרי 3 שניות
-    });
+    if (!localStorage.getItem("swalShown")) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Click on a day to see the list of appointments',
+        showConfirmButton: false,
+        timer: 3000,
+      });
+      localStorage.setItem("swalShown", "true");
+    }
   }, []);
 
-  const fetchWeekSchedule = () => {
-    const currentDate = new Date();
-    const month = currentDate.getMonth() + 1; // getMonth() returns 0-11
-    const year = currentDate.getFullYear();
-    axios.get(`http://localhost:8080/queues/allQueue/${month}/${year}/${userId}`)
-      .then(response => {
-        const data = response.data.map(item => ({
-          ...item,
-          Date: normalizeDate(item.Date)
-        }));
-        setWeekSchedule(data);
-      })
-      .catch(error => {
-        console.error('Error fetching week schedule:', error);
-      });
-
-    // Fetch next month's schedule
-    const nextMonth = month === 12 ? 1 : month + 1;
-    const nextMonthYear = month === 12 ? year + 1 : year;
-    axios.get(`http://localhost:8080/queues/allQueue/${nextMonth}/${nextMonthYear}/${userId}`)
-      .then(response => {
-        const data = response.data.map(item => ({
-          ...item,
-          Date: normalizeDate(item.Date)
-        }));
-        setNextMonthSchedule(data);
-      })
-      .catch(error => {
-        console.error('Error fetching next months schedule:', error);
-      });
+  const normalizeDate = (date) => {
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    return normalizedDate.toISOString().split('T')[0];
   };
 
-  const fetchDaysOff = () => {
-    axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`)
-      .then(response => {
-        const { daysOff } = response.data;
-        setDaysOff(daysOff);
-      })
-      .catch(error => {
-        console.error('Error fetching days off:', error);
-      });
+  // פונקציה להמיר תאריך ליום בשבוע
+  const getDayName = (date) => {
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return daysOfWeek[date.getDay()];
   };
 
-  const checkNextMonthAvailability = () => {
-    axios.get(`http://localhost:8080/queues/isAvailable/nextMonth/${userId}`)
-      .then(response => {
-        setNextMonthAvailable(response.data.isNextMonthAvailable);
-      })
-      .catch(error => {
-        console.error('Error checking next month availability:', error);
-      });
+
+  // פונקציה להמיר תאריך ליום בשבוע
+  const tileClassName = ({ date }) => {
+    const normalized = normalizeDate(date);
+    const dayName = getDayName(date);
+
+    if (freeDays.includes(dayName)) {
+      return 'no-workday';  // אם זה יום חופשי, הוא יקבל רקע אפור
+    }
+    if (selectedDay === normalized) {
+      return 'selected-day'; // אם זה היום שנבחר, הוא יצבע בכחול
+    }
+    return ''; // ברירת מחדל - ללא מחלקה מיוחדת
   };
+
+
+  useEffect(() => {
+    const fetchFreeDays = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`);
+        console.log("Free days from server:", response.data.daysOff);
+        if (Array.isArray(response.data.daysOff)) {
+          setFreeDays(response.data.daysOff);
+        } else {
+          console.error("Expected an array of free days, but got:", response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching free days:', error);
+      }
+    };
+
+    fetchFreeDays();
+  }, []);
+
+
+
+  const adjustMonthYear = (month, year) => {
+    if (month < 1) return { month: 12, year: year - 1 };
+    if (month > 12) return { month: 1, year: year + 1 };
+    return { month, year };
+  };
+
+  const fetchAppointmentsFromServer = async (year, month) => {
+    try {
+      const response = await axios.get(`http://localhost:8080/queues/allQueue/${month}/${year}/${userId}`);
+      console.log("response.data", response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      return [];
+    }
+  };
+
+  const fetchInitialAppointments = async () => {
+    const monthsToLoad = [
+      adjustMonthYear(currentMonth - 1, currentYear),
+      { month: currentMonth, year: currentYear },
+      adjustMonthYear(currentMonth + 1, currentYear)
+    ];
+
+    const newAppointments = { ...appointments };
+
+    for (const { month, year } of monthsToLoad) {
+      const key = `${year}-${month}`;
+      if (!newAppointments[key]) {
+        const data = await fetchAppointmentsFromServer(year, month);
+        if (data) newAppointments[key] = data;
+      }
+    }
+
+    setAppointments(prev => ({ ...prev, ...newAppointments }));
+  };
+
+  const prefetchNextMonth = async () => {
+    const { month: nextMonth, year: nextYear } = adjustMonthYear(currentMonth + 1, currentYear);
+    const key = `${nextYear}-${nextMonth}`;
+
+    if (!appointments[key]) {
+      const data = await fetchAppointmentsFromServer(nextYear, nextMonth);
+      if (data) {
+        setAppointments(prev => ({ ...prev, [key]: data }));
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchInitialAppointments();
+    prefetchNextMonth();
+  }, []);
+
+  useEffect(() => {
+    prefetchNextMonth();
+  }, [currentMonth]);
+
+  useEffect(() => {
+    if (!appointments[`${currentYear}-${currentMonth + 1}`]) {
+      prefetchNextMonth();
+    }
+  }, [currentMonth, currentYear]);
+
+  // const handleDaySelection = async (day) => {
+  //   const selectedDate = normalizeDate(day); // השתמש בפונקציה לנרמל את התאריך
+
+  //   setSelectedDay(selectedDate);
+
+  //   try {
+  //     const response = await axios.get(`http://localhost:8080/queues/date/${selectedDate}/${userId}`);
+  //     setSelectedDayAppointments(response.data);
+  //     setNoAppointmentsMessage(response.data.length === 0 ? `No appointments for ${selectedDate}` : '');
+  //   } catch (error) {
+  //     console.error('Error fetching day appointments:', error);
+  //     Swal.fire({
+  //       icon: 'error',
+  //       title: 'Error fetching appointments',
+  //       text: 'Please try again later.',
+  //     });
+  //   }
+  // };
+
 
   const handleDaySelection = (day) => {
-    const formattedDay = normalizeDate(day);
-
-    if (formattedDay === selectedDay) {
-      setIsDaySelected(false); // אם היום שנבחר כבר נבחר, מבטל את הבחירה
-      setSelectedDay(null); // מבטל את הבחירה של היום
+    const selectedDate = normalizeDate(day);
+    setSelectedDay(selectedDate);
+  
+    const month = day.getMonth() + 1;
+    const year = day.getFullYear();
+    const key = `${year}-${month}`;
+  
+    if (appointments[key]) {
+      const filteredAppointments = appointments[key].filter(appointment => normalizeDate(appointment.date) === selectedDate);
+      setSelectedDayAppointments(filteredAppointments);
+      setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDate}` : '');
     } else {
-      setSelectedDay(formattedDay); // בחר את היום החדש
-      setIsDaySelected(true); // עדכן שהיום נבחר
+      setSelectedDayAppointments([]);
+      setNoAppointmentsMessage(`No appointments for ${selectedDate}`);
     }
   };
+  
 
-  const fetchDayAppointments = (selectedDay) => {
-    const formattedDay = normalizeDate(selectedDay);
-    axios.get(`http://localhost:8080/queues/date/${formattedDay}/${userId}`)
-      .then(response => {
-        const appointments = response.data;
-        setSelectedDayAppointments(appointments);
-        if (appointments.length === 0) {
-          setNoAppointmentsMessage(`No appointments for ${formattedDay}`);
-        } else {
-          setNoAppointmentsMessage('');
+
+  const cancelWorkday = async () => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'This will cancel all appointments for the selected day.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, cancel it!',
+      cancelButtonText: 'No, keep it'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          var date = selectedDay;
+          await axios.put(`http://localhost:8080/queues/cancel/${date}/${userId}`);
+          console.log("selectedDay000", date, userId);
+          setSelectedDayAppointments([]);
+          Swal.fire('Cancelled!', 'All appointments for the day have been cancelled.', 'success');
+        } catch (error) {
+          console.error('Error cancelling workday:', error);
+          Swal.fire('Error', 'Failed to cancel the workday. Try again later.', 'error');
         }
-      })
-      .catch(error => {
-        console.error('Error fetching day appointments:', error);
-      });
+      }
+    });
   };
-
-  const normalizeDate = (date) => {
-    const localDate = new Date(date);
-    localDate.setDate(localDate.getDate() + 1);
-    localDate.setMinutes(localDate.getMinutes() + localDate.getTimezoneOffset());
-    return localDate.toISOString().split('T')[0];
-  };
-
-  const handleCancelDay = () => {
-    // בדוק אם יש תורים באותו יום
-    const appointmentsForSelectedDay = selectedDayAppointments.length;
-
-    if (appointmentsForSelectedDay === 0) {
-      // אם אין תורים, הצג הודעה מתוקה
-      Swal.fire({
-        icon: 'info',
-        title: 'No appointments on this day',
-        text: 'There are no appointments for this day, cancellation is not possible.',
-        showConfirmButton: true,
-      });
-    } else {
-      // אם יש תורים, תן למשתמש לאשר את הביטול
-      setShowCancelConfirmation(true);
-    }
-  };
-
-  const confirmCancelDay = () => {
-    // הצגת הודעת Success אם הצליח הביטול
-    axios.put(`http://localhost:8080/queues/cancel/${selectedDay}/${userId}`)
-      .then(response => {
-        setCancelDayConfirmed(true);
-        setShowCancelConfirmation(false);
-        fetchWeekSchedule();
-        fetchDayAppointments(new Date(selectedDay));
-        Swal.fire({
-          icon: 'success',
-          title: 'Day Cancelled',
-          text: 'All appointments for the day have been cancelled',
-          showConfirmButton: false,
-          timer: 1500
-        });
-      })
-      .catch(error => {
-        console.error('Error canceling day:', error);
-      });
-  };
-
-  const openNextMonthSchedule = () => {
-    if (nextMonthAvailable) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Month Already Opened',
-        text: 'The next month schedule has already been opened and set up.',
-        showConfirmButton: false,
-        timer: 1500
-      });
-    } else {
-      axios.post(`http://localhost:8080/queues/openNextMonthSchedule/${userId}`)
-        .then(response => {
-          console.log('Next month schedule opened successfully');
-          setNextMonthAvailable(true);
-          Swal.fire({
-            icon: 'success',
-            title: 'Next Month Opened',
-            text: 'The next month schedule has been opened successfully',
-            showConfirmButton: false,
-            timer: 1500
-          });
-        })
-        .catch(error => {
-          console.error('Error opening next month schedule:', error);
-        });
-    }
-  };
-
-  const tileClassName = ({ date }) => {
-    const formattedDay = normalizeDate(date);
-    if (formattedDay === selectedDay) {
-      return 'selected-day'; // מחזיר את ה-class שמתאים ליום שנבחר
-    }
-    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
-    return daysOff.includes(dayOfWeek) ? 'day-off' : ''; // לא משנה אם לא נבחר
-  };
-
-  const tileContent = ({ date, view }) => {
-    if (view === 'month') {
-      const day = normalizeDate(date);
-      const appointments = [...weekSchedule, ...nextMonthSchedule].filter(appointment => appointment.Date === day); // Combine schedules
-      const sortedAppointments = appointments.sort((a, b) => a.Hour.localeCompare(b.Hour));
-      const limitedAppointments = sortedAppointments.slice(0, 3);
-      return (
-        <div>
-          {limitedAppointments.map((appointment, index) => (
-            <div key={index} className="calendar-appointment">
-              <span className="appointment-time">{appointment.Hour}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const AppointmentDetails = ({ appointment }) => (
-    appointment && (
-      <div className="appointment-details">
-        <p><strong>Time:</strong> {appointment.Hour}</p>
-        <p><strong>Customer:</strong> {appointment.customerFirstName} {appointment.customerLastName}</p>
-        <p><strong>Service:</strong> {appointment.serviceTypeName}</p>
-      </div>
-    )
-  );
 
   return (
     <div className="business-appointments-page">
       <div className="calendar-container">
+
+
         <Calendar
           onChange={setDate}
           value={date}
-          tileContent={tileContent}
-          className="business-calendar"
           onClickDay={handleDaySelection}
-          tileClassName={tileClassName}
           locale="en-US"
+          tileClassName={tileClassName}
         />
 
-        <div className="appointment-actions">
-          {isDaySelected && (
-            <button className="cancel-day-button" onClick={handleCancelDay}>
-              Cancel Workday
-            </button>
-          )}
-          {showCancelConfirmation && (
-            <div className="cancel-confirmation">
-              <p>Are you sure you want to cancel {selectedDay}?</p>
-              <button onClick={confirmCancelDay}>Yes</button>
-              <button onClick={() => setShowCancelConfirmation(false)}>No</button>
-            </div>
-          )}
-          {cancelDayConfirmed && (
-            <p>Day canceled successfully. Updated appointments list.</p>
-          )}
-
-          <button
-            className="next-month-booking-button"
-            onClick={openNextMonthSchedule}
-            disabled={!isDaySelected}
-          >
-            Open Schedule for Next Month
-          </button>
-        </div>
       </div>
+
+
 
       <div className="selected-day-appointments">
         {selectedDay && (
           <div>
             <h3>Appointments for {selectedDay}</h3>
+            <button onClick={cancelWorkday} className="cancel-workday-button">Cancel Workday</button>
             <div className="appointments-list">
               {selectedDayAppointments.length > 0 ? (
                 selectedDayAppointments.map((appointment, index) => (
                   <div key={index} className="appointment">
-                    <AppointmentDetails appointment={appointment} />
+                    <p><strong>Time:</strong> {appointment.Hour}</p>
+                    <p><strong>Customer:</strong> {appointment.customerFirstName} {appointment.customerLastName}</p>
+                    <p><strong>Service:</strong> {appointment.serviceTypeName}</p>
                   </div>
                 ))
               ) : (
@@ -292,289 +250,3 @@ const MyCalendar = () => {
 };
 
 export default MyCalendar;
-
-
-// import React, { useState, useContext, useEffect } from 'react';
-// import { UserContext } from '../userContex';
-// import axios from 'axios';
-// import Calendar from 'react-calendar';
-// import Swal from 'sweetalert2';
-// import '../css/MyCalendar.css';
-
-// const MyCalendar = () => {
-//   const { user } = useContext(UserContext);
-//   const [weekSchedule, setWeekSchedule] = useState([]);
-//   const [nextMonthSchedule, setNextMonthSchedule] = useState([]);
-//   const [selectedDayAppointments, setSelectedDayAppointments] = useState([]);
-//   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
-//   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-//   const [cancelDayConfirmed, setCancelDayConfirmed] = useState(false);
-//   const [nextMonthAvailable, setNextMonthAvailable] = useState(false);
-//   const [date, setDate] = useState(new Date());
-//   const [noAppointmentsMessage, setNoAppointmentsMessage] = useState('');
-//   const [daysOff, setDaysOff] = useState([]);
-//   const [isDaySelected, setIsDaySelected] = useState(false);
-//   const userId = user.id;
-
-//   useEffect(() => {
-//     fetchWeekSchedule();
-//     checkNextMonthAvailability();
-//     fetchDayAppointments(new Date());
-//     fetchDaysOff();
-//   }, []);
-
-//   const fetchWeekSchedule = () => {
-//     const currentDate = new Date();
-//     const month = currentDate.getMonth() + 1; // getMonth() returns 0-11
-//     const year = currentDate.getFullYear();
-//     axios.get(`http://localhost:8080/queues/allQueue/${month}/${year}/${userId}`)
-//       .then(response => {
-//         const data = response.data.map(item => ({
-//           ...item,
-//           Date: normalizeDate(item.Date)
-//         }));
-//         setWeekSchedule(data);
-//       })
-//       .catch(error => {
-//         console.error('Error fetching week schedule:', error);
-//       });
-
-//     // Fetch next month's schedule
-//     const nextMonth = month === 12 ? 1 : month + 1;
-//     const nextMonthYear = month === 12 ? year + 1 : year;
-//     axios.get(`http://localhost:8080/queues/allQueue/${nextMonth}/${nextMonthYear}/${userId}`)
-//       .then(response => {
-//         const data = response.data.map(item => ({
-//           ...item,
-//           Date: normalizeDate(item.Date)
-//         }));
-//         setNextMonthSchedule(data);
-//       })
-//       .catch(error => {
-//         console.error('Error fetching next months schedule:', error);
-//       });
-//   };
-
-//   const fetchDaysOff = () => {
-//     axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`)
-//       .then(response => {
-//         const { daysOff } = response.data;
-//         setDaysOff(daysOff);
-//       })
-//       .catch(error => {
-//         console.error('Error fetching days off:', error);
-//       });
-//   };
-
-//   const checkNextMonthAvailability = () => {
-//     axios.get(`http://localhost:8080/queues/isAvailable/nextMonth/${userId}`)
-//       .then(response => {
-//         setNextMonthAvailable(response.data.isNextMonthAvailable);
-//       })
-//       .catch(error => {
-//         console.error('Error checking next month availability:', error);
-//       });
-//   };
-
-//   const handleDaySelection = (day) => {
-//     const formattedDay = normalizeDate(day);
-//     setSelectedDay(formattedDay);
-//     setIsDaySelected(true);
-//     fetchDayAppointments(day);
-//   };
-
-//   const fetchDayAppointments = (selectedDay) => {
-//     const formattedDay = normalizeDate(selectedDay);
-//     axios.get(`http://localhost:8080/queues/date/${formattedDay}/${userId}`)
-//       .then(response => {
-//         const appointments = response.data;
-//         setSelectedDayAppointments(appointments);
-//         if (appointments.length === 0) {
-//           setNoAppointmentsMessage(`No appointments for ${formattedDay}`);
-//         } else {
-//           setNoAppointmentsMessage('');
-//         }
-//       })
-//       .catch(error => {
-//         console.error('Error fetching day appointments:', error);
-//       });
-//   };
-
-//   const normalizeDate = (date) => {
-//     const localDate = new Date(date);
-//     localDate.setDate(localDate.getDate() + 1);
-//     localDate.setMinutes(localDate.getMinutes() + localDate.getTimezoneOffset());
-//     return localDate.toISOString().split('T')[0];
-//   };
-
-//   const handleCancelDay = () => {
-//     setShowCancelConfirmation(true);
-//   };
-
-//   const confirmCancelDay = () => {
-//     axios.put(`http://localhost:8080/queues/cancel/${selectedDay}/${userId}`)
-//       .then(response => {
-//         setCancelDayConfirmed(true);
-//         setShowCancelConfirmation(false);
-//         fetchWeekSchedule();
-//         fetchDayAppointments(new Date(selectedDay));
-//         Swal.fire({
-//           icon: 'success',
-//           title: 'Day Cancelled',
-//           text: 'All appointments for the day have been cancelled',
-//           showConfirmButton: false,
-//           timer: 1500
-//         });
-//       })
-//       .catch(error => {
-//         console.error('Error canceling day:', error);
-//       });
-//   };
-
-//   const openNextMonthSchedule = () => {
-//     if (nextMonthAvailable) {
-//       Swal.fire({
-//         icon: 'info',
-//         title: 'Month Already Opened',
-//         text: 'The next month schedule has already been opened and set up.',
-//         showConfirmButton: false,
-//         timer: 1500
-//       });
-//     } else {
-//       axios.post(`http://localhost:8080/queues/openNextMonthSchedule/${userId}`)
-//         .then(response => {
-//           console.log('Next month schedule opened successfully');
-//           setNextMonthAvailable(true);
-//           Swal.fire({
-//             icon: 'success',
-//             title: 'Next Month Opened',
-//             text: 'The next month schedule has been opened successfully',
-//             showConfirmButton: false,
-//             timer: 1500
-//           });
-//         })
-//         .catch(error => {
-//           console.error('Error opening next month schedule:', error);
-//         });
-//     }
-//   };
-
-//   const tileClassName = ({ date }) => {
-//     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
-//     return daysOff.includes(dayOfWeek) ? null : 'day-off';
-//   };
-
-//   const tileContent = ({ date, view }) => {
-//     if (view === 'month') {
-//       const day = normalizeDate(date);
-//       const appointments = [...weekSchedule, ...nextMonthSchedule].filter(appointment => appointment.Date === day); // Combine schedules
-//       const sortedAppointments = appointments.sort((a, b) => a.Hour.localeCompare(b.Hour));
-//       const limitedAppointments = sortedAppointments.slice(0, 3);
-//       return (
-//         <div>
-//           {limitedAppointments.map((appointment, index) => (
-//             <div key={index} className="calendar-appointment">
-//               <span className="appointment-time">{appointment.Hour}</span>
-//             </div>
-//           ))}
-//         </div>
-//       );
-//     }
-//     return null;
-//   };
-
-//   const AppointmentDetails = ({ appointment }) => (
-//     appointment && (
-//       <div className="appointment-details">
-//         <p><strong>Time:</strong> {appointment.Hour}</p>
-//         <p><strong>Customer:</strong> {appointment.customerFirstName} {appointment.customerLastName}</p>
-//         <p><strong>Service:</strong> {appointment.serviceTypeName}</p>
-//       </div>
-//     )
-//   );
-
-//   return (
-//     <div className="business-appointments-page">
-//       <div className="calendar-container">
-//         <Calendar
-//           onChange={setDate}
-//           value={date}
-//           tileContent={tileContent}
-//           className="business-calendar"
-//           onClickDay={handleDaySelection}
-//           tileClassName={tileClassName}
-//           locale="en-US"
-//         />
-
-//         <div className="appointment-actions">
-//           {isDaySelected && (
-//             <button className="cancel-day-button" onClick={handleCancelDay}>
-//               Cancel Workday
-//             </button>
-//           )}
-//           {showCancelConfirmation && (
-//             <div className="cancel-confirmation">
-//               <p>Are you sure you want to cancel {selectedDay}?</p>
-//               <button onClick={confirmCancelDay}>Yes</button>
-//               <button onClick={() => setShowCancelConfirmation(false)}>No</button>
-//             </div>
-//           )}
-//           {cancelDayConfirmed && (
-//             <p>Day canceled successfully. Updated appointments list.</p>
-//           )}
-
-//           <button
-//             className="next-month-booking-button"
-//             onClick={openNextMonthSchedule}
-//             disabled={!isDaySelected}
-//           >
-//             Open Schedule for Next Month
-//           </button>
-//         </div>
-//       </div>
-
-//       <div className="selected-day-appointments">
-//         {selectedDay && (
-//           <div>
-//             <h3>Appointments for {selectedDay}</h3>
-//             <div className="appointments-list">
-//               {selectedDayAppointments.length > (0) ? (selectedDayAppointments.map((appointment, index) => (
-//                 <div key={index} className="appointment">
-//                   <AppointmentDetails appointment={appointment} />
-//                 </div>
-//               ))
-//               ) : (
-//                 <p>{noAppointmentsMessage}</p>
-//               )}
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default MyCalendar;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

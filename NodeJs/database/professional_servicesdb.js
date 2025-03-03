@@ -10,14 +10,26 @@ export async function getProfessionalServices() {
 }
 
 // Function to get a professional service by ID
-export async function getProfessionalServicesById(id) {
-    const [profService] = await pool.query(`
-        SELECT serviceTypeCode, idProfessional, price, duration 
-        FROM professional_services 
-        WHERE idProfessional = ?
-    `, [id]);
-    return profService;
+export async function getProfessionalServicesById(businessName, serviceTypeName) {
+    const query = `
+        SELECT ps.ProffServiceID, ps.ServiceTypeCode, ps.idProfessional, ps.Price, ps.Duration
+        FROM professional_services ps
+        JOIN professionals p ON p.idProfessional = ps.idProfessional  -- Assuming there's a relationship with idProfessional
+        JOIN type_service st ON st.typeCode = ps.ServiceTypeCode  -- Assuming ServiceTypeCode links both
+        WHERE p.business_name = ? AND st.typeName = ?
+    `;
+    
+    try {
+        const [profService] = await pool.query(query, [businessName, serviceTypeName]);
+    
+        return profService;
+    } catch (error) {
+        console.error('Error fetching professional services:', error);
+        throw error;  // Rethrow or handle the error as needed
+    }
 }
+
+
 
 // Function to update an existing professional service
 export const updateProfessionalService = async (profServiceID, profServiceData) => {
