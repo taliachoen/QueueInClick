@@ -262,22 +262,25 @@ import '../css/Recommendations.css';
 import StarRating from './StartRating';
 
 const Recommendations = () => {
-    const {user} = useContext(UserContext);
+    const { user } = useContext(UserContext);
     const userId = user.id;
     const [comments, setComments] = useState([]);
     const [averageRating, setAverageRating] = useState(0);
 
     useEffect(() => {
         const fetchComments = () => {
-            axios.get(`http://localhost:8080/comments?IdProfessional=${userId}`)
+            console.log("Fetching comments for user ID:", userId);
+            axios.get(`http://localhost:8080/comments?idProfessional=${userId}`)
                 .then((response) => {
+                    console.log("Fetched recommendations:", response.data);
                     if (response.data && response.data.length) {
                         const fetchedRecommendations = response.data.map(comment => ({
                             commentCode: comment.commentCode,
                             queueCode: comment.queueCode,
                             idProfessional: comment.idProfessional,
                             idCustomer: comment.idCustomer,
-                            nameCustomer: comment.firstName + comment.lastName,
+                            // nameCustomer: `${comment.firstName} ${comment.lastName}`,
+                            // // nameCustomer: comment.firstName + comment.lastName,
                             rating: comment.rating,
                             content: comment.content,
                             comments_date: new Date(comment.comments_date).toLocaleDateString('en-GB'),

@@ -1,13 +1,13 @@
 import express from 'express';
-import { 
-    getComments, 
-    getAverageRating, 
-    getComment, 
-    postComment, 
-    deleteComment, 
-    updateComment, 
-    getCommentsByCustomerAndProfessional, 
-    getCommentsByProfessional 
+import {
+    getComments,
+    getAverageRating,
+    getComment,
+    postComment,
+    deleteComment,
+    updateComment,
+    getCommentsByCustomerAndProfessional,
+    getCommentsByProfessional
 } from '../database/commentsdb.js';
 
 const route = express.Router();
@@ -27,12 +27,10 @@ route.get('/rating/:idProfessional', async (req, res) => {
 // Get comments for a professional, customer, or all
 route.get('/', async (req, res) => {
     try {
-        const { idProfessional, idCustomer } = req.query;
+        const { idProfessional } = req.query;
+        console.log("idProfessional", idProfessional); // בדוק אם הפרמטר מגיע נכון
 
-        if (idCustomer && idProfessional) {
-            const comment = await getCommentsByCustomerAndProfessional(idCustomer, idProfessional);
-            return res.json(comment);
-        } else if (idProfessional) {
+        if (idProfessional) {
             const comments = await getCommentsByProfessional(idProfessional);
             return res.json(comments);
         } else {
@@ -44,6 +42,28 @@ route.get('/', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+// route.get('/', async (req, res) => {
+//     try {
+//         const { idProfessional, idCustomer } = req.query;
+//         console.log("idProfessional", idProfessional);
+//         console.log("idCustomer", idCustomer);
+
+//         if (idCustomer && idProfessional) {
+//             const comment = await getCommentsByCustomerAndProfessional(idCustomer, idProfessional);
+//             return res.json(comment);
+//         } else if (idProfessional) {
+//             const comments = await getCommentsByProfessional(idProfessional);
+//             return res.json(comments);
+//         } else {
+//             const comments = await getComments();
+//             return res.json(comments);
+//         }
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
 
 // Post a new comment for a professional
 route.post('/', async (req, res) => {

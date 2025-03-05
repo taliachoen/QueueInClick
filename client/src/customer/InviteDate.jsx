@@ -42,9 +42,20 @@ const InviteDate = () => {
     // Fetch queues when business details or selected date change
     useEffect(() => {
         if (businessDetails && selectedDate) {
+            console.log("Sending request with params:", {
+                businessName: businessDetails.business_name,
+                serviceTypeCode: type,
+                selectedDate
+            });
             fetchQueueData(businessDetails.business_name, type, selectedDate);
         }
     }, [businessDetails, selectedDate]);
+
+    // useEffect(() => {
+    //     if (businessDetails && selectedDate) {
+    //         fetchQueueData(businessDetails.business_name, type, selectedDate);
+    //     }
+    // }, [businessDetails, selectedDate]);
 
     // Apply filters when queues or filter time changes
     useEffect(() => {
@@ -96,10 +107,10 @@ const InviteDate = () => {
             await axios.post(`http://localhost:8080/queues/addNewQueue`, {
                 businessName: businessDetails.business_name,
                 data: selectedDate,
-                startTime:displayedQueues[QueueNumber].start,
+                startTime: displayedQueues[QueueNumber].start,
                 serviceType: type,
                 customerId: user.id,
-                
+
             });
 
             swal("Success", "Queue booked successfully!", "success").then(() => {

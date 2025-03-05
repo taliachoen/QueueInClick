@@ -3,18 +3,61 @@
   margin-left: 35%;
 }
 
+.tile-appointments-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tile-dot {
+  width: 6px;
+  height: 6px;
+  background-color: blue;
+  border-radius: 50%;
+  margin-top: 3px;
+}
+
+.tile-appointments {
+  display: none;
+  position: absolute;
+  bottom: 60%;
+  /* היה 120%, עכשיו יהיה 100% כדי לקרב אותו */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.tile-appointments-wrapper:hover .tile-appointments {
+  display: block;
+}
+
 .selected-day {
-  background-color: #206ec1;
+  background-color: #80878e;
   color: white;
 }
 
 .no-workday {
-  background-color: #f0f0f0; /* צבע רקע בהיר */
-  color: #706868; /* צבע טקסט כהה יותר */
-  border: 2px dashed #ccc; /* גבול דמוי קו מקוטע */
+  background-color: #f0f0f0;
+  /* צבע רקע בהיר */
+  color: #706868;
+  /* צבע טקסט כהה יותר */
+  border: 2px dashed #ccc;
+  /* גבול דמוי קו מקוטע */
 }
 
-
+.today {
+  background-color: blue;
+  /* צבע כחול ליום הנוכחי */
+  color: white;
+}
 
 .react-calendar__navigation button {
   background-color: #007bff;

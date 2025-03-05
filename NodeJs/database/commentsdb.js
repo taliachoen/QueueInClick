@@ -78,18 +78,36 @@ export async function getCommentsByCustomerAndProfessional(IdCustomer, IdProfess
     return comments;
 }
 
+// export async function getCommentsByProfessional(IdProfessional) {
+//     console.log("Fetching comments for professional ID: ", IdProfessional);
+//     const [comments] = await pool.query(`
+//         SELECT comments.commentCode, comments.queueCode, comments.idProfessional, comments.idCustomer, 
+//                comments.rating, comments.content, comments.comments_date, customers.firstName, customers.lastName 
+//         FROM comments
+//         JOIN customers ON comments.idCustomer = customers.idCustomer
+//         WHERE comments.idProfessional = ?
+//     `, [IdProfessional]);
+//     console.log("Comments fetched: ", comments);
+//     return comments;
+// }
+
 export async function getCommentsByProfessional(IdProfessional) {
+    console.log("hii");
     console.log("Fetching comments for professional ID: ", IdProfessional);
     const [comments] = await pool.query(`
         SELECT comments.commentCode, comments.queueCode, comments.idProfessional, comments.idCustomer, 
-               comments.rating, comments.content, comments.comments_date, customers.firstName, customers.lastName 
+               comments.rating, comments.content, comments.comments_date, 
+               COALESCE(customers.firstName, 'Unknown') AS firstName, 
+               COALESCE(customers.lastName, 'Customer') AS lastName 
         FROM comments
-        JOIN customers ON comments.idCustomer = customers.idCustomer
+        LEFT JOIN customers ON comments.idCustomer = customers.idCustomer
         WHERE comments.idProfessional = ?
     `, [IdProfessional]);
+
     console.log("Comments fetched: ", comments);
     return comments;
 }
+
 
 
 

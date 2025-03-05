@@ -3,13 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../userContex';
 import axios from 'axios';
 import '../css/SearchBusinessOwner.css';
+import { useLocation } from 'react-router-dom';
+
+
 
 const SearchBusinessOwner = () => {
+    const location = useLocation();
+    const [searchField, setSearchField] = useState(location.state?.businessName || '');
+
+    useEffect(() => {
+        if (location.state?.businessName) {
+            handleSearch(location.state.businessName);
+        }
+    }, [location.state]);
     const navigate = useNavigate();
     const { user } = useContext(UserContext);
     const userId = user?.id || null;
     const [hasUserCommented, setHasUserCommented] = useState(false);
-    const [searchField, setSearchField] = useState('');
+    //const [searchField, setSearchField] = useState('');
     const [businessName, setBusinessName] = useState([]);
     const [filteredBusinessNames, setFilteredBusinessNames] = useState([]);
     const [businessDetails, setBusinessDetails] = useState(null);
@@ -83,7 +94,7 @@ const SearchBusinessOwner = () => {
 
     const fetchRecommendations = async (idProfessional) => {
         try {
-            const response = await axios.get(`http://localhost:8080/comments?IdProfessional=${idProfessional}`);
+            const response = await axios.get(`http://localhost:8080/comments?idProfessional=${idProfessional}`);
             const fetchedRecommendations = response.data.map(comment => ({
                 commentCode: comment.commentCode,
                 queueCode: comment.queueCode,
@@ -168,7 +179,7 @@ const SearchBusinessOwner = () => {
                             <div className="invite-button-container">
                                 <button className="invite-button" onClick={() => navigateToInviteQueue(businessDetails)}>Invite Queue</button>
                             </div>
-                            
+
                             {!hasUserCommented && (
                                 <div className="rating-section">
                                     <h3>Rate me</h3>
@@ -223,7 +234,7 @@ const SearchBusinessOwner = () => {
                             )}
                         </div>
 
-                       
+
                     </div>
                 )}
             </main>
