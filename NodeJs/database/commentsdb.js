@@ -1,9 +1,4 @@
-
-
 import pool from './database.js';
-
-// פונקציות קיימות
-
 
 // Calculate average rating for a professional
 export async function getAverageRating(IdProfessional) {
@@ -13,20 +8,8 @@ export async function getAverageRating(IdProfessional) {
         WHERE IdProfessional = ?
     `, [IdProfessional]);
 
-    return rows[0].averageRating || 0; // Return 0 if no ratings
+    return rows[0].averageRating || 0;
 }
-
-
-// export async function getCommentsByIdProfessional(IdProfessional) {
-//     const [comments] = await pool.query(`
-//         SELECT c.firstName, c.lastName, cm.rating, cm.content
-//         FROM comments cm
-//         JOIN customers c ON cm.idCustomer = c.idCustomer
-//         WHERE cm.idProfessional = ?
-//     `, [IdProfessional]);
-
-//     return comments; // Return the comments with customer information
-// }
 
 export async function getComments() {
     const [comments] = await pool.query(`
@@ -78,22 +61,7 @@ export async function getCommentsByCustomerAndProfessional(IdCustomer, IdProfess
     return comments;
 }
 
-// export async function getCommentsByProfessional(IdProfessional) {
-//     console.log("Fetching comments for professional ID: ", IdProfessional);
-//     const [comments] = await pool.query(`
-//         SELECT comments.commentCode, comments.queueCode, comments.idProfessional, comments.idCustomer, 
-//                comments.rating, comments.content, comments.comments_date, customers.firstName, customers.lastName 
-//         FROM comments
-//         JOIN customers ON comments.idCustomer = customers.idCustomer
-//         WHERE comments.idProfessional = ?
-//     `, [IdProfessional]);
-//     console.log("Comments fetched: ", comments);
-//     return comments;
-// }
-
 export async function getCommentsByProfessional(IdProfessional) {
-    console.log("hii");
-    console.log("Fetching comments for professional ID: ", IdProfessional);
     const [comments] = await pool.query(`
         SELECT comments.commentCode, comments.queueCode, comments.idProfessional, comments.idCustomer, 
                comments.rating, comments.content, comments.comments_date, 
@@ -103,8 +71,6 @@ export async function getCommentsByProfessional(IdProfessional) {
         LEFT JOIN customers ON comments.idCustomer = customers.idCustomer
         WHERE comments.idProfessional = ?
     `, [IdProfessional]);
-
-    console.log("Comments fetched: ", comments);
     return comments;
 }
 

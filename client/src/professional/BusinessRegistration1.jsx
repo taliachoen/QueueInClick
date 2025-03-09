@@ -104,28 +104,6 @@ const BusinessRegistration1 = () => {
     setFormData(updatedFormData);
   };
 
-  // טיפול בשינוי קובץ הלוגו
-  // const handleLogoChange = (e) => {
-  //   setLogo(e.target.files[0]);
-  //   const { name, value } = e.target;
-  //   let updatedFormData = { ...formData, [name]: value };
-  //   setFormData(updatedFormData);
-  // };
-
-  // const handleLogoChange = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.readAsDataURL(file);
-  //     reader.onload = () => {
-  //       setFormData({
-  //         ...formData,
-  //         logo: reader.result,
-  //       });
-  //     };
-  //   }
-  // };
-
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {

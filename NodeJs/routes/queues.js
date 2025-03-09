@@ -4,22 +4,18 @@ import {
     postQueue,
     getQueues,
     getQueueById,
-    checkSlotAvailability,
     getQueuesByDateAndBusinessOwner,
     getQueuesByFullDateAndBusinessOwner,
     cancelQueueByCode,
     getFilteredQueues,
     getQueuesByCustomer,
     updateExistQueue,
-    updateQueue,
     updateEndedAppointments,
-    isNextMonthAvailable,
     updateQueueStatus
 } from '../database/queuesdb.js';
-import { calculateAvailableSlots, addMinutesToTime, isSlotOverlapping } from './professionals.js';  // קישור לפונקציות שהגדרת
-
+import { calculateAvailableSlots } from './professionals.js';
+import { io  } from '../socket.js';
 const router = express.Router();
-
 
 // הוספת פגישה חדשה
 router.post('/addNewQueue', async (req, res) => {
@@ -28,9 +24,9 @@ router.post('/addNewQueue', async (req, res) => {
     try {
        
         const result = await postQueue( businessName, serviceType, customerId, data, startTime, 'scheduled'); // קריאה לפונקציה המוסיפה
-       console.log("result" , result);
        
         if (result) {
+            io.emit("newAppointment", result);
             res.status(200).json({ message: 'Queue added successfully', queue: result });
         } else {
             res.status(400).json({ message: 'Failed to add queue' });
@@ -266,82 +262,3 @@ router.get('/appointments/available-slots/nextMonth/:professionalId', async (req
 });
 
 export default router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-     // const appointments = await getQueueByNameBusiness(businessName);  // קבלת כל הפגישות הקיימות של המקצוען
-        // for (let appointment of appointments) {
-        //     const existingSlot = { start: appointment.startTime, end: appointment.endTime };  // הגדרת שעות הפגישה הקיימת
-        //     const newSlot = { start: startTime, end: endTime };  // הגדרת שעות הפגישה החדשה
-
-        //     // בדיקת אם השעות מתנגשויות
-        //     if (isSlotOverlapping(existingSlot, newSlot, data)) {
-        //         return res.status(400).json({ message: 'The selected time slot is already taken.' });
-        //     }
-        // }
-
-        // await postQueue(businessName, data, startTime, endTime, serviceType, customerId);  // הוספת הפגישה החדשה
-        // res.status(200).json({ message: 'Appointment booked successfully' });
-
-
-
-// const appointments = await getQueueByNameBusiness(businessName);  // קבלת כל הפגישות הקיימות של המקצוען
-//         for (let appointment of appointments) {
-//             const existingSlot = { start: appointment.startTime, end: appointment.endTime };  // הגדרת שעות הפגישה הקיימת
-//             const newSlot = { start: startTime, end: endTime };  // הגדרת שעות הפגישה החדשה
-
-//             // בדיקת אם השעות מתנגשויות
-//             if (isSlotOverlapping(existingSlot, newSlot, data)) {
-//                 return res.status(400).json({ message: 'The selected time slot is already taken.' });
-//             }
-//         }
-
-//         await postQueue(businessName, data, startTime, endTime, serviceType, customerId);  // הוספת הפגישה החדשה
-//         res.status(200).json({ message: 'Appointment booked successfully' });
-
-
-
-// router.post('/addNewQueue', async (req, res) => {
-//     try {
-//       const { businessName, serviceType, customerId, data, time } = req.body; // קבלת הנתונים מהבקשה
-
-//       const result = await postQueue(businessName, serviceType, customerId, data, time, 'scheduled'); // קריאה לפונקציה המוסיפה
-
-//       if (result) {
-//         res.status(200).json({ message: 'Queue added successfully', queue: result });
-//       } else {
-//         res.status(400).json({ message: 'Failed to add queue' });
-//       }
-//     } catch (error) {
-//       console.error('Error adding queue:', error);
-//       res.status(500).json({ message: error.message });
-//     }
-//   });
-
-
-
-// בדיקת זמינות חודש הבא לביצוע הזמנות עבור בעל העסק
-// router.get('/isAvailable/nextMonth/:businessOwnerId', async (req, res) => {
-//     try {
-//         const { businessOwnerId } = req.params;  // קבלת id של בעל העסק
-//         const isAvailable = await isNextMonthAvailable(businessOwnerId);  // בדיקת הזמינות לחודש הבא
-//         res.json({ isNextMonthAvailable: isAvailable });
-//     } catch (error) {
-//         console.error('Error checking next month availability:', error);
-//         res.status(500).json({ message: error.message });
-//     }
-// });

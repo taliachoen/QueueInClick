@@ -58,7 +58,6 @@ route.post('/login', async (req, res) => {
 //החזרת הערה לפי מספר זהות
 route.get('/:customerId', async (req, res) => {
     try {
-        console.log("hiii with id");
         const { customerId } = req.params;
         const customer = await getCustomer(customerId);
         console.log(2222)

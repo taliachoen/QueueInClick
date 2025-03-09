@@ -4,6 +4,8 @@ import axios from 'axios';
 import Calendar from 'react-calendar';
 import Swal from 'sweetalert2';
 import '../css/MyCalendar.css';
+import io from "socket.io-client";
+const socket = io("http://localhost:8080");
 
 const MyCalendar = () => {
   const { user } = useContext(UserContext);
@@ -19,6 +21,16 @@ const MyCalendar = () => {
   const userId = user.id;
 
   useEffect(() => {
+    socket.on("newAppointment", (appointment) => {
+      console.log("New appointment received:", appointment);
+      // כאן תוכלי לקרוא לפונקציה שמרעננת את רשימת התורים
+      fetchInitialAppointments();
+    });
+
+    return () => socket.off("newAppointment");
+  }, []);
+
+  useEffect(() => {
     if (!localStorage.getItem("swalShown")) {
       Swal.fire({
         icon: 'info',
@@ -30,14 +42,8 @@ const MyCalendar = () => {
     }
   }, []);
 
-  // const normalizeDate = (date) => {
-  //   const normalizedDate = new Date(date);
-  //   normalizedDate.setHours(0, 0, 0, 0);
-  //   return normalizedDate.toISOString().split('T')[0];
-  // };
 
   const normalizeDate = (date) => {
-    console.log("normalizeDate received date:", date); // הדפסת הערך
     const normalizedDate = new Date(date);
 
     if (isNaN(normalizedDate.getTime())) {
@@ -56,20 +62,6 @@ const MyCalendar = () => {
     return daysOfWeek[date.getDay()];
   };
 
-
-  // פונקציה להמיר תאריך ליום בשבוע
-  // const tileClassName = ({ date }) => {
-  //   const normalized = normalizeDate(date);
-  //   const dayName = getDayName(date);
-
-  //   if (freeDays.includes(dayName)) {
-  //     return 'no-workday';  // אם זה יום חופשי, הוא יקבל רקע אפור
-  //   }
-  //   if (selectedDay === normalized) {
-  //     return 'selected-day'; // אם זה היום שנבחר, הוא יצבע בכחול
-  //   }
-  //   return ''; // ברירת מחדל - ללא מחלקה מיוחדת
-  // };
   const tileClassName = ({ date }) => {
     const normalized = normalizeDate(date);
     const dayName = getDayName(date);
@@ -92,7 +84,6 @@ const MyCalendar = () => {
     const fetchFreeDays = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`);
-        console.log("Free days from server:", response.data.daysOff);
         if (Array.isArray(response.data.daysOff)) {
           setFreeDays(response.data.daysOff);
         } else {
@@ -117,14 +108,13 @@ const MyCalendar = () => {
   const fetchAppointmentsFromServer = async (year, month) => {
     try {
       const response = await axios.get(`http://localhost:8080/queues/allQueue/${month}/${year}/${userId}`);
-      console.log("response.data", response.data);
-
       return response.data;
     } catch (error) {
       console.error('Error fetching appointments:', error);
       return [];
     }
   };
+  
 
   const fetchInitialAppointments = async () => {
     const monthsToLoad = [
@@ -173,34 +163,6 @@ const MyCalendar = () => {
     }
   }, [currentMonth, currentYear]);
 
-  // const handleDaySelection = (day) => {
-  //   console.log("Selected day:", day); // הוספת הדפסת הערך שהתקבל
-  //   const selectedDate = normalizeDate(day);
-  //   console.log("Normalized date:", selectedDate); // הדפסת התוצאה של normalizeDate
-
-  //   if (!selectedDate) {
-  //     console.error("Invalid selected date:", day);
-  //     return; // אם התאריך לא תקני, לא מבצעים שום דבר
-  //   }
-
-  //   const month = day.getMonth() + 1;
-  //   const year = day.getFullYear();
-  //   const key = `${year}-${month}`;
-
-  //   if (appointments[key]) {
-  //     const filteredAppointments = appointments[key].filter(appointment => {
-  //       const appointmentDate = normalizeDate(appointment.Date); // תיקון כאן ל-Date במקום date
-  //       console.log("Appointment date:", appointmentDate);
-  //       return appointmentDate === selectedDate;
-  //     });
-  //     setSelectedDayAppointments(filteredAppointments);
-  //     setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDate}` : '');
-  //   } else {
-  //     setSelectedDayAppointments([]);
-  //     setNoAppointmentsMessage(`No appointments for ${selectedDate}`);
-  //   }
-  // };
-
   // בתוך handleDaySelection
   const handleDaySelection = (day) => {
     console.log("Selected day:", day); // הוספת הדפסת הערך שהתקבל
@@ -238,35 +200,6 @@ const MyCalendar = () => {
   };
 
 
-
-
-
-
-  // const cancelWorkday = async () => {
-  //   Swal.fire({
-  //     title: 'Are you sure?',
-  //     text: 'This will cancel all appointments for the selected day.',
-  //     icon: 'warning',
-  //     showCancelButton: true,
-  //     confirmButtonText: 'Yes, cancel it!',
-  //     cancelButtonText: 'No, keep it'
-  //   }).then(async (result) => {
-  //     if (result.isConfirmed) {
-  //       try {
-  //         var date = selectedDay;
-  //         await axios.put(`http://localhost:8080/queues/cancel/${date}/${userId}`);
-  //         console.log("selectedDay000", date, userId);
-  //         setSelectedDayAppointments([]);
-  //         Swal.fire('Cancelled!', 'All appointments for the day have been cancelled.', 'success');
-  //       } catch (error) {
-  //         console.error('Error cancelling workday:', error);
-  //         Swal.fire('Error', 'Failed to cancel the workday. Try again later.', 'error');
-  //       }
-  //     }
-  //   });
-  // };
-
-
   const cancelWorkday = async () => {
     if (selectedDayAppointments.length === 0) {
       Swal.fire('No Appointments', 'There are no appointments to cancel for this day.', 'info');
@@ -285,7 +218,6 @@ const MyCalendar = () => {
         try {
           var date = selectedDay;
           await axios.put(`http://localhost:8080/queues/cancel/${date}/${userId}`);
-          console.log("selectedDay000", date, userId);
           setSelectedDayAppointments([]);
           Swal.fire('Cancelled!', 'All appointments for the day have been cancelled.', 'success');
         } catch (error) {
@@ -324,34 +256,6 @@ const MyCalendar = () => {
       </div>
     );
   };
-
-
-
-  // const tileContent = ({ date }) => {
-  //   const normalizedDate = normalizeDate(date);
-  //   const month = date.getMonth() + 1;
-  //   const year = date.getFullYear();
-  //   const key = `${year}-${month}`;
-
-  //   if (!appointments[key]) return null;
-
-  //   const dailyAppointments = appointments[key].filter(appointment =>
-  //     normalizeDate(appointment.Date) === normalizedDate
-  //   );
-
-  //   const firstThreeAppointments = dailyAppointments.slice(0, 3); // קח עד 3 תורים ראשונים
-
-  //   return (
-  //     <div className="tile-appointments">
-  //       {firstThreeAppointments.map((appointment, index) => (
-  //         <div key={index} className="appointment-short">
-  //           {appointment.Hour} - {appointment.customerFirstName}
-  //         </div>
-  //       ))}
-  //     </div>
-  //   );
-  // };
-
 
   return (
     <div className="business-appointments-page">

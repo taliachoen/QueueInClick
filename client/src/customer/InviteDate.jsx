@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../userContex';
 import '../css/InviteDate.css';
 import swal from 'sweetalert';
+import io from "socket.io-client";
 
 const InviteDate = () => {
     const [queues, setQueues] = useState([]);
@@ -19,10 +20,7 @@ const InviteDate = () => {
     const navigate = useNavigate();
 
 
-    // useEffect(() => {
-    //     console.log("Queues:", queues);
-    //     console.log("Filtered Queues:", filteredQueues);
-    // }, [queues, filteredQueues]);
+    const socket = io("http://localhost:8080");
 
 
     // Fetch business details if provided
@@ -42,20 +40,9 @@ const InviteDate = () => {
     // Fetch queues when business details or selected date change
     useEffect(() => {
         if (businessDetails && selectedDate) {
-            console.log("Sending request with params:", {
-                businessName: businessDetails.business_name,
-                serviceTypeCode: type,
-                selectedDate
-            });
             fetchQueueData(businessDetails.business_name, type, selectedDate);
         }
     }, [businessDetails, selectedDate]);
-
-    // useEffect(() => {
-    //     if (businessDetails && selectedDate) {
-    //         fetchQueueData(businessDetails.business_name, type, selectedDate);
-    //     }
-    // }, [businessDetails, selectedDate]);
 
     // Apply filters when queues or filter time changes
     useEffect(() => {
@@ -104,7 +91,7 @@ const InviteDate = () => {
     // Confirm queue booking
     const handleConfirmQueue = async (QueueNumber) => {
         try {
-            await axios.post(`http://localhost:8080/queues/addNewQueue`, {
+            const response = await axios.post(`http://localhost:8080/queues/addNewQueue`, {
                 businessName: businessDetails.business_name,
                 data: selectedDate,
                 startTime: displayedQueues[QueueNumber].start,
@@ -112,6 +99,8 @@ const InviteDate = () => {
                 customerId: user.id,
 
             });
+
+            socket.emit("newAppointment", response.data);
 
             swal("Success", "Queue booked successfully!", "success").then(() => {
                 navigate('../MyQueues');

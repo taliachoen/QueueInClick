@@ -4,7 +4,7 @@ import useLocalStorage from './useLocalStorage';
 export const UserContext = createContext({});
 
 export const UserProvider = ({children}) => {
-    const [user, setUser, claerLocalStorage] = useLocalStorage('user', null);
+    const [user, setUser] = useLocalStorage('user', null);
     const data = { 
         user,
         setUser(user) {

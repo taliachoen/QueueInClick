@@ -12,12 +12,6 @@ const AppointmentsPage = () => {
   const [viewPastAppointments, setViewPastAppointments] = useState(false); // Store past appointments view state
   const userid=user?.id;
   
-
-  useEffect(() => {
-    console.log("User context:", user); // בדוק מה יש בתוך user
-    console.log("User ID:", user?.id); // בדוק אם ה-ID קיים
-  }, [user]); // מעקב אחר שינויים ב-user
-  
   useEffect(() => {
     fetchAppointments(); // Fetch appointments whenever currentDate or viewPastAppointments changes
   }, [currentDate, viewPastAppointments, userid]);
@@ -82,10 +76,6 @@ const AppointmentsPage = () => {
   const toggleViewPastAppointments = () => {
     setViewPastAppointments(!viewPastAppointments); // Toggle past appointments view state
   };
-
-  // const handleAppointmentClick = (appointmentId) => {
-  //   navigate(`/queue/${appointmentId}`); // Navigate to appointment details page with appointment ID
-  // };
 
   const isToday = (date) => {
     const today = new Date();
