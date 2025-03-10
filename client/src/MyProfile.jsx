@@ -40,6 +40,7 @@ const MyProfile = () => {
             try {
                 if (!user?.id) return;
                 const response = await axios.get(`http://localhost:8080/${user.userType}/${user.id}`);
+                console.log('Fetched user data:', response.data); // הוספתי הדפסה
                 setUser(prevUser => ({
                     ...prevUser,
                     ...response.data, // מוסיף לעדכון את שם העיר והתחום

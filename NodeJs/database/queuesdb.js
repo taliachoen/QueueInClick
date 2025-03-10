@@ -113,7 +113,7 @@ async function getAppointmentsByBusinessAndDate(professionalId, selectedDate) {
 async function getServiceDurationForAppointment(ProfessionalServiceCode) {
     const [duration] = await pool.query(`
     SELECT Duration FROM professional_services
-    WHERE ProffServiceID = ?`, [ProfessionalServiceCode])    
+    WHERE ProffServiceID = ?`, [ProfessionalServiceCode])
     return duration;
 }
 
@@ -122,15 +122,36 @@ export async function getQueueById(id) {
     return queue;
 }
 
-// פונקציה המחזירה את כל התורים של לקוח ספיציפי
+//פונקציה המחזירה את כל התורים של לקוח ספיציפי
 export async function getQueuesByCustomer(customerId) {
     try {
         const query = `
-            SELECT q.QueueCode, q.ProfessionalServiceCode, q.CustomerCode, q.Date, q.Hour, q.Status, 
-                   c.idCustomer, c.firstName, c.lastName, c.address, c.cityCode, c.email, c.phone
-            FROM queues q
-            JOIN customers c ON q.CustomerCode = c.idCustomer
-            WHERE q.CustomerCode = ? AND q.Status != 'cancelled'
+    SELECT 
+    q.QueueCode, 
+    q.ProfessionalServiceCode, 
+    q.CustomerCode, 
+    q.Date, 
+    q.Hour, 
+    q.Status, 
+    c.idCustomer, 
+    c.firstName, 
+    c.lastName, 
+    c.address, 
+    c.cityCode, 
+    c.email, 
+    c.phone, 
+    p.business_name AS businessName, 
+    t.typeName AS serviceName
+FROM queues q
+JOIN customers c ON q.CustomerCode = c.idCustomer
+JOIN professional_services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
+JOIN professionals p ON ps.idProfessional = p.idProfessional
+JOIN  type_service t ON ps.ServiceTypeCode = t.typeCode
+WHERE q.CustomerCode = ?
+AND q.Status != 'cancelled';
+
+
+
         `;
         const [queues] = await pool.query(query, [customerId]);
         return queues;
@@ -242,7 +263,7 @@ const formatDate = (date) => {
 }
 
 //החזרת התורים של בעל העסק לפי ת.ז ולפי תאריך ולפי תורים תפוסים
-export async function getQueuesByDateAndBusinessOwner(month, year, id) {    
+export async function getQueuesByDateAndBusinessOwner(month, year, id) {
     const query = `
       SELECT q.QueueCode, q.Date, q.Hour, q.Status, c.firstName AS customerFirstName, c.lastName AS customerLastName, c.phone AS customerPhone,
              st.typeName AS serviceTypeName
@@ -261,7 +282,7 @@ export async function getQueuesByDateAndBusinessOwner(month, year, id) {
             const localDate = new Date(queue.Date);
             queue.Date = formatDate(localDate); // format to YYYY-MM-DD
             return queue;
-        });        
+        });
         return localQueues;
     } catch (error) {
         console.error('Error executing SQL query:', error);
@@ -484,82 +505,82 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
         const existingAppointmentsInfo = [];
         for (const appointment of appointments) {
             const { Date: existingDate, Hour: existingHour, ProfessionalServiceCode } = appointment;
-            
+
             // ודא שהשדה קיים ולא ריק
             if (!existingDate || !existingHour) {
                 continue;
             }
-            
+
             try {
                 // Format the date properly
                 const formattedDate = formatDate(existingDate);
-                
+
                 // Format the hour properly - ensure it has seconds
                 const formattedHour = formatTime(existingHour);
-                
+
                 // יצירת אובייקט Date עם תאריך ושעה מפורמטים
                 const existingStart = new Date(`${formattedDate}T${formattedHour}`);
-                
+
                 // Check if date is valid
                 if (isNaN(existingStart.getTime())) {
                     console.error(`Invalid date created with: ${formattedDate}T${formattedHour}`);
                     continue;
                 }
-                
+
                 // קבלת משך זמן הטיפול - באופן סינכרוני לטובת המבנה הקיים
                 const serviceDurationForAppointment = await getServiceDurationForAppointment(ProfessionalServiceCode);
-                
+
                 if (!serviceDurationForAppointment || !serviceDurationForAppointment[0]?.Duration) {
                     continue;
                 }
-                
+
                 const serviceDurationForAppointmentTime = serviceDurationForAppointment[0].Duration.split(':').map(Number);
-                const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 + 
-                                         serviceDurationForAppointmentTime[1] * 60 + 
-                                         serviceDurationForAppointmentTime[2]) * 1000;
-                
+                const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 +
+                    serviceDurationForAppointmentTime[1] * 60 +
+                    serviceDurationForAppointmentTime[2]) * 1000;
+
                 const existingEnd = new Date(existingStart.getTime() + durationInMillis);
-                
+
                 existingAppointmentsInfo.push({
                     start: existingStart,
                     end: existingEnd
                 });
-                
+
             } catch (err) {
                 console.error("Error processing appointment:", err, "Data:", existingDate, existingHour);
             }
-        
 
-        while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
-            const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
-            
-            // בדיקת זמינות ללא async בתוך some() שגורם לבעיות
-            // const isAvailable = !existingAppointmentsInfo.some(appt => 
-            //     start < appt.end && slotEnd > appt.start
-            // );
-            const isAvailable = existingAppointmentsInfo.every(appt => 
-                slotEnd <= appt.start || start >= appt.end
-            );
-            
 
-            if (isAvailable) {
-                availableSlots.push({ 
-                    start: new Date(start), 
-                    end: slotEnd,
-                    // הוספת פורמט קריא של השעות
-                    startTime: start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-                    endTime: slotEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
-                });
+            while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
+                const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
+
+                // בדיקת זמינות ללא async בתוך some() שגורם לבעיות
+                // const isAvailable = !existingAppointmentsInfo.some(appt => 
+                //     start < appt.end && slotEnd > appt.start
+                // );
+                const isAvailable = existingAppointmentsInfo.every(appt =>
+                    slotEnd <= appt.start || start >= appt.end
+                );
+
+
+                if (isAvailable) {
+                    availableSlots.push({
+                        start: new Date(start),
+                        end: slotEnd,
+                        // הוספת פורמט קריא של השעות
+                        startTime: start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+                        endTime: slotEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                    });
+                }
+
+                start = new Date(start.getTime() + serviceDurationMinutes * 60000);
             }
 
-            start = new Date(start.getTime() + serviceDurationMinutes * 60000);
-        }
+            if (availableSlots.length === 0) {
+                return { message: 'No available appointments for the selected day.' };
+            }
 
-        if (availableSlots.length === 0) {
-            return { message: 'No available appointments for the selected day.' };
-        }
-
-        return { availableSlots };
+            return { availableSlots };
         }
     } catch (error) {
         console.error('Error in getFilteredQueues:', error);
@@ -574,17 +595,17 @@ function formatTime(timeString) {
             console.warn(`Invalid time format: ${timeString}`);
             return '00:00:00';
         }
-        
+
         // If time is in format HH:MM, add seconds
         if (timeString.match(/^\d{1,2}:\d{2}$/)) {
             return `${timeString}:00`;
         }
-        
+
         // If time already has seconds, return as is
         if (timeString.match(/^\d{1,2}:\d{2}:\d{2}$/)) {
             return timeString;
         }
-        
+
         // Try to parse the time from various formats
         const timeParts = timeString.split(':');
         if (timeParts.length >= 2) {

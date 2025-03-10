@@ -1,0 +1,31 @@
+.carousel-container {
+    width: 90%;
+    margin: auto;
+    text-align: center;
+}
+
+.swiper {
+    padding: 20px;
+}
+
+.carousel-item {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    transition: transform 0.3s ease-in-out;
+}
+
+.carousel-item:hover {
+    transform: scale(1.05);
+}
+
+h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.error {
+    color: red;
+}

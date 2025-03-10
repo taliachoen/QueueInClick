@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { UserContext } from '../userContex';
 import axios from 'axios';
 import Calendar from 'react-calendar';
@@ -19,6 +19,20 @@ const MyCalendar = () => {
   const [freeDays, setFreeDays] = useState([]);
 
   const userId = user.id;
+
+  useEffect(() => {
+    const handleCancelAppointment = ({ queueCode }) => {
+      console.log("Appointment cancelled:", queueCode);
+      fetchInitialAppointments(); // ריענון היומן
+    };
+
+    socket.on("cancelAppointment", handleCancelAppointment);
+
+    return () => {
+      socket.off("cancelAppointment", handleCancelAppointment);
+    };
+  }, []);
+
 
   useEffect(() => {
     socket.on("newAppointment", (appointment) => {
@@ -114,7 +128,7 @@ const MyCalendar = () => {
       return [];
     }
   };
-  
+
 
   const fetchInitialAppointments = async () => {
     const monthsToLoad = [

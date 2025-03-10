@@ -6,7 +6,7 @@ import icon from '../image/logo.png';
 import '../css/customerMenu.css';
 
 const CustomerMenu = () => {
-  const [activeButton, setActiveButton] = useState('AppointmentsPage');
+  const [activeButton, setActiveButton] = useState('myQueues');
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
 

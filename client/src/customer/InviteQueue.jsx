@@ -57,12 +57,6 @@ const InviteQueue = () => {
             });
     };
 
-    const handleSecondaryFieldChange = (e) => {
-        setSearchSecondaryField(e.target.value);
-        setBusinesses([]); // ריקון הרשימה כאשר תת-התחום משתנה
-    };
-    
-    
     const fetchSecondaryFields = (domain) => {
         axios.get(`http://localhost:8080/type_service/${domain}`)
             .then(response => {
@@ -74,17 +68,18 @@ const InviteQueue = () => {
     };
 
     const fetchBusinesses = () => {
-        if (!searchField.trim() || !searchSecondaryField.trim()) {
+        if (!searchField || !searchSecondaryField) {
+            // הוספת התראה עם SweetAlert
             Swal.fire({
                 icon: 'warning',
-                title: 'נא למלא את כל השדות',
-                text: 'הוסף תחום ותת-תחום לפני החיפוש!',
+                title: 'please fill all the fields',
+                text: 'add domain ans sub-domain before the search!',
             });
             return;
         }
 
         setLoading(true);
-        axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}`, {})
+        axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}/${selectedCity}`, {})
             .then(response => {
                 setBusinesses(response.data);
                 setLoading(false);
@@ -139,10 +134,7 @@ const InviteQueue = () => {
                         list="secondary-fields"
                         placeholder="Secondary field"
                         value={searchSecondaryField}
-                        onChange={(e) => {
-                            setSearchSecondaryField(e.target.value);
-                            handleSecondaryFieldChange(e);
-                        }}
+                        onChange={(e) => setSearchSecondaryField(e.target.value)}
                     />
                     <datalist id="secondary-fields">
                         {secondaryFields.map((field, index) => (

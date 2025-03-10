@@ -27,7 +27,7 @@ const MyMessages = () => {
     }, []);
 
     const handleDetailsClick = (businessName) => {
-        navigate(`../searchBusinessOwner`, { replace: true, state: { name: businessName } });
+        navigate(`../searchBusinessOwner`, { replace: true, state: { businessName } });
     };
 
     const markAsRead = async (messageCode) => {

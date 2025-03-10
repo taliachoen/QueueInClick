@@ -4,8 +4,8 @@ import { UserContext } from '../userContex';
 import axios from 'axios';
 import '../css/SearchBusinessOwner.css';
 import { useLocation } from 'react-router-dom';
-
-
+import BusinessCarousel from './BusinessCarousel'; // יבוא הקומפוננטה החדשה
+import Swal from 'sweetalert2';
 
 const SearchBusinessOwner = () => {
     const location = useLocation();
@@ -31,6 +31,24 @@ const SearchBusinessOwner = () => {
     const [userComment, setUserComment] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        if (recommendations.length <= 2) {
+            setCurrentRecommendations(recommendations);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setCurrentIndex((prevIndex) => (prevIndex + 2) % recommendations.length);
+        }, 2500);
+
+        return () => clearInterval(interval);
+    }, [recommendations]);
+
+    useEffect(() => {
+        setCurrentRecommendations(recommendations.slice(currentIndex, currentIndex + 2));
+    }, [currentIndex, recommendations]);
 
     useEffect(() => {
         fetchBusinessNames();
@@ -65,6 +83,7 @@ const SearchBusinessOwner = () => {
     };
 
     const handleSearch = async (name) => {
+
         if (!name.trim()) {
             alert('Please enter a business name.');
             return;
@@ -95,6 +114,7 @@ const SearchBusinessOwner = () => {
     const fetchRecommendations = async (idProfessional) => {
         try {
             const response = await axios.get(`http://localhost:8080/comments?idProfessional=${idProfessional}`);
+            console.log(response.data);
             const fetchedRecommendations = response.data.map(comment => ({
                 commentCode: comment.commentCode,
                 queueCode: comment.queueCode,
@@ -113,6 +133,9 @@ const SearchBusinessOwner = () => {
         }
     };
 
+
+
+
     const handleSendComment = async () => {
         if (userRating === 0) {
             alert('Please select a rating before submitting.');
@@ -124,23 +147,83 @@ const SearchBusinessOwner = () => {
         }
 
         const newComment = {
-            queueCode: 20,
-            IdProfessional: businessDetails.idProfessional,
-            IdCustomer: userId,
+            queueCode: 20,  // צריך לוודא שזה ערך נכון במסד הנתונים
+            idProfessional: businessDetails.idProfessional,
+            idCustomer: userId,
             rating: userRating,
             content: userComment,
             comments_date: new Date().toISOString().split('T')[0]
         };
-
+        console.log("📤 Sending comment:", newComment); // ✅ כאן נבדוק מה נשלח
         try {
             await axios.post('http://localhost:8080/comments', newComment);
             setUserRating(0);
             setUserComment('');
-            fetchRecommendations(businessDetails.idProfessional);
+            await fetchRecommendations(businessDetails.idProfessional);
+            //fetchRecommendations(businessDetails.idProfessional);
         } catch (error) {
-            console.error('Error sending comment:', error);
+            console.error('Error sending comment:', error.response?.data || error);
         }
     };
+
+    // const handleSendComment = async () => {
+    //     try {
+    //         // בדוק אם הלקוח כבר הגיב לעסק
+    //         const response = await axios.get('http://localhost:8080/comments/check', {
+    //             params: {
+    //                 businessId: businessDetails.idProfessional,
+    //                 customerId: userId
+    //             }
+    //         });
+
+    //         console.log('Response from /check:', response.data); // לוודא שהשרת מחזיר תשובה תקינה
+
+    //         if (response.data.hasCommented) {
+    //             Swal.fire({
+    //                 title: 'הודעה',
+    //                 text: 'You have already commented on this professional.',
+    //                 icon: 'info',
+    //                 confirmButtonText: 'OK'
+    //             });
+    //             return;
+    //         }
+
+    //         // אם לא הגיב, ניתן להמשיך לשלוח את התגובה
+    //         const newComment = {
+    //             queueCode: 20,
+    //             idProfessional: businessDetails.idProfessional,
+    //             idCustomer: userId,
+    //             rating: userRating,
+    //             content: userComment,
+    //             comments_date: new Date().toISOString().split('T')[0]
+    //         };
+
+    //         await axios.post('http://localhost:8080/comments', newComment);
+    //         setUserRating(0);
+    //         setUserComment('');
+    //         localStorage.setItem('lastCommentTime', new Date().toISOString());
+    //         await fetchRecommendations(businessDetails.idProfessional);
+
+    //         Swal.fire({
+    //             title: 'תודה!',
+    //             text: 'Your comment has been submitted successfully.',
+    //             icon: 'success',
+    //             confirmButtonText: 'OK'
+    //         });
+
+    //     } catch (error) {
+    //         console.error('Error sending comment:', error.response?.data || error);
+    //         Swal.fire({
+    //             title: 'שגיאה',
+    //             text: 'There was an error submitting your comment.',
+    //             icon: 'error',
+    //             confirmButtonText: 'OK'
+    //         });
+    //     }
+    // };
+
+
+
 
     const navigateToInviteQueue = (businessDetails) => {
         navigate(`../inviteQueue`, { replace: true, state: { domainName: businessDetails.domainName, cityName: businessDetails.cityName } });
@@ -227,7 +310,20 @@ const SearchBusinessOwner = () => {
                                             <p>{rec.customerName}</p>
                                             <span>{rec.comments_date}</span>
                                             <br />
-                                            <span>Rating: {Array(rec.rating).fill('★').join('')}</span>
+                                            <span>
+                                                Rating:
+                                                {[...Array(5)].map((_, starIndex) => (
+                                                    <span
+                                                        key={starIndex}
+                                                        style={{
+                                                            color: starIndex < rec.rating ? 'yellow' : 'gray', // צבע צהוב אם הכוכב נבחר, אפור אם לא
+                                                            fontSize: '20px', // גודל הכוכב (אפשר לשנות לפי הצורך)
+                                                        }}
+                                                    >
+                                                        ★
+                                                    </span>
+                                                ))}
+                                            </span>
                                         </div>
                                     </div>
                                 ))
@@ -238,6 +334,7 @@ const SearchBusinessOwner = () => {
                     </div>
                 )}
             </main>
+            {searchStatus === '' && <BusinessCarousel />}
         </div>
     );
 };

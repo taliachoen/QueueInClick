@@ -12,6 +12,35 @@ import {
 
 const route = express.Router();
 
+
+// Add a route to check if the customer has commented on the professional
+// בקשה לבדוק אם הלקוח כבר הגיב לעסק
+route.get('/check', async (req, res) => {
+    try {
+        const { businessId, customerId } = req.query;
+
+        // לוודא שהפרמטרים קיימים בבקשה
+        if (!businessId || !customerId) {
+            return res.status(400).json({ message: 'Missing required parameters' });
+        }
+
+        // השתמש בפונקציה החדשה כדי לבדוק אם יש תגובה לעסק הזה מהלקוח
+        const hasCommented = await getCommentsByCustomerAndProfessional(customerId, businessId);
+
+        if (hasCommented) {
+            return res.json({ hasCommented: true });
+        } else {
+            return res.json({ hasCommented: false });
+        }
+    } catch (error) {
+        console.error('Error in /check route:', error); // דפוק log נוסף כדי לבדוק שגיאות
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+
+
 // Get average rating of a professional
 route.get('/rating/:idProfessional', async (req, res) => {
     try {
@@ -42,23 +71,29 @@ route.get('/', async (req, res) => {
 });
 
 
-// Post a new comment for a professional
 route.post('/', async (req, res) => {
     try {
-        const { idCustomer, idProfessional, rating, text } = req.body;
-        const existingComment = await getComment(idCustomer, idProfessional);
+        const { queueCode, idCustomer, idProfessional, rating, content, comments_date } = req.body;
 
+        // נוודא שכל השדות לא חסרים
+        if (!idCustomer || !idProfessional || !rating || !content || !queueCode || !comments_date) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const existingComment = await getComment(idCustomer, idProfessional);
         if (existingComment) {
             return res.status(400).json({ message: "You have already commented on this professional" });
         }
 
-        const newComment = await postComment(idCustomer, idProfessional, rating, text);
+        const newComment = await postComment(queueCode, idCustomer, idProfessional, rating, content, comments_date);
+
         res.status(201).json(newComment);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
 });
+
 
 // Delete a comment by ID
 route.delete('/:id', async (req, res) => {

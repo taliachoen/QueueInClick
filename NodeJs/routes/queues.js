@@ -1,4 +1,5 @@
 import express from 'express';
+import { notifyAppointmentCancelled } from "../socket.js";
 import { postMessage } from '../database/messagesdb.js';  // ייבוא הפונקציה המתאימה להוספת הודעה
 import {
     postQueue,
@@ -14,7 +15,7 @@ import {
     updateQueueStatus
 } from '../database/queuesdb.js';
 import { calculateAvailableSlots } from './professionals.js';
-import { io  } from '../socket.js';
+import { io } from '../socket.js';
 const router = express.Router();
 
 // הוספת פגישה חדשה
@@ -22,9 +23,9 @@ router.post('/addNewQueue', async (req, res) => {
     const { businessName, data, startTime, serviceType, customerId } = req.body;  // קבלת פרטי הפגישה
     console.log("addQueue", businessName, data, startTime, serviceType, customerId);
     try {
-       
-        const result = await postQueue( businessName, serviceType, customerId, data, startTime, 'scheduled'); // קריאה לפונקציה המוסיפה
-       
+
+        const result = await postQueue(businessName, serviceType, customerId, data, startTime, 'scheduled'); // קריאה לפונקציה המוסיפה
+
         if (result) {
             io.emit("newAppointment", result);
             res.status(200).json({ message: 'Queue added successfully', queue: result });
@@ -32,7 +33,7 @@ router.post('/addNewQueue', async (req, res) => {
             res.status(400).json({ message: 'Failed to add queue' });
         }
 
-       } catch (error) {
+    } catch (error) {
         console.error('Error booking appointment:', error);
         res.status(500).json({ message: error.message });
     }
@@ -133,20 +134,73 @@ router.put('/updateEndedAppointments', async (req, res) => {
     }
 });
 
-// ביטול פגישה מסוימת לפי קוד
-router.put('/cancel/:queueCode', async (req, res) => {
+// בשרת
+// פונקציה שמשתמשת ב- getQueuesByCustomer ומחזירה את התור והנתונים הרלוונטיים
+router.put("/cancel/:queueCode", async (req, res) => {
+    const { queueCode } = req.params;
+
+
     try {
-        const { queueCode } = req.params;  // קבלת קוד הפגישה
-        const result = await cancelQueueByCode(queueCode);  // ביטול הפגישה
+        // שליפת כל התורים של הלקוח
+        const queues = await getQueuesByCustomer(req.body.customerId); // תעודת הזהות של הלקוח נשלחת בגוף הבקשה
+        console.log("woww", queues)
+        // חיפוש התור לפי קוד התור
+        const appointment = queues.find(queue => queue.QueueCode === queueCode);
+        console.log("succeed", appointment)
+
+        // if (!appointment) {
+        //     return res.status(404).json({ message: "Appointment not found" });
+        // }
+        const result = await cancelQueueByCode(queueCode);
+
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Queue not found' });
+            return res.status(404).json({ message: "Queue not found" });
         }
-        res.status(200).json({ message: 'Queue cancelled successfully' });
+
+        res.json({ message: "Appointment cancelled successfully" });
+
+        // notifyAppointmentCancelled(queueCode);
+         notifyAppointmentCancelled(queueCode, appointment.idProfessional);
     } catch (error) {
-        console.error('Error canceling queue:', error);
-        res.status(500).json({ message: error.message });
+        console.error(error);
+        res.status(500).json({ message: "Error cancelling appointment" });
     }
 });
+
+
+// router.put("/cancel/:queueCode'", async (req, res) => {
+//     try {
+//         const { queueCode } = req.params;
+
+//         // אם יש לך פונקציה לביטול בתור "cancelQueueByCode" שמבצעת גם את החיפוש וגם את הביטול
+//         const result = await cancelQueueByCode(queueCode);
+
+//         if (result.affectedRows === 0) {
+//             return res.status(404).json({ message: "Queue not found" });
+//         }
+//         notifyAppointmentCancelled(queueCode);
+//         res.json({ message: "Appointment cancelled successfully" });
+//     } catch (error) {
+//         console.error('Error canceling queue:', error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
+
+
+// // ביטול פגישה מסוימת לפי קוד
+// router.put('/cancel/:queueCode', async (req, res) => {
+//     try {
+//         const { queueCode } = req.params;  // קבלת קוד הפגישה
+//         const result = await cancelQueueByCode(queueCode);  // ביטול הפגישה
+//         if (result.affectedRows === 0) {
+//             return res.status(404).json({ message: 'Queue not found' });
+//         }
+//         res.status(200).json({ message: 'Queue cancelled successfully' });
+//     } catch (error) {
+//         console.error('Error canceling queue:', error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
 
 // עדכון פגישה קיימת
 router.put('/update/:QueueCode', async (req, res) => {

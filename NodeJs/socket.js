@@ -12,4 +12,10 @@ export function setupSocket(server) {
     });
 }
 
+export function notifyAppointmentCancelled(queueCode, businessId) {
+    if (io) {
+        io.to(`business_${businessId}`).emit("appointmentCancelled", { queueCode });
+    }
+}
+
 export { io };

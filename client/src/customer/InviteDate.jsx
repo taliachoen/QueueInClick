@@ -147,6 +147,7 @@ const InviteDate = () => {
                     id="select-date"
                     value={selectedDate}
                     onChange={handleDateChange}
+                    min={new Date().toISOString().split('T')[0]} // חוסם תאריכים שעברו
                 />
                 <label htmlFor="select-time">Filter by Time:</label>
                 <select id="select-time" value={filterTime} onChange={handleFilterTimeChange}>

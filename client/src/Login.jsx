@@ -30,13 +30,12 @@ const Login = () => {
         setFormErrors(errors);
         if (Object.keys(errors).length === 0) {
             const endpoint = userType === 'customer' ? 'http://localhost:8080/customers/login' : 'http://localhost:8080/professionals/login';
-//???????????? למה פוסט
             axios.post(endpoint, formUserData)
                 .then((response) => {
                     if (response.status === 200) {
                         const user = response.data;
                         if (user) {
-                            const userContextData = userType === 'customer' 
+                            const userContextData = userType === 'customer'
                                 ? {
                                     id: user.idCustomer,
                                     firstName: user.firstName,
@@ -77,29 +76,33 @@ const Login = () => {
                     }
                 })
                 .catch(error => {
-                    if (error.response && error.response.status === 401) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Unauthorized',
-                            text: 'Invalid email or password',
-                            showConfirmButton: true
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Something went wrong, please try again later',
-                            showConfirmButton: true
-                        });
+                    let errorMessage = 'Something went wrong, please try again later';
+                    if (error.response) {
+                        if (error.response.status === 401) {
+                            errorMessage = 'Invalid email or password';
+                        } else if (error.response.status === 500) {
+                            errorMessage = 'Internal server error, please try again later';
+                        }
                     }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage,
+                        showConfirmButton: true
+                    });
+
+                    // Reset form fields
                     setFormUserData({
                         email: '',
                         password: ''
                     });
+                    if (error.response?.status !== 401) {
+                        console.error('Login error:', error);
+                    }
                 });
         }
     };
-    
+
 
     const handleChange = (event) => {
         const { name, value } = event.target;

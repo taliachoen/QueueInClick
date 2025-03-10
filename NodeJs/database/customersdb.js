@@ -15,20 +15,32 @@ export async function getCustomer(id) {
 }
 //התחברות לקוח
 
+// export const getCustomerByEmailAndPassword = async (email, password) => {
+//     try {
+//         const query = 'SELECT * FROM customer_view WHERE email = ? AND passwordCust = ?';
+//         const [rows] = await pool.execute(query, [email, password]);
+//         if (rows.length > 0) {
+//             return rows[0]; // Return the first matching customer
+//         } else {
+//             return null; // No customer found
+//         }
+//     } catch (error) {
+//         console.error('Error fetching customer by email and password:', error);
+//         // throw error; // Re-throw the error to handle it in the calling function
+//     }
+// };
+
 export const getCustomerByEmailAndPassword = async (email, password) => {
     try {
         const query = 'SELECT * FROM customer_view WHERE email = ? AND passwordCust = ?';
         const [rows] = await pool.execute(query, [email, password]);
-        if (rows.length > 0) {
-            return rows[0]; // Return the first matching customer
-        } else {
-            return null; // No customer found
-        }
+        return rows.length > 0 ? rows[0] : null;
     } catch (error) {
         console.error('Error fetching customer by email and password:', error);
-        // throw error; // Re-throw the error to handle it in the calling function
+        throw error; // כעת השרת ידע שהייתה שגיאה ויוכל לטפל בה
     }
 };
+
 
 
 //פונקציה המוסיפה לקוח חדשה
