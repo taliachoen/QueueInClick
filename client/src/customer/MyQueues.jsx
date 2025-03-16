@@ -48,27 +48,6 @@ function MyQueues() {
         });
     };
     
-
-    // const cancelQueue = (queueCode) => {
-    //     axios.put(`http://localhost:8080/queues/cancel/${queueCode}`)
-    //         .then(response => {
-    //             setQueues(queues.filter(queue => queue.QueueCode !== queueCode));
-    //             // שליחת עדכון ב-socket כדי ליידע את בעל העסק
-    //             socket.emit("cancelAppointment", { queueCode });
-    //             // הצגת SweetAlert לאחר ביטול התור
-    //             Swal.fire({
-    //                 title: "yout turn canceled successfully",
-    //                 text: "you can invite date ant time you want",
-    //                 icon: "success",
-    //                 confirmButtonText: "confirm"
-    //             });
-
-    //         })
-    //         .catch(error => {
-    //             setError('There was an error cancelling the queue!');
-    //         });
-    // };
-
     if (loading) {
         return <div>Loading...</div>;
     }

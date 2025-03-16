@@ -5,6 +5,7 @@ import { UserContext } from '../userContex';
 import '../css/InviteDate.css';
 import swal from 'sweetalert';
 import io from "socket.io-client";
+const socket = io("http://localhost:8080");
 
 const InviteDate = () => {
     const [queues, setQueues] = useState([]);
@@ -18,10 +19,7 @@ const InviteDate = () => {
     const { businessDetails: businessDetailsFromState, type } = state || {};
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
-
-
     const socket = io("http://localhost:8080");
-
 
     // Fetch business details if provided
     useEffect(() => {
@@ -56,24 +54,24 @@ const InviteDate = () => {
                 params: { businessName, serviceTypeCode, selectedDate }
             });
 
-            // אם response.data מכיל את המפתח availableSlots, אז יש לו מערך
+            if (response.data && response.data.message) {
+                const { message, type } = response.data;
+                swal(message, "", type);  // Show message with SweetAlert
+            }
+
+            // If response contains availableSlots, set them
             if (response.data && Array.isArray(response.data.availableSlots)) {
                 setQueues(response.data.availableSlots);
-                // console.log("response.data.availableSlots", response.data.availableSlots);
             } else {
-                // אם הנתונים לא במבנה הנכון, נשאיר את התורים כפי שהם או נאפס את התור
                 console.warn("Fetched queue data is not in the expected format:", response.data);
-                setQueues([]);  // או להשאיר את התורים כמו שהם, תלוי בצורך
+                setQueues([]);
             }
         } catch (error) {
             swal("Error", "An error occurred while fetching queues details", "error");
             console.error('Error fetching queue data:', error);
-            setQueues([]); // במקרה של שגיאת רשת או כשל אחר, מאתחלים לריק
+            setQueues([]); // Reset queues on error
         }
     };
-
-
-
 
     // Fetch business details
     const fetchBusinessDetails = async (businessName, serviceType) => {
@@ -97,7 +95,6 @@ const InviteDate = () => {
                 startTime: displayedQueues[QueueNumber].start,
                 serviceType: type,
                 customerId: user.id,
-
             });
 
             socket.emit("newAppointment", response.data);
@@ -124,14 +121,32 @@ const InviteDate = () => {
     // Apply filters based on selected date and time
     const applyFilters = () => {
         let filtered = queues;
+
+        // Apply time filter if specified
+        if (filterTime) {
+            filtered = filtered.filter(queue => {
+                const queueTime = new Date(queue.start).getHours();
+                if (filterTime === 'morning') return queueTime >= 6 && queueTime < 12;
+                if (filterTime === 'afternoon') return queueTime >= 12 && queueTime < 18;
+                if (filterTime === 'evening') return queueTime >= 18 && queueTime < 24;
+                return true;
+            });
+        }
+
         setFilteredQueues(filtered);
         setCurrentPage(1);
     };
 
-
     // Load more queues
     const handleLoadMore = () => {
         setCurrentPage(prevPage => prevPage + 1);
+    };
+
+    // Navigate to previous page
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prevPage => prevPage - 1);
+        }
     };
 
     // Display queues on the current page
@@ -147,7 +162,7 @@ const InviteDate = () => {
                     id="select-date"
                     value={selectedDate}
                     onChange={handleDateChange}
-                    min={new Date().toISOString().split('T')[0]} // חוסם תאריכים שעברו
+                    min={new Date().toISOString().split('T')[0]}
                 />
                 <label htmlFor="select-time">Filter by Time:</label>
                 <select id="select-time" value={filterTime} onChange={handleFilterTimeChange}>
@@ -168,12 +183,6 @@ const InviteDate = () => {
                                 <li><strong>Phone:</strong> {businessDetails.phone}</li>
                                 <li><strong>Address:</strong> {businessDetails.address}</li>
                             </ul>
-                            <ul>
-                                <li><strong>City:</strong> {businessDetails.cityName}</li>
-                                <li><strong>Duration:</strong> {businessDetails.Duration}</li>
-                                <li><strong>Price:</strong> {businessDetails.Price}</li>
-                                <li><strong>Service Type:</strong> {type}</li>
-                            </ul>
                         </div>
                     </div>
                 )}
@@ -187,22 +196,17 @@ const InviteDate = () => {
                     <tbody>
                         {displayedQueues.map((queue, index) => (
                             <tr key={index}>
-                                {/* <td>{new Date(queue.Date).toLocaleDateString()}</td> */}
-                                <td>{new Date(queue.start).toLocaleString('en-GB', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    hour12: false
-                                })}</td>
-                                <td><button
-                                    className="book-button"
-                                    onClick={() => handleConfirmQueue(index)}
-                                >
-                                    Confirm queue
-                                </button></td>
+                                <td>{new Date(queue.start).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}</td>
+                                <td><button className="book-button" onClick={() => handleConfirmQueue(index)}>Confirm queue</button></td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+
+                {currentPage > 1 && (
+                    <button className="load-more-button" onClick={handlePreviousPage}>Previous</button>
+                )}
+
                 {currentPage * itemsPerPage < filteredQueues.length && (
                     <button className="load-more-button" onClick={handleLoadMore}>Load More</button>
                 )}
@@ -212,4 +216,3 @@ const InviteDate = () => {
 };
 
 export default InviteDate;
-

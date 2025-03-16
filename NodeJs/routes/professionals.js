@@ -123,8 +123,6 @@ route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
 
 // Get all professionals
 route.get('/', async (req, res) => {
-    console.log("222");
-
     try {
         const professionals = await getAllProfessionals();
         res.json(professionals);
@@ -170,8 +168,6 @@ route.post('/login', async (req, res) => {
 
 // Get all business names
 route.get('/business_name', async (req, res) => {
-    console.log("444");
-
     try {        
         const business_names = await getAllBuisnessNames();
         res.json(business_names);
@@ -223,7 +219,6 @@ route.get('/type_service/:searchField/:searchSecondaryField', async (req, res) =
 
 // Get professional details by business name and service type
 route.get('/details/ByNameAndService', async (req, res) => {
-    console.log("666");
     try {
         const { businessName, serviceType } = req.query;
         const details = await getProfessionalDetails(businessName, serviceType);

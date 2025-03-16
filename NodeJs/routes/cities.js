@@ -13,8 +13,6 @@ route.get('/', async (req, res) => {
     }
 });
 
-
-
 //החזרת בעל מקצוע לפי מספר מזהה
 route.get('/:cityId', async (req, res) => {
     try {

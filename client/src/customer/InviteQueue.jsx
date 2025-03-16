@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import '../css/InviteQueue.css';
 import Swal from 'sweetalert2';
 
+
 const InviteQueue = () => {
     const [businesses, setBusinesses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -13,7 +14,7 @@ const InviteQueue = () => {
     const [cities, setCities] = useState([]);
     const [fields, setFields] = useState([]);
     const [secondaryFields, setSecondaryFields] = useState([]);
-    const [showPrompt, setShowPrompt] = useState(false); // For showing the sweet alert message
+    const [showPrompt, setShowPrompt] = useState(false);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -78,8 +79,8 @@ const InviteQueue = () => {
             return;
         }
 
-        setLoading(true);
-        axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}/${selectedCity}`, {})
+        setLoading(true);        
+        axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}`, {})
             .then(response => {
                 setBusinesses(response.data);
                 setLoading(false);
@@ -191,3 +192,6 @@ const InviteQueue = () => {
 };
 
 export default InviteQueue;
+
+
+

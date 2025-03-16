@@ -93,6 +93,17 @@ export async function getAllBuisnessNames() {
     return business_names;
 }
 
+export async function getIidProfessionalByBusinessName(business_name) {
+    console.log("business_name" , business_name);
+    
+    const [idProfessional] = await pool.query(`
+         SELECT idProfessional
+         FROM professionals
+         where business_name = ? 
+    `, [business_name]);
+    return idProfessional;
+}
+
 export async function getProfessionalByName(name) {
     const [[professional]] = await pool.query(`
         SELECT p.idProfessional, p.firstName, p.lastName, p.domainCode, d.domainName,
@@ -196,7 +207,6 @@ export async function getProfessionalServiceCode(professionalId, serviceTypeCode
     // בדיקה אם יש תוצאה לפני החילוץ
     if (rows.length > 0) {
         const { ProffServiceID } = rows[0];
-        console.log(ProffServiceID, 44444);
         return ProffServiceID;
     } else {
         return null;

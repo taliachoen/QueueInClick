@@ -3,6 +3,7 @@ import pool from './database.js';
 import { getDaysOff } from './scheduledb.js';
 import { getProfessionalAllDetails } from './professionalsdb.js';
 import { getServiceDuration } from '../routes/professional_services.js';
+import swal from 'sweetalert';
 
 export async function getQueues() {
     const [queues] = await pool.query(`
@@ -370,10 +371,10 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
             FROM professionals 
             WHERE business_name =  ?`, [businessName]);
 
-
         if (professionalResult.length === 0) {
             throw new Error('Business not found');
         }
+
         const professionalId = professionalResult[0].idProfessional;
         const [serviceCode] = await pool.query(`
             SELECT typeCode 
@@ -390,22 +391,23 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
             throw new Error('Service not found for this business');
         }
 
-
         if (!(startTime instanceof Date)) {
             startTime = new Date(startTime);  // Convert if necessary
         }
 
         const startFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}:00`;
+        console.log(5454, serviceResult[0].ProffServiceID, customerId, date, startFormatted, status);
 
         // שלב 3: הכנסת התור לטבלה queues
         const [result] = await pool.query(`
             INSERT INTO queues (ProfessionalServiceCode, CustomerCode, Date, Hour, Status)
             VALUES (?, ?, ?, ?, ?)`, [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
-
+        console.log(77);
 
         if (result.affectedRows === 0) {
             return null; // אם ההוספה נכשלה
         }
+        console.log(88);
 
         return {
             QueueCode: result.insertId,
@@ -463,12 +465,11 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
         // קבלת ימי החופש של בעל העסק
         const daysOff = await getDaysOff(business.idProfessional);
         const selectedDayNum = new Date(selectedDate).getDay();
-
-        // בדיקה אם היום הנבחר הוא יום חופש
-        if (daysOff.includes(selectedDayNum)) {
-            return { message: 'The selected day is a day off and no appointments can be booked.' };
+        const selectedDayName = dayNames[selectedDayNum];
+        const daysOffLowerCase = daysOff.map(day => day.toLowerCase());
+        if (daysOffLowerCase.includes(selectedDayName.toLowerCase())) {
+            return { message: `The selected day is a free and meetings cannot be booked. my free days is: ${daysOff} We would be happy to meet you on another day😊`, type: 'warning' };
         }
-
         // לשנות לפונקציה השולחת את היום ואת ת.ז בעל העסק ובודקת אם זמין ומחזירה אמת או שקר
         const availableDays = await getAvailableDays(businessName);
         const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
@@ -476,8 +477,9 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
 
         // בדיקה אם היום פתוח להזמנות
         if (!isDayAvailable) {
-            return { message: 'The selected day is not available for appointments.' };
+            return { message: 'The selected day is not available for appointments.', type: 'warning' };
         }
+
 
         // קבלת שעות העבודה של העסק
         const workingHours = await getWorkingHoursByBusinessName(business.business_name);

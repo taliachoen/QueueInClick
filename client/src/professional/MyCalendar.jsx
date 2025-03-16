@@ -4,6 +4,7 @@ import axios from 'axios';
 import Calendar from 'react-calendar';
 import Swal from 'sweetalert2';
 import '../css/MyCalendar.css';
+import moment from 'moment-timezone';
 import io from "socket.io-client";
 const socket = io("http://localhost:8080");
 
@@ -20,45 +21,47 @@ const MyCalendar = () => {
 
   const userId = user.id;
 
-  useEffect(() => {
-    const handleCancelAppointment = ({ queueCode }) => {
-      console.log("Appointment cancelled:", queueCode);
-      fetchInitialAppointments(); // ריענון היומן
-    };
-
-    socket.on("cancelAppointment", handleCancelAppointment);
-
-    return () => {
-      socket.off("cancelAppointment", handleCancelAppointment);
-    };
-  }, []);
-
 
   useEffect(() => {
-    socket.on("newAppointment", (appointment) => {
-      console.log("New appointment received:", appointment);
-      // כאן תוכלי לקרוא לפונקציה שמרעננת את רשימת התורים
+    socket.on("appointmentCancelled", (data) => { 
       fetchInitialAppointments();
+        // אם התור שבוטל היה ביום שנבחר, עדכן את הרשימה
+        setSelectedDayAppointments((prevAppointments) =>
+            prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
+        );
     });
 
-    return () => socket.off("newAppointment");
-  }, []);
+    return () => {
+        socket.off("appointmentCancelled");
+    };
+}, []);
 
-  useEffect(() => {
-    if (!localStorage.getItem("swalShown")) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Click on a day to see the list of appointments',
-        showConfirmButton: false,
-        timer: 3000,
-      });
-      localStorage.setItem("swalShown", "true");
-    }
-  }, []);
+useEffect(() => {
+  // עדכון הודעת "אין תורים" אחרי שינוי בתאריך
+  const filteredAppointments = appointments[selectedDay]?.filter(appointment => normalizeDate(appointment.Date) === selectedDay) || [];
+  setSelectedDayAppointments(filteredAppointments);
+  setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDay}` : '');
+}, [selectedDay, appointments]); // התלויות ב-selectedDay ובappointments
+
+
+useEffect(() => {
+  socket.on("appointmentAdd", (data) => { 
+    fetchInitialAppointments();
+      // אם התור שבוטל היה ביום שנבחר, עדכן את הרשימה
+      setSelectedDayAppointments((prevAppointments) =>
+          prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
+      );
+  });
+
+  return () => {
+      socket.off("appointmentAdd");
+  };
+}, []);
 
 
   const normalizeDate = (date) => {
     const normalizedDate = new Date(date);
+    normalizedDate.setDate(normalizedDate.getDate() + 1);
 
     if (isNaN(normalizedDate.getTime())) {
       console.error("Invalid date format:", date);
@@ -136,9 +139,7 @@ const MyCalendar = () => {
       { month: currentMonth, year: currentYear },
       adjustMonthYear(currentMonth + 1, currentYear)
     ];
-
     const newAppointments = { ...appointments };
-
     for (const { month, year } of monthsToLoad) {
       const key = `${year}-${month}`;
       if (!newAppointments[key]) {
@@ -146,14 +147,12 @@ const MyCalendar = () => {
         if (data) newAppointments[key] = data;
       }
     }
-
     setAppointments(prev => ({ ...prev, ...newAppointments }));
   };
 
   const prefetchNextMonth = async () => {
     const { month: nextMonth, year: nextYear } = adjustMonthYear(currentMonth + 1, currentYear);
     const key = `${nextYear}-${nextMonth}`;
-
     if (!appointments[key]) {
       const data = await fetchAppointmentsFromServer(nextYear, nextMonth);
       if (data) {
@@ -177,42 +176,30 @@ const MyCalendar = () => {
     }
   }, [currentMonth, currentYear]);
 
-  // בתוך handleDaySelection
   const handleDaySelection = (day) => {
-    console.log("Selected day:", day); // הוספת הדפסת הערך שהתקבל
+    // הפוך את היום שנבחר לפורמט תאריך סטנדרטי (YYYY-MM-DD)
     const selectedDate = normalizeDate(day);
-    console.log("Normalized date:", selectedDate); // הדפסת התוצאה של normalizeDate
-
-    if (!selectedDate) {
-      console.error("Invalid selected date:", day);
-      return; // אם התאריך לא תקני, לא מבצעים שום דבר
-    }
-
-    // אם הלחיצה על אותו יום שנבחר, מבטלים את הבחירה
-    if (selectedDay === selectedDate) {
-      setSelectedDay(null);
-    } else {
-      setSelectedDay(selectedDate);
-    }
-
+    // המרת היום שנבחר לפורמט המתאים לאזור הזמן המקומי של המשתמש
+    const localSelectedDay = moment(selectedDate).tz(moment.tz.guess()).format('YYYY-MM-DD');
+    // התאמת חודש ושנה שנבחרו
     const month = day.getMonth() + 1;
     const year = day.getFullYear();
     const key = `${year}-${month}`;
-
+    // אם קיימים תורים לאותו חודש, נסה למצוא תורים לפי היום שנבחר
     if (appointments[key]) {
       const filteredAppointments = appointments[key].filter(appointment => {
         const appointmentDate = normalizeDate(appointment.Date);
-        console.log("Appointment date:", appointmentDate);
-        return appointmentDate === selectedDate;
+        return appointmentDate === selectedDate;  // השוואת התאריכים
       });
       setSelectedDayAppointments(filteredAppointments);
+      // הצגת הודעה אם אין תורים ביום שנבחר
       setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDate}` : '');
     } else {
       setSelectedDayAppointments([]);
       setNoAppointmentsMessage(`No appointments for ${selectedDate}`);
     }
   };
-
+  
 
   const cancelWorkday = async () => {
     if (selectedDayAppointments.length === 0) {
@@ -230,7 +217,9 @@ const MyCalendar = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          var date = selectedDay;
+          const localSelectedDay = moment(selectedDay).tz(moment.tz.guess()).format('YYYY-MM-DD');
+          var date = localSelectedDay;
+
           await axios.put(`http://localhost:8080/queues/cancel/${date}/${userId}`);
           setSelectedDayAppointments([]);
           Swal.fire('Cancelled!', 'All appointments for the day have been cancelled.', 'success');
@@ -249,7 +238,6 @@ const MyCalendar = () => {
     const key = `${year}-${month}`;
 
     if (!appointments[key]) return null;
-
     const dailyAppointments = appointments[key].filter(appointment =>
       normalizeDate(appointment.Date) === normalizedDate
     );
@@ -275,16 +263,14 @@ const MyCalendar = () => {
     <div className="business-appointments-page">
       <div className="calendar-container">
 
-
         <Calendar
           onChange={setDate}
           value={date}
           onClickDay={handleDaySelection}
           locale="en-US"
           tileClassName={tileClassName}
-          tileContent={tileContent} // הוספת פונקציה להצגת התורים
+          tileContent={tileContent}
         />
-
 
       </div>
 

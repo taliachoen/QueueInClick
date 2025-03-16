@@ -1,6 +1,43 @@
 import pool from './database.js'
 import {getCustomer} from './customersdb.js'
 
+
+
+// עדכון פונקציה כדי להחזיר רק את ההודעות של הלקוח הספציפי
+export async function getMessagesForCustomer(customerId) {
+    try {
+        const query = `
+            SELECT
+                m.messageCode,
+                m.message_date,
+                CONCAT(c.firstName, ' ', c.lastName) AS customer_name,
+                p.business_name,
+                CONCAT(p.firstName, ' ', p.lastName) AS professional_name,
+                m.content,
+                m.title,
+                m.isRead
+            FROM
+                messages m
+            JOIN
+                queues q ON m.queueCode = q.QueueCode
+            JOIN
+                customers c ON q.CustomerCode = c.idCustomer
+            JOIN
+                Professional_Services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
+            JOIN
+                professionals p ON ps.idProfessional = p.idProfessional
+            WHERE
+                q.CustomerCode = ?;
+        `;
+        const [messages] = await pool.query(query, [customerId]);
+        return messages;
+    } catch (error) {
+        throw new Error(`Error fetching messages for customer: ${error.message}`);
+    }
+}
+
+
+
 export async function getMessages() {
     try {
         const query = `

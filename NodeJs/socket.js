@@ -6,15 +6,21 @@ export function setupSocket(server) {
     io = new Server(server, { cors: { origin: "*" } });
 
     io.on("connection", (socket) => {
-        socket.on("disconnect", () => {
-            console.log("A user disconnected");
-        });
+        socket.on("disconnect", () => {});
     });
 }
 
 export function notifyAppointmentCancelled(queueCode, businessId) {
     if (io) {
-        io.to(`business_${businessId}`).emit("appointmentCancelled", { queueCode });
+        console.log(`Notifying business_${businessId} about cancellation:`, queueCode);
+        io.emit("appointmentCancelled", { queueCode });
+    }
+}
+
+export function notifyAppointmentAdd(queueCode, businessId) {
+    if (io) {
+        console.log(`Notifying business_${businessId} about added:`, queueCode);
+        io.emit("appointmentAdd", { queueCode });
     }
 }
 
