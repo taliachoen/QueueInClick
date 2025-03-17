@@ -37,7 +37,7 @@
 }
 
 .cancel-button {
-    background-color: #e74c3c;
+    background-color: #f16e60;
     color: #fff;
     border: none;
     padding: 8px 12px;
@@ -48,4 +48,40 @@
 
 .cancel-button:hover {
     background-color: #c0392b;
+}
+
+.details-button {
+    margin-right: 10px;
+    /* ריווח בין הכפתורים */
+    background-color: #f0f0f0;
+    /* צבע אפור בהיר */
+    color: #333;
+    /* צבע טקסט כהה */
+    border: 2px solid #ccc;
+    /* גבול אפור בהיר */
+    padding: 8px 12px;
+    border-radius: 4px;
+    /* ריווח פנימי */
+    font-size: 16px;
+
+    /* פינות מעוגלות */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    /* אפקט מעבר חלק */
+}
+
+.details-button:hover {
+    background-color: #e0e0e0;
+    /* שינוי צבע ברקע בעת ריחוף */
+    border-color: #999;
+    /* גבול כהה יותר */
+    transform: scale(1.05);
+    /* הגדלת כפתור בצורה עדינה */
+}
+
+.details-button:focus {
+    outline: none;
+    /* הסרת מסגרת סימון מיותרת */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    /* הוספת הצללה עדינה */
 }

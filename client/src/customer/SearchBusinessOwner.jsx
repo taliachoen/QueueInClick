@@ -97,6 +97,7 @@ const SearchBusinessOwner = () => {
             const response = await axios.get(`http://localhost:8080/professionals/name/${name}`);
             if (response.data) {
                 setBusinessDetails(response.data);
+                console.log("sss", response.data);
                 setSearchStatus('found');
                 fetchRecommendations(response.data.idProfessional);
             } else {
@@ -133,94 +134,96 @@ const SearchBusinessOwner = () => {
         }
     };
 
-
-
-
     const handleSendComment = async () => {
+        console.log('handleSendComment called');
+
         if (userRating === 0) {
-            alert('Please select a rating before submitting.');
+            Swal.fire('Error', 'Please select a rating before submitting.', 'error');
             return;
         }
         if (!userComment.trim()) {
-            alert('Please enter a comment before submitting.');
+            Swal.fire('Error', 'Please enter a comment before submitting.', 'error');
             return;
         }
 
-        const newComment = {
-            queueCode: 20,  // צריך לוודא שזה ערך נכון במסד הנתונים
-            idProfessional: businessDetails.idProfessional,
-            idCustomer: userId,
-            rating: userRating,
-            content: userComment,
-            comments_date: new Date().toISOString().split('T')[0]
-        };
-        console.log("📤 Sending comment:", newComment); // ✅ כאן נבדוק מה נשלח
         try {
+            // 🔹 בדיקת האם מותר להגיב
+            const checkResponse = await axios.get('http://localhost:8080/comments/check', {
+                params: { IdProfessional: businessDetails.idProfessional, IdCustomer: userId }
+            });
+
+            console.log("🔵 Response from server:", checkResponse.data); // בדיקת נתונים שמתקבלים
+
+            if (!checkResponse.data.canCommented) {
+                // ❌ המשתמש *לא* יכול להגיב – עליו לחכות!
+                Swal.fire({
+                    title: 'Please wait',
+                    text: `You can leave another comment on ${checkResponse.data.nextAllowedDate}.`,
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                setUserComment('');
+                setUserRating(0);
+                return;
+            }
+
+            // ✅ המשתמש *יכול* לשלוח תגובה – שולחים לשרת
+            const newComment = {
+                queueCode: 20,
+                idProfessional: businessDetails.idProfessional,
+                idCustomer: userId,
+                rating: userRating,
+                content: userComment,
+                comments_date: new Date().toISOString().split('T')[0]
+            };
+
+            console.log('Sending new comment:', newComment);
             await axios.post('http://localhost:8080/comments', newComment);
+
+            // איפוס טופס לאחר שליחה
             setUserRating(0);
             setUserComment('');
             await fetchRecommendations(businessDetails.idProfessional);
-            //fetchRecommendations(businessDetails.idProfessional);
+
+            Swal.fire('Success', 'Your comment has been submitted successfully.', 'success');
+
         } catch (error) {
-            console.error('Error sending comment:', error.response?.data || error);
+            console.error('Error sending comment:', error.response?.data || error.message);
+            Swal.fire('Error', `There was an issue submitting your comment: ${error.response?.data?.message || error.message}`, 'error');
         }
     };
 
+
     // const handleSendComment = async () => {
+    //     if (userRating === 0) {
+    //         alert('Please select a rating before submitting.');
+    //         return;
+    //     }
+    //     if (!userComment.trim()) {
+    //         alert('Please enter a comment before submitting.');
+    //         return;
+    //     }
+
+    //     const newComment = {
+    //         queueCode: 20,  // צריך לוודא שזה ערך נכון במסד הנתונים
+    //         idProfessional: businessDetails.idProfessional,
+    //         idCustomer: userId,
+    //         rating: userRating,
+    //         content: userComment,
+    //         comments_date: new Date().toISOString().split('T')[0]
+    //     };
+    //     console.log("📤 Sending comment:", newComment); // ✅ כאן נבדוק מה נשלח
     //     try {
-    //         // בדוק אם הלקוח כבר הגיב לעסק
-    //         const response = await axios.get('http://localhost:8080/comments/check', {
-    //             params: {
-    //                 businessId: businessDetails.idProfessional,
-    //                 customerId: userId
-    //             }
-    //         });
-
-    //         console.log('Response from /check:', response.data); // לוודא שהשרת מחזיר תשובה תקינה
-
-    //         if (response.data.hasCommented) {
-    //             Swal.fire({
-    //                 title: 'הודעה',
-    //                 text: 'You have already commented on this professional.',
-    //                 icon: 'info',
-    //                 confirmButtonText: 'OK'
-    //             });
-    //             return;
-    //         }
-
-    //         // אם לא הגיב, ניתן להמשיך לשלוח את התגובה
-    //         const newComment = {
-    //             queueCode: 20,
-    //             idProfessional: businessDetails.idProfessional,
-    //             idCustomer: userId,
-    //             rating: userRating,
-    //             content: userComment,
-    //             comments_date: new Date().toISOString().split('T')[0]
-    //         };
-
     //         await axios.post('http://localhost:8080/comments', newComment);
     //         setUserRating(0);
     //         setUserComment('');
-    //         localStorage.setItem('lastCommentTime', new Date().toISOString());
     //         await fetchRecommendations(businessDetails.idProfessional);
-
-    //         Swal.fire({
-    //             title: 'תודה!',
-    //             text: 'Your comment has been submitted successfully.',
-    //             icon: 'success',
-    //             confirmButtonText: 'OK'
-    //         });
-
+    //         //fetchRecommendations(businessDetails.idProfessional);
     //     } catch (error) {
     //         console.error('Error sending comment:', error.response?.data || error);
-    //         Swal.fire({
-    //             title: 'שגיאה',
-    //             text: 'There was an error submitting your comment.',
-    //             icon: 'error',
-    //             confirmButtonText: 'OK'
-    //         });
     //     }
     // };
+
 
 
 

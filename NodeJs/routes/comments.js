@@ -6,8 +6,8 @@ import {
     postComment,
     deleteComment,
     updateComment,
-    getCommentsByCustomerAndProfessional,
-    getCommentsByProfessional
+    getCommentsByProfessional,
+    checkLastCommentDate
 } from '../database/commentsdb.js';
 
 const route = express.Router();
@@ -15,28 +15,43 @@ const route = express.Router();
 
 // Add a route to check if the customer has commented on the professional
 // בקשה לבדוק אם הלקוח כבר הגיב לעסק
+
 route.get('/check', async (req, res) => {
     try {
-        const { businessId, customerId } = req.query;
+        const { IdProfessional, IdCustomer } = req.query;
+        const result = await checkLastCommentDate(IdProfessional, IdCustomer);
+        console.log("result", result);
+        return res.json(result);
 
-        // לוודא שהפרמטרים קיימים בבקשה
-        if (!businessId || !customerId) {
-            return res.status(400).json({ message: 'Missing required parameters' });
-        }
-
-        // השתמש בפונקציה החדשה כדי לבדוק אם יש תגובה לעסק הזה מהלקוח
-        const hasCommented = await getCommentsByCustomerAndProfessional(customerId, businessId);
-
-        if (hasCommented) {
-            return res.json({ hasCommented: true });
-        } else {
-            return res.json({ hasCommented: false });
-        }
     } catch (error) {
-        console.error('Error in /check route:', error); // דפוק log נוסף כדי לבדוק שגיאות
+        console.error("Error checking comment restriction:", error);
         res.status(500).json({ message: error.message });
     }
 });
+
+
+// route.get('/check', async (req, res) => {
+//     try {
+//         const { businessId, customerId } = req.query;
+
+//         // לוודא שהפרמטרים קיימים בבקשה
+//         if (!businessId || !customerId) {
+//             return res.status(400).json({ message: 'Missing required parameters' });
+//         }
+
+//         // השתמש בפונקציה החדשה כדי לבדוק אם יש תגובה לעסק הזה מהלקוח
+//         const hasCommented = await getCommentsByCustomerAndProfessional(customerId, businessId);
+
+//         if (hasCommented) {
+//             return res.json({ hasCommented: true });
+//         } else {
+//             return res.json({ hasCommented: false });
+//         }
+//     } catch (error) {
+//         console.error('Error in /check route:', error); // דפוק log נוסף כדי לבדוק שגיאות
+//         res.status(500).json({ message: error.message });
+//     }
+// });
 
 
 
@@ -80,10 +95,10 @@ route.post('/', async (req, res) => {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
-        const existingComment = await getComment(idCustomer, idProfessional);
-        if (existingComment) {
-            return res.status(400).json({ message: "You have already commented on this professional" });
-        }
+        // const existingComment = await getComment(idCustomer, idProfessional);
+        // if (existingComment) {
+        //     return res.status(400).json({ message: "You have already commented on this professional" });
+        // }
 
         const newComment = await postComment(queueCode, idCustomer, idProfessional, rating, content, comments_date);
 

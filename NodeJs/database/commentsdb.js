@@ -2,21 +2,60 @@ import pool from './database.js';
 
 // פונקציה חדשה כדי לבדוק אם יש תגובה עבור לקוח ועסק
 // פונקציה ב-DB כדי לבדוק אם יש תגובה עבור לקוח ועסק
-export const getCommentsByCustomerAndProfessional = async (idCustomer, idProfessional) => {
-    const query = `
-        SELECT COUNT(*) AS commentCount
-        FROM comments
-        WHERE idCustomer = ? AND idProfessional = ?
-    `;
-    try {
-        const [rows] = await db.execute(query, [idCustomer, idProfessional]);
-        console.log('Rows from DB:', rows); // להוסיף בדיקה כאן
-        return rows[0].commentCount > 0; // מחזיר true אם יש תגובה
-    } catch (error) {
-        console.error('Database error:', error); // הוספת log בשגיאה
-        throw new Error('Error checking comment: ' + error.message);
+// export const getCommentsByCustomerAndProfessional = async (idCustomer, idProfessional) => {
+//     try {
+//         const [rows] = await pool.query(`
+//             SELECT COUNT(*) AS commentCount
+//             FROM comments
+//             WHERE idCustomer = ? AND idProfessional = ?
+//         `, [idCustomer, idProfessional]);
+//         console.log('Rows from DB:', rows); // להוסיף בדיקה כאן
+//         return rows[0].commentCount > 0; // מחזיר true אם יש תגובה
+//     } catch (error) {
+//         console.error('Database error:', error); // הוספת log בשגיאה
+//         throw new Error('Error checking comment: ' + error.message);
+//     }
+// };
+
+export async function checkLastCommentDate(IdProfessional, IdCustomer) {
+    const [rows] = await pool.query(
+        `SELECT comments_date 
+         FROM comments 
+         WHERE IdProfessional = ? AND IdCustomer = ? 
+         ORDER BY comments_date DESC 
+         LIMIT 1`,
+        [IdProfessional, IdCustomer]
+    );
+
+    if (rows.length === 0) {
+        console.log("🔵 No previous comments found - user is allowed to comment.");
+        return { canComment: true }; // לא הגיב אף פעם - מותר להגיב
     }
-};
+
+    const lastCommentDate = new Date(rows[0].comments_date);
+    const now = new Date();
+    const nextAllowedDate = new Date(lastCommentDate);
+    nextAllowedDate.setDate(lastCommentDate.getDate() + 2); // הוספת יומיים
+
+    console.log("🔵 Last comment date:", lastCommentDate);
+    console.log("🔵 Current date:", now);
+    console.log("🔵 Next allowed date:", nextAllowedDate);
+
+    if (now >= nextAllowedDate) {
+        console.log("✅ User is allowed to comment.");
+        return { canComment: true }; // מותר להגיב
+    } else {
+        console.log("❌ User must wait before commenting again.");
+        return {
+            canComment: false, // אסור להגיב
+            nextAllowedDate: nextAllowedDate.toISOString().split('T')[0]
+        };
+    }
+}
+
+
+
+
 
 
 // Calculate average rating for a professional
