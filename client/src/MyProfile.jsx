@@ -6,6 +6,7 @@ import { UserContext } from './userContex';
 import { ImProfile } from "react-icons/im";
 import './css/MyProfile.css';
 import axios from 'axios';
+import moment from 'moment-timezone';
 import swal from 'sweetalert';
 
 const MyProfile = () => {
@@ -74,7 +75,12 @@ const MyProfile = () => {
     const handleUpdateProfile = async () => {
         try {
             const userId = user.id;
-            const response = await axios.put(`http://localhost:8080/${user.userType}/${userId}`, updatedUser);
+            const updatedUserData = {
+                ...updatedUser,
+                startDate: (user.userType === 'professionals' && updatedUser.startDate) ? moment(updatedUser.startDate).format('YYYY-MM-DD') : null
+            };
+            console.log("Updated User Data:", updatedUserData); // בדוק את הנתונים
+            const response = await axios.put(`http://localhost:8080/${user.userType}/${userId}`, updatedUserData);
             swal("Success", "Profile updated successfully", "success");
             setEditMode(false);
             setUser(prevUser => ({
@@ -136,7 +142,14 @@ const MyProfile = () => {
                             {user.userType === 'professionals' && (
                                 <>
                                     <label htmlFor="startDate">Start Date:</label>
-                                    <input type="date" id="startDate" name="startDate" value={updatedUser.startDate} onChange={handleChange} />
+                                    {/* <input type="date" id="startDate" name="startDate" value={updatedUser.startDate} onChange={handleChange} /> */}
+                                    <input
+                                        type="date"
+                                        id="startDate"
+                                        name="startDate"
+                                        value={updatedUser.startDate ? moment(updatedUser.startDate).format('YYYY-MM-DD') : ''} // שימוש ב-moment כדי להמיר את התאריך לפורמט הנדרש
+                                        onChange={handleChange}
+                                    />
                                     <label htmlFor="business_name">Business Name:</label>
                                     <input type="text" id="business_name" name="business_name" value={updatedUser.business_name} onChange={handleChange} />
                                 </>

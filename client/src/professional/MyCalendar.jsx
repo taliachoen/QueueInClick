@@ -23,55 +23,64 @@ const MyCalendar = () => {
 
 
   useEffect(() => {
-    socket.on("appointmentCancelled", (data) => { 
+    socket.on("appointmentCancelled", (data) => {
       fetchInitialAppointments();
-        // אם התור שבוטל היה ביום שנבחר, עדכן את הרשימה
-        setSelectedDayAppointments((prevAppointments) =>
-            prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
-        );
+      // אם התור שבוטל היה ביום שנבחר, עדכן את הרשימה
+      setSelectedDayAppointments((prevAppointments) =>
+        prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
+      );
     });
 
     return () => {
-        socket.off("appointmentCancelled");
+      socket.off("appointmentCancelled");
     };
-}, []);
+  }, []);
 
-useEffect(() => {
-  // עדכון הודעת "אין תורים" אחרי שינוי בתאריך
-  const filteredAppointments = appointments[selectedDay]?.filter(appointment => normalizeDate(appointment.Date) === selectedDay) || [];
-  setSelectedDayAppointments(filteredAppointments);
-  setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDay}` : '');
-}, [selectedDay, appointments]); // התלויות ב-selectedDay ובappointments
+  useEffect(() => {
+    // עדכון הודעת "אין תורים" אחרי שינוי בתאריך
+    const filteredAppointments = appointments[selectedDay]?.filter(appointment => normalizeDate(appointment.Date) === selectedDay) || [];
+    setSelectedDayAppointments(filteredAppointments);
+    setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDay}` : '');
+  }, [selectedDay, appointments]); // התלויות ב-selectedDay ובappointments
 
 
-useEffect(() => {
-  socket.on("appointmentAdd", (data) => { 
-    fetchInitialAppointments();
+  useEffect(() => {
+    socket.on("appointmentAdd", (data) => {
+      fetchInitialAppointments();
       // אם התור שבוטל היה ביום שנבחר, עדכן את הרשימה
       setSelectedDayAppointments((prevAppointments) =>
-          prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
+        prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
       );
-  });
+    });
 
-  return () => {
+    return () => {
       socket.off("appointmentAdd");
-  };
-}, []);
+    };
+  }, []);
 
 
+  // const normalizeDate = (date) => {
+  //   const normalizedDate = new Date(date);
+  //   normalizedDate.setDate(normalizedDate.getDate() + 1);
+
+  //   if (isNaN(normalizedDate.getTime())) {
+  //     console.error("Invalid date format:", date);
+  //     return null; // מחזיר null במקרה של תאריך לא תקני
+  //   }
+
+  //   return normalizedDate.toISOString().split('T')[0];
+  // };
   const normalizeDate = (date) => {
-    const normalizedDate = new Date(date);
-    normalizedDate.setDate(normalizedDate.getDate() + 1);
+    // השתמש ב-moment כדי לוודא שהתאריך מחושב נכון
+    const normalizedDate = moment(date).format('YYYY-MM-DD');
 
-    if (isNaN(normalizedDate.getTime())) {
+    if (!normalizedDate) {
       console.error("Invalid date format:", date);
       return null; // מחזיר null במקרה של תאריך לא תקני
     }
 
-    return normalizedDate.toISOString().split('T')[0];
+    return normalizedDate;  // מחזיר בפורמט YYYY-MM-DD
   };
-
-
 
   // פונקציה להמיר תאריך ליום בשבוע
   const getDayName = (date) => {
@@ -179,6 +188,9 @@ useEffect(() => {
   const handleDaySelection = (day) => {
     // הפוך את היום שנבחר לפורמט תאריך סטנדרטי (YYYY-MM-DD)
     const selectedDate = normalizeDate(day);
+
+    console.log("Raw selected date:", day);
+    console.log("Normalized date:", normalizeDate(day));
     // המרת היום שנבחר לפורמט המתאים לאזור הזמן המקומי של המשתמש
     const localSelectedDay = moment(selectedDate).tz(moment.tz.guess()).format('YYYY-MM-DD');
     // התאמת חודש ושנה שנבחרו
@@ -199,7 +211,7 @@ useEffect(() => {
       setNoAppointmentsMessage(`No appointments for ${selectedDate}`);
     }
   };
-  
+
 
   const cancelWorkday = async () => {
     if (selectedDayAppointments.length === 0) {

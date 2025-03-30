@@ -101,7 +101,7 @@ route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
             await postProfessionalService(professionalId, service.serviceType, service.price, service.duration);
         }
 
-        for (const dayOfWeek in workingHours) {            
+        for (const dayOfWeek in workingHours) {
             if (workingHours[dayOfWeek].isWorking) {
                 await postSchedule(professionalId, dayOfWeek, workingHours[dayOfWeek].start, workingHours[dayOfWeek].end);
             }
@@ -168,7 +168,7 @@ route.post('/login', async (req, res) => {
 
 // Get all business names
 route.get('/business_name', async (req, res) => {
-    try {        
+    try {
         const business_names = await getAllBuisnessNames();
         res.json(business_names);
     } catch (error) {
@@ -208,7 +208,7 @@ route.get('/:userId', async (req, res) => {
 // Get professionals by domain and type of service
 route.get('/type_service/:searchField/:searchSecondaryField', async (req, res) => {
     try {
-        const { searchField, searchSecondaryField } = req.params;         
+        const { searchField, searchSecondaryField } = req.params;
         const professionals = await getProfessionalsByDomainAndType(searchField, searchSecondaryField);
         res.json(professionals);
     } catch (error) {
@@ -252,6 +252,7 @@ route.get('/name/:name', async (req, res) => {
 // Update professional details
 route.put('/:userId', async (req, res) => {
     console.log("888");
+    console.log("Request body:", req.body);
 
     try {
         const { userId } = req.params;

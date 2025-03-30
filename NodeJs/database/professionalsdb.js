@@ -94,8 +94,8 @@ export async function getAllBuisnessNames() {
 }
 
 export async function getIidProfessionalByBusinessName(business_name) {
-    console.log("business_name" , business_name);
-    
+    console.log("business_name", business_name);
+
     const [idProfessional] = await pool.query(`
          SELECT idProfessional
          FROM professionals
@@ -181,7 +181,7 @@ export async function updateProfessional(professionalID, professionalData) {
         const { firstName, lastName, domainCode, startDate, address, cityCode, email, business_name, phone, logo } = professionalData;
 
         // אם startDate קיים, להמיר לפורמט הנכון
-        const formattedDate = startDate ? moment(startDate).format('YYYY-MM-DD HH:mm:ss') : null;
+        const formattedDate = startDate ? moment(startDate).format('YYYY-MM-DD') : null;
 
         const query = `UPDATE professionals SET firstName = ?, lastName = ?, domainCode = ?, startDate = ?, address = ?, cityCode = ?, email = ?, business_name = ?, phone = ?, logo = ? WHERE idProfessional = ?`;
 

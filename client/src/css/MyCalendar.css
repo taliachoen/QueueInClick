@@ -40,8 +40,8 @@
 }
 
 .selected-day {
-  background-color: #80878e;
-  color: white;
+  background-color: yellow;
+  color: black;
 }
 
 .no-workday {
@@ -53,11 +53,12 @@
   /* גבול דמוי קו מקוטע */
 }
 
-.today {
+/* .today {
   background-color: blue;
-  /* צבע כחול ליום הנוכחי */
   color: white;
-}
+  /* צבע כחול ליום הנוכחי 
+  
+} */
 
 .react-calendar__navigation button {
   background-color: #007bff;
@@ -80,7 +81,7 @@
   color: #999;
 }
 
-.react-calendar__tile--active {}
+
 
 .calendar-appointment {
   width: 20px;
@@ -307,6 +308,12 @@
   transition: background-color 0.3s;
 }
 
-.cancel-confirmation button:hover {
+/* .cancel-confirmation button:hover {
   background-color: lightblue;
+} */
+
+.react-calendar__tile--active {
+  background-color: #007bff !important;
+  /* הצבע הצהוב נשאר קבוע */
+  color: black !important;
 }
