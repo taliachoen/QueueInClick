@@ -11,7 +11,6 @@ const BusinessRegistration1 = () => {
   const [cities, setCities] = useState([]);
   const [domains, setDomains] = useState([]);
   const [business_name, setBusinessName] = useState([]);
-  const [logo, setLogo] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
@@ -56,7 +55,8 @@ const BusinessRegistration1 = () => {
   const checkIfIdExists = async (id) => {
     try {
       const response = await axios.get(`http://localhost:8080/professionals/id_check/${id}`);
-      if (response.data.exists) {
+      console.log("response.data" , response.data);
+      if (response.data) {
         return true;
       }
       return false;
@@ -86,51 +86,30 @@ const BusinessRegistration1 = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     let updatedFormData = { ...formData, [name]: value };
-
     if (name === 'cityCode') {
       const selectedCity = cities.find(city => city.CityCode === parseInt(value));
       if (selectedCity) {
         updatedFormData.cityName = selectedCity.CityName;
       }
     }
-
     if (name === 'domainCode') {
       const selectedDomain = domains.find(domain => domain.idDomain === parseInt(value));
       if (selectedDomain) {
         updatedFormData.domainName = selectedDomain.domainName;
       }
     }
-
     setFormData(updatedFormData);
   };
-
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        setFormData({
-          ...formData,
-          logo: reader.result,
-        });
-      };
-    }
-  };
-  
-  
   
   // טיפול בשליחת הטופס ובדיקת תקינות הנתונים
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     // בדיקה אם תעודת הזהות קיימת
     const idExists = await checkIfIdExists(formData.idProfessional);
     if (idExists) {
       alert('This ID already exists. Please enter a different ID.');
       return; // עצירת התהליך
     }
-
     // בדיקת מילוי שדות חובה
     if (!formData.idProfessional ||
       !formData.firstName ||
@@ -145,39 +124,29 @@ const BusinessRegistration1 = () => {
       alert('Please fill in all required fields.');
       return;
     }
-
     // בדיקת ייחודיות שם העסק
     const isDuplicate = business_name.some((business) => business.business_name === formData.business_name);
     if (isDuplicate) {
       alert('The business name already exists.');
       return;
     }
-
     // בדיקת תקינות כתובת האימייל
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       alert('Please enter a valid email address.');
       return;
     }
-
     // בדיקת תאריך התחלה שלא נמצא בעתיד
     const currentDate = new Date().toISOString().split('T')[0];
     if (formData.startDate > currentDate) {
       alert('Start date cannot be in the future.');
       return;
     }
-
-    // יצירת נתוני הטופס לשליחה כולל הלוגו
     const formDataToSend = new FormData();
     formDataToSend.append('formData', JSON.stringify(formData));
-    if (logo) {
-      formDataToSend.append('logo', logo); // הוספת קובץ לוגו
-    }
-
     setStep1(formData);
     navigate('../Step2', { relative: true });
   };
-
 
   const handleIdChange = async (e) => {
     const id = e.target.value;
@@ -186,14 +155,13 @@ const BusinessRegistration1 = () => {
       [e.target.name]: id
     });
     // בדיקה אם תעודת הזהות קיימת
-    const idExists = await checkIfIdExists(id);
-    console.log("idExiststt", idExists);
-    if (idExists) {
-      // לא מאפשר להמשיך אם תעודת הזהות קיימת
-      return;
-    }
+    // const idExists = await checkIfIdExists(id);
+    // console.log("idExiststt", idExists);
+    // if (idExists) {
+    //   // לא מאפשר להמשיך אם תעודת הזהות קיימת
+    //   return;
+    // }
   };
-
 
   return (
     <div id="registration-container">
@@ -212,12 +180,12 @@ const BusinessRegistration1 = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="firstName">First Name:</label>
+            <label htmlFor="startDate">Start Date:</label>
             <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={formData.startDate}
               onChange={handleChange}
             />
           </div>
@@ -245,12 +213,12 @@ const BusinessRegistration1 = () => {
             </select>
           </div>
           <div className="form-group">
-            <label htmlFor="startDate">Start Date:</label>
+            <label htmlFor="firstName">First Name:</label>
             <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={formData.startDate}
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
               onChange={handleChange}
             />
           </div>
@@ -304,17 +272,6 @@ const BusinessRegistration1 = () => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="logo">Logo:</label>
-            <input
-              type="file"
-              id="logo"
-              name="logo"
-              accept="image/*"
-              // value={formData.logo}
-              onChange={handleLogoChange}
             />
           </div>
         </div>

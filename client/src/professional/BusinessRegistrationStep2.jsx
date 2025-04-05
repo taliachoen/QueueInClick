@@ -11,15 +11,12 @@ const BusinessRegistrationStep2 = () => {
   const [formDataStep1, setFormDataStep1] = useState(step1);
   const [serviceTypes, setServiceTypes] = useState([]);
   const [serviceData, setServiceData] = useState({ serviceType: '', price: '', duration: '' });
-
-  // סטייט לפתיחת המודל
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newServiceType, setNewServiceType] = useState('');
-  const [isLoading, setIsLoading] = useState(true);  // מצב טעינה
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchServiceTypes();
-    console.log("formData.logo" , formDataStep1.logo, "formData" , formDataStep1);
   }, [formDataStep1.domainCode]);
 
   const fetchServiceTypes = async () => {

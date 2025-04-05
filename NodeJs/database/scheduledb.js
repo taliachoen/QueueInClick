@@ -8,18 +8,55 @@ export async function getSchedules() {
   return schedules;
 }
 
+
 export async function getDaysOff(userId) {
-  try {    
-    // שאילתת SQL כדי לשלוף את ימי השבוע שבהם המקצוען אינו עובד
+  try {
+    console.log("userID", userId);
+    
+    // שאילתת SQL כדי לשלוף את ימי השבוע שבהם המקצוען עובד
     const [rows] = await pool.query(`
       SELECT dayOfWeek
       FROM schedules
       WHERE professionalId = ?
-      AND (startTime = '00:00:00' AND endTime = '00:00:00')
-  `, [userId]);  
-  
-    // ממפה את השורות כדי לחלץ רק את ערכי dayOfWeek לתוך מערך
-    const daysOff = rows.map(row => row.dayOfWeek);
+    `, [userId]);
+    
+    // מערך שמקשר בין שמות הימים למספרים
+    const dayMap = {
+      'Sunday': 0,
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6
+    };
+    
+    // מערך שמקשר בין מספרים לשמות הימים
+    const reverseDayMap = {
+      0: 'Sunday',
+      1: 'Monday',
+      2: 'Tuesday',
+      3: 'Wednesday',
+      4: 'Thursday',
+      5: 'Friday',
+      6: 'Saturday'
+    };
+    
+    // מערך של כל ימות השבוע (במספרים)
+    const allDays = [0, 1, 2, 3, 4, 5, 6];
+    
+    // ממפה את השורות כדי לחלץ את הימים בשמות, וממיר אותם למספרים
+    const workDays = rows.map(row => dayMap[row.dayOfWeek]);
+    console.log("rows", rows);
+    console.log("workDays", workDays);
+    
+    // מחסיר את ימי העבודה מימות השבוע ומחזיר את ימי החופש
+    const daysOffNumbers = allDays.filter(day => !workDays.includes(day));
+    
+    // ממיר את ימי החופש בחזרה לשמות ימים
+    const daysOff = daysOffNumbers.map(day => reverseDayMap[day]);
+    console.log("daysOff", daysOff);
+    
     // מחזיר את המערך daysOff
     return daysOff;
   } catch (error) {

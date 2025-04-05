@@ -31,6 +31,7 @@ const SearchBusinessOwner = () => {
     const [userComment, setUserComment] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [formattedDate, setformattedDate] = useState('');
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
@@ -97,7 +98,11 @@ const SearchBusinessOwner = () => {
             const response = await axios.get(`http://localhost:8080/professionals/name/${name}`);
             if (response.data) {
                 setBusinessDetails(response.data);
-                console.log("sss", response.data);
+                console.log(businessDetails, "businessDetails");
+                const startDate = new Date(businessDetails.startDate);
+                const formattedDate = startDate.toLocaleDateString('he-IL'); // פורמט בעברית
+                setformattedDate(formattedDate);
+                console.log(formattedDate); //זה יציג תאריך כמו "31/03/2025"
                 setSearchStatus('found');
                 fetchRecommendations(response.data.idProfessional);
             } else {
@@ -193,41 +198,6 @@ const SearchBusinessOwner = () => {
         }
     };
 
-
-    // const handleSendComment = async () => {
-    //     if (userRating === 0) {
-    //         alert('Please select a rating before submitting.');
-    //         return;
-    //     }
-    //     if (!userComment.trim()) {
-    //         alert('Please enter a comment before submitting.');
-    //         return;
-    //     }
-
-    //     const newComment = {
-    //         queueCode: 20,  // צריך לוודא שזה ערך נכון במסד הנתונים
-    //         idProfessional: businessDetails.idProfessional,
-    //         idCustomer: userId,
-    //         rating: userRating,
-    //         content: userComment,
-    //         comments_date: new Date().toISOString().split('T')[0]
-    //     };
-    //     console.log("📤 Sending comment:", newComment); // ✅ כאן נבדוק מה נשלח
-    //     try {
-    //         await axios.post('http://localhost:8080/comments', newComment);
-    //         setUserRating(0);
-    //         setUserComment('');
-    //         await fetchRecommendations(businessDetails.idProfessional);
-    //         //fetchRecommendations(businessDetails.idProfessional);
-    //     } catch (error) {
-    //         console.error('Error sending comment:', error.response?.data || error);
-    //     }
-    // };
-
-
-
-
-
     const navigateToInviteQueue = (businessDetails) => {
         navigate(`../inviteQueue`, { replace: true, state: { domainName: businessDetails.domainName, cityName: businessDetails.cityName } });
     };
@@ -262,6 +232,7 @@ const SearchBusinessOwner = () => {
                             <p>Address: {businessDetails.address}</p>
                             <p>Phone: {businessDetails.phone}</p>
                             <p>Email: {businessDetails.email}</p>
+                            <p>Start Date: {formattedDate}</p>
                             <div className="invite-button-container">
                                 <button className="invite-button" onClick={() => navigateToInviteQueue(businessDetails)}>Invite Queue</button>
                             </div>

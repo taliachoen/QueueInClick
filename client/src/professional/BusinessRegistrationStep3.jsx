@@ -5,7 +5,6 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import '../css/BusinessRegistrationStep3.css';
 import { FormContext } from './FormProvider';
-// import { UserContext } from '../userContex';
 
 const daysOfWeek = [
   { name: 'Sunday', key: 'Sunday' },
@@ -16,7 +15,6 @@ const daysOfWeek = [
   { name: 'Friday', key: 'Friday' },
   { name: 'Saturday', key: 'Saturday' },
 ];
-
 
 const BusinessRegistrationStep3 = () => {
   const navigate = useNavigate();

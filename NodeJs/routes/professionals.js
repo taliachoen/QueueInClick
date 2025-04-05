@@ -271,6 +271,8 @@ route.get('/id_check/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const professional = await getProfessionalById(id);
+        console.log("id" , id , "did" , professional);
+
         if (professional) {
             res.json(professional);
         } else {

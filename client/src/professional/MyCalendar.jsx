@@ -18,9 +18,7 @@ const MyCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [freeDays, setFreeDays] = useState([]);
-
   const userId = user.id;
-
 
   useEffect(() => {
     socket.on("appointmentCancelled", (data) => {
@@ -52,33 +50,18 @@ const MyCalendar = () => {
         prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
       );
     });
-
     return () => {
       socket.off("appointmentAdd");
     };
   }, []);
 
-
-  // const normalizeDate = (date) => {
-  //   const normalizedDate = new Date(date);
-  //   normalizedDate.setDate(normalizedDate.getDate() + 1);
-
-  //   if (isNaN(normalizedDate.getTime())) {
-  //     console.error("Invalid date format:", date);
-  //     return null; // מחזיר null במקרה של תאריך לא תקני
-  //   }
-
-  //   return normalizedDate.toISOString().split('T')[0];
-  // };
   const normalizeDate = (date) => {
     // השתמש ב-moment כדי לוודא שהתאריך מחושב נכון
     const normalizedDate = moment(date).format('YYYY-MM-DD');
-
     if (!normalizedDate) {
       console.error("Invalid date format:", date);
       return null; // מחזיר null במקרה של תאריך לא תקני
     }
-
     return normalizedDate;  // מחזיר בפורמט YYYY-MM-DD
   };
 
@@ -87,7 +70,6 @@ const MyCalendar = () => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return daysOfWeek[date.getDay()];
   };
-
   const tileClassName = ({ date }) => {
     const normalized = normalizeDate(date);
     const dayName = getDayName(date);
@@ -103,7 +85,6 @@ const MyCalendar = () => {
     }
     return ''; // ברירת מחדל - ללא מחלקה מיוחדת
   };
-
 
 
   useEffect(() => {
@@ -188,9 +169,6 @@ const MyCalendar = () => {
   const handleDaySelection = (day) => {
     // הפוך את היום שנבחר לפורמט תאריך סטנדרטי (YYYY-MM-DD)
     const selectedDate = normalizeDate(day);
-
-    console.log("Raw selected date:", day);
-    console.log("Normalized date:", normalizeDate(day));
     // המרת היום שנבחר לפורמט המתאים לאזור הזמן המקומי של המשתמש
     const localSelectedDay = moment(selectedDate).tz(moment.tz.guess()).format('YYYY-MM-DD');
     // התאמת חודש ושנה שנבחרו

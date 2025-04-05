@@ -12,7 +12,8 @@ import {
     getQueuesByCustomer,
     updateExistQueue,
     updateEndedAppointments,
-    updateQueueStatus
+    updateQueueStatus,
+    openDaySchedule
 } from '../database/queuesdb.js';
 import { calculateAvailableSlots  } from './professionals.js';
 import {  getIidProfessionalByBusinessName } from '../database/professionalsdb.js';
@@ -183,11 +184,10 @@ router.delete('/:id', async (req, res) => {
 });
 
 // פתיחת לוח זמנים ליום מסוים
-router.post('/openDaySchedule/:formattedDate', async (req, res) => {
-    const { formattedDate } = req.params;  // קבלת תאריך פתיחת הלוח
+router.post('/openDaySchedule', async (req, res) => {
     try {
-        await openDaySchedule(formattedDate);  // פתיחת לוח הזמנים עבור התאריך
-        res.json({ message: `Day schedule for ${formattedDate} has been opened successfully.` });
+        await openDaySchedule();  // פתיחת לוח הזמנים עבור התאריך
+        res.json({ message: `Day schedule has been opened successfully.` });
     } catch (error) {
         console.error('Error opening day schedule:', error);
         res.status(500).json({ message: error.message });

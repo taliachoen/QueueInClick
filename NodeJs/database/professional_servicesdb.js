@@ -18,18 +18,16 @@ export async function getProfessionalServicesById(businessName, serviceTypeName)
         JOIN type_service st ON st.typeCode = ps.ServiceTypeCode  -- Assuming ServiceTypeCode links both
         WHERE p.business_name = ? AND st.typeName = ?
     `;
-    
+
     try {
         const [profService] = await pool.query(query, [businessName, serviceTypeName]);
-    
+
         return profService;
     } catch (error) {
         console.error('Error fetching professional services:', error);
         throw error;  // Rethrow or handle the error as needed
     }
 }
-
-
 
 // Function to update an existing professional service
 export const updateProfessionalService = async (profServiceID, profServiceData) => {
@@ -56,14 +54,14 @@ export async function getProffServiceID(idProfessional, serviceTypeCode) {
 
 export async function postProfessionalService(idProfessional, typeName, Price, Duration) {
     try {
-     
-      const [result] = await pool.query(
-        `INSERT INTO professional_services (idProfessional, ServiceTypeCode, Price, Duration) 
+        const durationInSeconds = Duration * 60;
+        const [result] = await pool.query(
+            `INSERT INTO professional_services (idProfessional, ServiceTypeCode, Price, Duration) 
          VALUES (?, ?, ?, ?)`,
-        [idProfessional, typeName, Price, Duration]
-      );
-      return result.insertId;
+            [idProfessional, typeName, Price, durationInSeconds]
+        );
+        return result.insertId;
     } catch (error) {
-      throw new Error(`Error inserting professional service: ${error.message}`);
+        throw new Error(`Error inserting professional service: ${error.message}`);
     }
-  }
+}

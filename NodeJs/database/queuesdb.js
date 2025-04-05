@@ -424,30 +424,74 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
     }
 }
 
-// פונקציה שתפתח את לוח הזמנים עבור היום שנמסר
-export async function openDaySchedule(formattedDate) {
+
+// פונקציה שתפתח את לוח הזמנים עבור היום הבא עבור כל בעל עסק
+export async function openDaySchedule() {
     try {
-        // כאן אנחנו מניחים ש- formattedDate יהיה בתצורת YYYY-MM-DD, לדוגמה "2025-05-06"
+        // שלב ראשון - קבלת כל בעלי העסקים מהטבלה professionals
+        const professionalsResult = await pool.query('SELECT idProfessional FROM professionals');
+        console.log(professionalsResult, "professionalsResult");
 
-        // נרצה לבדוק אם יום זה כבר קיים בתור
-        const result = await pool.query(
-            `SELECT * FROM available_days WHERE dayDate = $1`, [formattedDate]
-        );
-
-        if (result.rows.length > 0) {
+        // בדוק אם יש בעלי עסקים
+        if (!professionalsResult || !professionalsResult[0] || professionalsResult[0].length === 0) {
+            console.log('No professionals found.');
             return;
         }
 
-        // אם היום לא קיים בתור, נפתח אותו על ידי הוספה לטבלה
-        await pool.query(
-            `INSERT INTO available_days (dayDate, isAvailable) VALUES ($1, true)`,
-            [formattedDate]
-        );
+        // עבור כל בעל עסק, בצע את הפעולה להוסיף את היום הבא בתור
+        for (const professional of professionalsResult[0]) {  // גישה למערך הראשון
+            const professionalId = professional.idProfessional;  // תוקן השם של השדה
+
+            // שלב שני - קבלת היום האחרון שהוזן עבור בעל העסק
+            const lastAvailableDayResult = await pool.query(
+                'SELECT dayDate FROM available_days WHERE professionalId = ? ORDER BY dayDate DESC LIMIT 1',
+                [professionalId]
+            );
+
+            console.log(lastAvailableDayResult, "lastAvailableDayResult");
+
+            // אם יש ימי עבודה קודמים, בחר את היום האחרון
+            if (lastAvailableDayResult && lastAvailableDayResult[0] && lastAvailableDayResult[0].length > 0) {
+                const lastAvailableDay = new Date(lastAvailableDayResult[0][0].dayDate);
+                const nextDay = new Date(lastAvailableDay.setDate(lastAvailableDay.getDate() + 1));
+                const formattedNextDay = nextDay.toISOString().split('T')[0];  // הגדרה אחרי החישוב של nextDay
+
+                console.log(`Next day calculated: ${formattedNextDay}`);
+
+                // בדוק אם היום הבא כבר קיים בתור עבור בעל העסק
+                const existingDay = await pool.query(
+                    'SELECT * FROM available_days WHERE dayDate = ? AND professionalId = ?',
+                    [formattedNextDay, professionalId]
+                );
+
+                console.log(existingDay, "existingDay");
+
+                // אם היום הבא לא קיים בתור, הוסף אותו
+                if (existingDay[0].length === 0) {
+                    await pool.query(
+                        'INSERT INTO available_days (dayDate, professionalId, isAvailable) VALUES (?, ?, true)',
+                        [formattedNextDay, professionalId]
+                    );
+                    console.log(`Schedule for professional ${professionalId} opened for date ${formattedNextDay}`);
+                } else {
+                    console.log(`Schedule for professional ${professionalId} already exists for date ${formattedNextDay}`);
+                }
+            } else {
+                console.log(`No available days found for professional ${professionalId}`);
+            }
+        }
     } catch (error) {
         console.error('Error opening day schedule:', error);
         throw new Error('Error opening day schedule');
     }
-};
+}
+
+
+
+
+
+
+
 
 export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
     // מערך שמות הימים בשבוע
