@@ -61,7 +61,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Register business with professional details and logo
-route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
+// route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
+route.post('/registerBusiness', async (req, res) => {
     try {
         const {
             step1: {
@@ -75,7 +76,6 @@ route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
                 email,
                 business_name,
                 phone,
-                logo,
             },
             step2: { services },
             passwordProff,
@@ -94,7 +94,6 @@ route.post('/registerBusiness', upload.single('logo'), async (req, res) => {
             passwordProff,
             business_name,
             phone,
-            logo
         );
 
         for (const service of services) {
@@ -153,8 +152,7 @@ route.post('/login', async (req, res) => {
                 cityName: user.CityName,
                 address: user.address,
                 phone: user.phone,
-                business_name: user.business_name,
-                logo: user.logo
+                business_name: user.business_name
             };
             res.status(200).json(userContextData);
         } else {
@@ -271,7 +269,7 @@ route.get('/id_check/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const professional = await getProfessionalById(id);
-        console.log("id" , id , "did" , professional);
+        console.log("id", id, "did", professional);
 
         if (professional) {
             res.json(professional);

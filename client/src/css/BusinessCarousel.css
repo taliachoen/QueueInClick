@@ -1,7 +1,8 @@
 .carousel-container {
-    width: 90%;
+    width: 85%;
     margin: auto;
     text-align: center;
+    padding-top: 50px;
 }
 
 .swiper {
@@ -9,23 +10,90 @@
 }
 
 .carousel-item {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
     text-align: left;
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    max-width: 350px;
+    margin: 0 auto;
 }
 
 .carousel-item:hover {
-    transform: scale(1.05);
+    transform: scale(1.07);
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 h3 {
-    color: #333;
-    margin-bottom: 20px;
+    color: #2c3e50;
+    font-size: 30px;
+    font-family: 'Arial', sans-serif;
+    margin-bottom: 30px;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 .error {
     color: red;
+    font-size: 16px;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+}
+
+.carousel-item h4 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #2d3e50;
+    text-transform: capitalize;
+    margin-bottom: 10px;
+    font-family: 'Georgia', serif;
+}
+
+.carousel-item p {
+    font-size: 16px;
+    color: #555;
+    margin: 5px 0;
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+}
+
+.carousel-item .btn {
+    background-color: #3498db;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 30px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    width: 90%;
+    margin-top: 20px;
+}
+
+.carousel-item .btn:hover {
+    background-color: #2980b9;
+}
+
+@media (max-width: 768px) {
+    .carousel-container {
+        width: 95%;
+    }
+
+    .carousel-item {
+        max-width: 100%;
+        padding: 20px;
+    }
+
+    h3 {
+        font-size: 24px;
+    }
+
+    .carousel-item h4 {
+        font-size: 22px;
+    }
+
+    .carousel-item p {
+        font-size: 14px;
+    }
 }

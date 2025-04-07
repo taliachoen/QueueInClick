@@ -4,124 +4,129 @@
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
-    background-color: #f8f9fa;
-    /* צבע רקע עדין */
-    padding: 20px;
+    background: linear-gradient(135deg, #f3f0ff, #e9ecef);
+    padding: 40px 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* כרטיס פרופיל */
 .profile-card {
+    width: 100%;
     max-width: 700px;
-    /* הרחבת הטופס */
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    /* קצוות מעוגלים יותר */
-    padding: 10px;
-    /* הגדלת ריווח פנימי */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    /* צל מודגש */
-    margin: 10px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 8px 20px rgba(100, 100, 111, 0.2);
+    transition: all 0.3s ease-in-out;
 }
 
-/* כותרת הכרטיס */
+.profile-card.edit-mode {
+    background-color: #f9f9ff;
+}
+
+/* כותרת */
 .profile-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    /* רווח נוסף */
+    margin-bottom: 30px;
 }
 
 .profile-header h1 {
-    margin: 0;
     font-size: 28px;
-    /* גופן גדול יותר */
+    color: #5e548e;
     display: flex;
     align-items: center;
-    font-family: 'Arial', sans-serif;
-    /* שינוי גופן */
-    color: #343a40;
-    /* צבע כהה */
+    gap: 10px;
+    font-family: 'Poppins', sans-serif;
 }
 
 /* כפתורים */
 .edit-button,
 .cancel-button,
 .update-button {
-    padding: 10px 18px;
-    /* ריווח נוח יותר */
+    padding: 10px 20px;
     border: none;
     cursor: pointer;
-    border-radius: 6px;
-    /* קצוות מעוגלים */
+    border-radius: 30px;
     font-size: 16px;
-    font-family: 'Arial', sans-serif;
-    /* גופן אחיד */
+    font-weight: 500;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.2s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .edit-button {
-    background-color: #007bff;
-    color: #fff;
+    background-color: #6f42c1;
+}
+
+.edit-button:hover {
+    background-color: #5a36a0;
+    transform: translateY(-2px);
 }
 
 .cancel-button {
-    background-color: #dc3545;
-    color: #fff;
+    background-color: #e63946;
     margin-right: 10px;
 }
 
-.update-button {
-    background-color: #28a745;
-    color: #fff;
+.cancel-button:hover {
+    background-color: #c42d39;
+    transform: translateY(-2px);
 }
 
-/* גוף הכרטיס */
+.update-button {
+    background-color: #38b000;
+}
+
+.update-button:hover {
+    background-color: #2d8d00;
+    transform: translateY(-2px);
+}
+
+/* גוף הטופס */
 .profile-body {
-    margin-top: 20px;
     display: grid;
     grid-template-columns: 1fr;
-    /* פריסה עמודתית */
-    row-gap: 15px;
-    /* ריווח בין השדות */
+    row-gap: 20px;
 }
 
-/* תוויות ושדות */
+/* תוויות */
 .profile-body label {
-    font-weight: bold;
-    margin-bottom: 6px;
-    display: block;
+    font-weight: 600;
     font-size: 16px;
-    /* גופן אחיד */
-    color: #495057;
+    color: #343a40;
+    margin-bottom: 6px;
 }
 
+/* שדות טקסט, פסקאות, תפריטים */
 .profile-body input,
 .profile-body p,
 .city-select {
-    margin-bottom: 10px;
     width: 100%;
-    padding: 12px;
-    /* ריווח פנימי גדול יותר */
+    padding: 14px;
     border: 1px solid #ccc;
-    border-radius: 6px;
-    /* קצוות מעוגלים */
+    border-radius: 10px;
     font-size: 16px;
-    font-family: 'Arial', sans-serif;
-    /* גופן אחיד */
+    font-family: inherit;
     box-sizing: border-box;
+    transition: all 0.3s ease-in-out;
+    background-color: #fff;
 }
 
-/* תצוגת טקסט */
+.profile-body input:focus,
+.city-select:focus {
+    border-color: #6f42c1;
+    box-shadow: 0 0 8px rgba(111, 66, 193, 0.2);
+    outline: none;
+}
+
 .profile-body p {
     margin: 0;
-    font-size: 16px;
     color: #495057;
-}
-
-/* עריכת טופס */
-.profile-card.edit-mode {
-    background-color: #f0f0f0;
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
 }
 
 /* תפריט בחירת עיר */
@@ -129,4 +134,15 @@
     appearance: none;
     background-color: #fff;
     cursor: pointer;
+}
+
+/* רספונסיביות */
+@media (max-width: 768px) {
+    .profile-card {
+        padding: 20px;
+    }
+
+    .profile-header h1 {
+        font-size: 22px;
+    }
 }

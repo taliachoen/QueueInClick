@@ -277,6 +277,7 @@ const MyCalendar = () => {
                   <div key={index} className="appointment">
                     <p><strong>Time:</strong> {appointment.Hour}</p>
                     <p><strong>Customer:</strong> {appointment.customerFirstName} {appointment.customerLastName}</p>
+                    <p><strong>Phone:</strong> {appointment.customerPhone}</p>
                     <p><strong>Service:</strong> {appointment.serviceTypeName}</p>
                   </div>
                 ))

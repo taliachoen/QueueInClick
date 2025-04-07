@@ -1,10 +1,10 @@
 import pool from './database.js';
 
 
-export async function postProfessional(idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, passwordProff, business_name, phone, logo) {
+export async function postProfessional(idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, passwordProff, business_name, phone) {
     try {
         const [result] = await pool.query(
-            `INSERT INTO professionals (idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, passwordProff, business_name, phone, logo) 
+            `INSERT INTO professionals (idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, passwordProff, business_name, phone) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 idProfessional,
@@ -17,8 +17,7 @@ export async function postProfessional(idProfessional, firstName, lastName, doma
                 email,
                 passwordProff,
                 business_name,
-                phone,
-                logo
+                phone
             ]
         );
         return result.insertId;
@@ -42,10 +41,6 @@ export async function postUser(userId, fullName, email, userType, password, user
         throw error;
     }
 }
-
-
-
-
 
 
 export const getProfessionalByEmailAndPassword = async (email, password) => {
@@ -79,7 +74,7 @@ AND t.typeName LIKE ?
 
 export async function getAllProfessionals() {
     const [professionals] = await pool.query(`
-         SELECT idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, business_name, phone ,logo
+         SELECT idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, business_name, phone 
          FROM professionals
     `);
     return professionals;
@@ -144,6 +139,8 @@ export async function getProfessionalAllDetails(businessName) {
 
 export async function getProfessionalById(id) {
     console.log("shirshir")
+    // const [[professional]] = await pool.query(`SELECT * FROM professional_view where idProfessional=?`, [id]);
+    // return professional;
     const query = `
         SELECT 
             p.idProfessional, 
@@ -175,27 +172,29 @@ import moment from 'moment';
 
 export async function updateProfessional(professionalID, professionalData) {
     try {
-
+        console.log("yosi");
         console.log("Updating professional:", professionalID, professionalData);
 
-        const { firstName, lastName, domainCode, startDate, address, cityCode, email, business_name, phone, logo } = professionalData;
-
+        const { firstName, lastName, domainCode, startDate, address, cityCode, email, business_name, phone } = professionalData;
         // אם startDate קיים, להמיר לפורמט הנכון
         const formattedDate = startDate ? moment(startDate).format('YYYY-MM-DD') : null;
-
-        const query = `UPDATE professionals SET firstName = ?, lastName = ?, domainCode = ?, startDate = ?, address = ?, cityCode = ?, email = ?, business_name = ?, phone = ?, logo = ? WHERE idProfessional = ?`;
-
-        const [result] = await pool.query(query, [firstName, lastName, domainCode, formattedDate, address, cityCode, email, business_name, phone, logo, professionalID]);
-
+        const query = `UPDATE professionals SET firstName = ?, lastName = ?, domainCode = ?, startDate = ?, address = ?, cityCode = ?, email = ?, business_name = ?, phone = ? WHERE idProfessional = ?`;
+        const [result] = await pool.query(query, [firstName, lastName, domainCode, formattedDate, address, cityCode, email, business_name, phone, professionalID]);
         if (result.affectedRows === 0) {
             throw new Error(`Update failed: No professional found with ID ${professionalID}`);
         }
 
         return await getProfessionalById(professionalID);
     } catch (error) {
-        console.error("Error updating professional:", error);
-        throw error;
+        console.error('Error updating profile:', error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+            swal("Error", error.response.data.message || "An error occurred while updating the profile", "error");
+        } else {
+            swal("Error", "An error occurred while updating the profile", "error");
+        }
     }
+
 };
 
 export async function getProfessionalServiceCode(professionalId, serviceTypeCode) {

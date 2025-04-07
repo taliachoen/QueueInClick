@@ -1,6 +1,3 @@
-
-
-
 import React, { useContext, useState, useEffect } from 'react';
 import { UserContext } from './userContex';
 import { ImProfile } from "react-icons/im";
@@ -62,32 +59,57 @@ const MyProfile = () => {
         setUpdatedUser({ ...user });
     };
 
-    // Handle input changes in the profile form
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setUpdatedUser(prevUser => ({
-            ...prevUser,
-            [name]: value
-        }));
+        if (name === 'cityName') {
+            const selectedCity = cities.find(city => city.CityName === value);  // חפש את העיר לפי שם העיר
+            setUpdatedUser(prevUser => ({
+                ...prevUser,
+                [name]: value,  // נשמור את שם העיר
+                cityCode: selectedCity?.CityCode || '',  // נשמור את קוד העיר
+            }));
+        } else {
+            setUpdatedUser(prevUser => ({
+                ...prevUser,
+                [name]: value
+            }));
+        }
     };
-
-    // Update the user profile with the new data
     const handleUpdateProfile = async () => {
         try {
+
+            console.log("Updated User Data:", updatedUser);  // הצגת הנתונים שנשלחים לשרת
             const userId = user.id;
+            console.log("cityCode being sent:", updatedUser.cityCode);
+
+            // לוודא ש-cityCode לא ריק לפני שליחה
+            if (!updatedUser.cityCode) {
+                swal("Error", "City code is required", "error");
+                return;
+            }
             const updatedUserData = {
-                ...updatedUser,
-                startDate: (user.userType === 'professionals' && updatedUser.startDate) ? moment(updatedUser.startDate).format('YYYY-MM-DD') : null
+                firstName: updatedUser.firstName,
+                lastName: updatedUser.lastName,
+                domainCode: updatedUser.domainCode || null,
+                startDate: updatedUser.startDate
+                    ? moment(updatedUser.startDate).format('YYYY-MM-DD')
+                    : null,
+                address: updatedUser.address,
+                cityCode: updatedUser.cityCode,
+                email: updatedUser.email,
+                business_name: updatedUser.business_name || null,
+                phone: updatedUser.phone,
             };
-            console.log("Updated User Data:", updatedUserData); // בדוק את הנתונים
+
+            console.log("Data sent to backend:", updatedUserData);
+
             const response = await axios.put(`http://localhost:8080/${user.userType}/${userId}`, updatedUserData);
             swal("Success", "Profile updated successfully", "success");
             setEditMode(false);
             setUser(prevUser => ({
-                ...prevUser,  // שומר על הנתונים הקודמים
-                ...response.data, // מוסיף/מעדכן את הנתונים שהתקבלו מהשרת
-                // cityName: response.data.updatedUser.cityName || prevUser.cityName, // שומר על שם העיר
-                // domainName: response.data.updatedUser.domainName || prevUser.domainName // שומר על שם התחום
+                ...prevUser,
+                ...response.data,
             }));
 
         } catch (error) {
@@ -130,25 +152,31 @@ const MyProfile = () => {
                             <p><strong>Email:</strong> {user.email}</p>
                             <label htmlFor="address">Address:</label>
                             <input type="text" id="address" name="address" value={updatedUser.address} onChange={handleChange} />
-                            <select className='city-select' name="cityName" value={updatedUser.cityName} onChange={handleChange}>
+                            <select
+                                className='city-select'
+                                name="cityCode"
+                                value={updatedUser.cityCode}  // נשלח קוד העיר
+                                onChange={handleChange}  // תעדכן את הערכים בהמשך
+                            >
                                 {cities.map((city) => (
-                                    <option key={city.CityCode} value={city.CityName}>
+                                    <option key={city.CityCode} value={city.CityCode}>  {/* העברת הערך של קוד העיר */}
                                         {city.CityName}
                                     </option>
                                 ))}
                             </select>
+
                             <label htmlFor="phone">Phone:</label>
                             <input type="text" id="phone" name="phone" value={updatedUser.phone} onChange={handleChange} />
                             {user.userType === 'professionals' && (
                                 <>
                                     <label htmlFor="startDate">Start Date:</label>
-                                    {/* <input type="date" id="startDate" name="startDate" value={updatedUser.startDate} onChange={handleChange} /> */}
                                     <input
                                         type="date"
                                         id="startDate"
                                         name="startDate"
-                                        value={updatedUser.startDate ? moment(updatedUser.startDate).format('YYYY-MM-DD') : ''} // שימוש ב-moment כדי להמיר את התאריך לפורמט הנדרש
+                                        value={updatedUser.startDate ? moment(updatedUser.startDate).format('YYYY-MM-DD') : ''}
                                         onChange={handleChange}
+                                        readOnly={true}  // הוספת אטריבוט שימנע שינוי
                                     />
                                     <label htmlFor="business_name">Business Name:</label>
                                     <input type="text" id="business_name" name="business_name" value={updatedUser.business_name} onChange={handleChange} />
