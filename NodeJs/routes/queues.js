@@ -17,7 +17,7 @@ import {
 } from '../database/queuesdb.js';
 import { calculateAvailableSlots  } from './professionals.js';
 import {  getIidProfessionalByBusinessName } from '../database/professionalsdb.js';
-import { io } from '../socket.js';
+// import { io } from '../socket.js';
 const router = express.Router();
 
 // הוספת פגישה חדשה

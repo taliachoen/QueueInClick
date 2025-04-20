@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../userContex';
 import '../css/InviteDate.css';
 import swal from 'sweetalert';
 import io from "socket.io-client";
-const socket = io("http://localhost:8080");
+import { useRef } from 'react';
 
 const InviteDate = () => {
     const [queues, setQueues] = useState([]);
@@ -19,7 +19,9 @@ const InviteDate = () => {
     const { businessDetails: businessDetailsFromState, type } = state || {};
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
-    const socket = io("http://localhost:8080");
+    // const socket = io("http://localhost:8080");
+    const socketRef = useRef(null);
+
 
     // Fetch business details if provided
     useEffect(() => {
@@ -27,6 +29,8 @@ const InviteDate = () => {
             fetchBusinessDetails(businessDetailsFromState.business_name, type);
         }
     }, [businessDetailsFromState, type]);
+
+
 
     // Fetch queues for the next day when component mounts
     useEffect(() => {
@@ -46,6 +50,31 @@ const InviteDate = () => {
     useEffect(() => {
         applyFilters();
     }, [queues, selectedDate, filterTime]);
+
+
+    useEffect(() => {
+        socketRef.current = io("http://localhost:8080");
+
+        socketRef.current.on("refreshAvailableQueues", () => {
+            console.log("Received refreshAvailableQueues from server");
+            fetchAvailableQueues();
+        });
+
+        return () => {
+            socketRef.current.disconnect();
+        };
+    }, [fetchAvailableQueues]);
+
+
+
+
+    const fetchAvailableQueues = async () => {
+        try {
+            fetchQueueData(businessDetails.business_name, type, selectedDate);
+        } catch (error) {
+            console.error("Error fetching available queues", error);
+        }
+    };
 
     // Fetch queue data from the server
     const fetchQueueData = async (businessName, serviceTypeCode, selectedDate) => {
@@ -97,7 +126,7 @@ const InviteDate = () => {
                 customerId: user.id,
             });
 
-            socket.emit("newAppointment", response.data);
+            socketRef.current.emit("newAppointment", response.data);
 
             swal("Success", "Queue booked successfully!", "success").then(() => {
                 navigate('../MyQueues');
@@ -119,7 +148,7 @@ const InviteDate = () => {
     };
 
     // Apply filters based on selected date and time
-    const applyFilters = () => {
+    const applyFilters = useCallback(() => {
         let filtered = queues;
 
         // Apply time filter if specified
@@ -132,10 +161,15 @@ const InviteDate = () => {
                 return true;
             });
         }
-
         setFilteredQueues(filtered);
         setCurrentPage(1);
-    };
+    }, [queues, filterTime]);
+
+    useEffect(() => {
+        applyFilters();
+    }, [applyFilters]);
+
+
 
     // Load more queues
     const handleLoadMore = () => {
@@ -216,3 +250,8 @@ const InviteDate = () => {
 };
 
 export default InviteDate;
+
+
+
+
+

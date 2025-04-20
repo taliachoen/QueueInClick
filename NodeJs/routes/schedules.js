@@ -14,7 +14,10 @@ route.get('/', async (req, res) => {
 });
 route.get('/daysOfWeek/:userId', async (req, res) => {
     const { userId } = req.params; // חילוץ userId מפרמטרי ה-URL    
+    console.log(userId, "userId");
     try {
+        console.log(userId, "userId");
+        
         // קריאה לפונקציה getDaysOff כדי לקבל את ימי החופש
         const daysOff = await getDaysOff(userId);
         // שליחת תגובת JSON עם מערך ה-daysOff

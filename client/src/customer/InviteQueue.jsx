@@ -81,7 +81,7 @@ const InviteQueue = () => {
 
         setLoading(true);        
         axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}`, {})
-            .then(response => {
+            .then(response => {                
                 setBusinesses(response.data);
                 setLoading(false);
             })

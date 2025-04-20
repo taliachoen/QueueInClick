@@ -90,6 +90,8 @@ const MyCalendar = () => {
   useEffect(() => {
     const fetchFreeDays = async () => {
       try {
+        console.log("userIduserId" , userId);
+        
         const response = await axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`);
         if (Array.isArray(response.data.daysOff)) {
           setFreeDays(response.data.daysOff);

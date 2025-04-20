@@ -6,9 +6,23 @@ export function setupSocket(server) {
     io = new Server(server, { cors: { origin: "*" } });
 
     io.on("connection", (socket) => {
-        socket.on("disconnect", () => {});
+        console.log("Client connected");
+
+        socket.on("disconnect", () => {
+            console.log("Client disconnected");
+        });
     });
+
+    // שידור לכל הלקוחות כל 3 דקות
+    setInterval(() => {
+        if (io) {
+            io.emit("refreshAvailableQueues");
+            console.log("Sent refreshAvailableQueues to all clients");
+        }
+    }, 180000); // 3 דקות
 }
+
+
 
 export function notifyAppointmentCancelled(queueCode, businessId) {
     if (io) {
@@ -25,3 +39,12 @@ export function notifyAppointmentAdd(queueCode, businessId) {
 }
 
 export { io };
+
+
+
+
+
+
+
+
+

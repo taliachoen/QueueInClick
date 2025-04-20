@@ -70,7 +70,6 @@ async function getWorkingHoursByBusinessName(businessName) {
         if (!businessRows.length) {
             throw new Error('Business not found');
         }
-
         const professionalId = businessRows[0].idProfessional;
 
         // שליפת שעות העבודה לפי professionalId מתוך טבלת schedules
@@ -80,10 +79,8 @@ async function getWorkingHoursByBusinessName(businessName) {
         if (!workingHoursRows.length) {
             throw new Error('Working hours not found for this business');
         }
-
         // החזרת שעות העבודה
         return workingHoursRows;
-
     } catch (error) {
         console.error('Error in getWorkingHoursByBusinessName:', error);
         throw new Error('Unable to fetch working hours');
@@ -424,8 +421,280 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
     }
 }
 
+// export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
+//     // מערך שמות הימים בשבוע
+//     const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+//     try {
+//         // קבלת פרטי העסק
+//         const business = await getProfessionalAllDetails(businessName);
+//         if (!business) throw new Error('Business not found.');
+
+//         // קבלת משך זמן השירות
+//         const serviceDuration = await getServiceDuration(businessName, serviceTypeName);
+//         if (!serviceDuration) throw new Error('Service duration not found.');
+
+//         // קבלת ימי החופש של בעל העסק
+//         const daysOff = await getDaysOff(business.idProfessional);
+//         const selectedDayNum = new Date(selectedDate).getDay();
+//         const selectedDayName = dayNames[selectedDayNum];
+//         const daysOffLowerCase = daysOff.map(day => day.toLowerCase());
+//         if (daysOffLowerCase.includes(selectedDayName.toLowerCase())) {
+//             return { message: `The selected day is a free and meetings cannot be booked. my free days is: ${daysOff} We would be happy to meet you on another day😊`, type: 'warning' };
+//         }
+//         // לשנות לפונקציה השולחת את היום ואת ת.ז בעל העסק ובודקת אם זמין ומחזירה אמת או שקר
+//         const availableDays = await getAvailableDays(businessName);
+//         const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
+//         const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
+//         console.log(11, availableDays, 11, formattedSelectedDate, 11, isDayAvailable);
+
+//         // בדיקה אם היום פתוח להזמנות
+//         if (!isDayAvailable) {
+//             return { message: 'The selected day is not available for appointments.', type: 'warning' };
+//         }
+
+
+//         // קבלת שעות העבודה של העסק
+//         const workingHours = await getWorkingHoursByBusinessName(business.business_name);
+//         const appointments = await getAppointmentsByBusinessAndDate(business.idProfessional, selectedDate);
+
+//         // המרת משך זמן השירות לדקות
+//         const timeParts = serviceDuration.split(':').map(Number);
+//         const serviceDurationMinutes = (timeParts[0] * 60) + timeParts[1] + (timeParts[2] / 60);
+//         let availableSlots = [];
+
+//         // לולאה העוברת על שעות העבודה ומייצרת טווחי זמן פנויים
+//         // במקום לעבור על כל הימים, נבדוק את היום הספציפי שנבחר
+//         const workingDay = workingHours.find(({ dayOfWeek }) => dayOfWeek.toUpperCase() === dayNames[selectedDayNum]);
+//         if (!workingDay) {
+//             return { message: 'The selected day is a day off and no appointments can be booked.' };
+//         }
+
+//         // אם מצאנו יום עבודה תואם, נמשיך
+//         // הסרת ה-Z כדי למנוע בעיות אזור זמן
+//         let start = new Date(`${selectedDate}T${workingDay.startTime.slice(0, 5)}:00`);
+//         let end = new Date(`${selectedDate}T${workingDay.endTime.slice(0, 5)}:00`);
+
+//         // נקבל מראש את כל מידע הפגישות הקיימות לייעול
+//         const existingAppointmentsInfo = [];
+//         console.log("existingAppointmentsInfo -- 0", existingAppointmentsInfo);
+//         console.log("appointments", appointments);
+
+//         if (appointments) {
+//             for (const appointment of appointments) {
+//                 console.log("0 -- 0", appointment);
+//                 const { Date: existingDate, Hour: existingHour, ProfessionalServiceCode } = appointment;
+
+//                 // ודא שהשדה קיים ולא ריק
+//                 if (!existingDate || !existingHour) {
+//                     continue;
+//                 }
+//                 console.log("1 -- 1");
+
+//                 try {
+//                     // Format the date properly
+//                     const formattedDate = formatDate(existingDate);
+
+//                     // Format the hour properly - ensure it has seconds
+//                     const formattedHour = formatTime(existingHour);
+
+//                     // יצירת אובייקט Date עם תאריך ושעה מפורמטים
+//                     const existingStart = new Date(`${formattedDate}T${formattedHour}`);
+
+//                     // Check if date is valid
+//                     if (isNaN(existingStart.getTime())) {
+//                         console.error(`Invalid date created with: ${formattedDate}T${formattedHour}`);
+//                         continue;
+//                     }
+
+//                     // קבלת משך זמן הטיפול - באופן סינכרוני לטובת המבנה הקיים
+//                     const serviceDurationForAppointment = await getServiceDurationForAppointment(ProfessionalServiceCode);
+
+//                     if (!serviceDurationForAppointment || !serviceDurationForAppointment[0]?.Duration) {
+//                         continue;
+//                     }
+
+//                     const serviceDurationForAppointmentTime = serviceDurationForAppointment[0].Duration.split(':').map(Number);
+//                     const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 +
+//                         serviceDurationForAppointmentTime[1] * 60 +
+//                         serviceDurationForAppointmentTime[2]) * 1000;
+
+//                     const existingEnd = new Date(existingStart.getTime() + durationInMillis);
+
+//                     existingAppointmentsInfo.push({
+//                         start: existingStart,
+//                         end: existingEnd
+//                     });
+
+//                 } catch (err) {
+//                     console.error("Error processing appointment:", err, "Data:", existingDate, existingHour);
+//                 }
+
+//                 console.log("existingAppointmentsInfo", existingAppointmentsInfo);
+
+//                 while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
+//                     const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
+
+//                     // בדיקת זמינות ללא async בתוך some() שגורם לבעיות
+//                     // const isAvailable = !existingAppointmentsInfo.some(appt => 
+//                     //     start < appt.end && slotEnd > appt.start
+//                     // );
+//                     const isAvailable = existingAppointmentsInfo.every(appt =>
+//                         slotEnd <= appt.start || start >= appt.end
+//                     );
+
+
+//                     if (isAvailable) {
+//                         availableSlots.push({
+//                             start: new Date(start),
+//                             end: slotEnd,
+//                             // הוספת פורמט קריא של השעות
+//                             startTime: start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+//                             endTime: slotEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+//                         });
+//                     }
+
+//                     start = new Date(start.getTime() + serviceDurationMinutes * 60000);
+//                 }
+
+//                 if (availableSlots.length === 0) {
+//                     return { message: 'No available appointments for the selected day.' };
+//                 }
+
+//                 return { availableSlots };
+//             }
+//         }
+
+//     } catch (error) {
+//         console.error('Error in getFilteredQueues:', error);
+//         return { error: 'Unable to fetch filtered queues. Please try again later.' };
+//     }
+// }
 
 // פונקציה שתפתח את לוח הזמנים עבור היום הבא עבור כל בעל עסק
+
+export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
+    const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+    try {
+        // קבלת פרטי העסק
+        const business = await getProfessionalAllDetails(businessName);
+        if (!business) throw new Error('Business not found.');
+
+        // קבלת משך זמן השירות
+        const serviceDuration = await getServiceDuration(businessName, serviceTypeName);
+        if (!serviceDuration) throw new Error('Service duration not found.');
+
+        // קבלת ימי החופש של בעל העסק
+        const daysOff = await getDaysOff(business.idProfessional);
+        const selectedDayNum = new Date(selectedDate).getDay();
+        const selectedDayName = dayNames[selectedDayNum];
+        const daysOffLowerCase = daysOff.map(day => day.toLowerCase());
+
+        if (daysOffLowerCase.includes(selectedDayName.toLowerCase())) {
+            return { message: `The selected day is a free day, meetings cannot be booked. My free days are: ${daysOff.join(", ")}. We would be happy to meet you on another day😊`, type: 'warning' };
+        }
+
+        // קבלת הימים הפנויים של בעל העסק
+        const availableDays = await getAvailableDays(businessName);
+        const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
+        const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
+
+        if (!isDayAvailable) {
+            return { message: 'The selected day is not available for appointments.', type: 'warning' };
+        }
+
+        // קבלת שעות העבודה של העסק
+        const workingHours = await getWorkingHoursByBusinessName(business.business_name);
+        const appointments = await getAppointmentsByBusinessAndDate(business.idProfessional, selectedDate);
+
+        // המרת משך זמן השירות לדקות
+        const timeParts = serviceDuration.split(':').map(Number);
+        const serviceDurationMinutes = (timeParts[0] * 60) + timeParts[1] + (timeParts[2] / 60);
+        let availableSlots = [];
+
+        // חיפוש יום העבודה המתאים
+        const workingDay = workingHours.find(({ dayOfWeek }) => dayOfWeek.toUpperCase() === dayNames[selectedDayNum]);
+        if (!workingDay) {
+            return { message: 'The selected day is a day off and no appointments can be booked.' };
+        }
+
+        let start = new Date(`${selectedDate}T${workingDay.startTime.slice(0, 5)}:00`);
+        let end = new Date(`${selectedDate}T${workingDay.endTime.slice(0, 5)}:00`);
+
+        // חישוב מידע קיים לפגישות
+        const existingAppointmentsInfo = [];
+
+        if (appointments) {
+            for (const appointment of appointments) {
+                const { Date: existingDate, Hour: existingHour, ProfessionalServiceCode } = appointment;
+                if (!existingDate || !existingHour) continue;
+
+                try {
+                    // Format the date and hour properly
+                    const formattedDate = formatDate(existingDate);
+                    const formattedHour = formatTime(existingHour);
+                    const existingStart = new Date(`${formattedDate}T${formattedHour}`);
+
+                    if (isNaN(existingStart.getTime())) continue;
+
+                    // קבלת משך זמן הפגישה
+                    const serviceDurationForAppointment = await getServiceDurationForAppointment(ProfessionalServiceCode);
+                    if (!serviceDurationForAppointment || !serviceDurationForAppointment[0]?.Duration) continue;
+
+                    const serviceDurationForAppointmentTime = serviceDurationForAppointment[0].Duration.split(':').map(Number);
+                    const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 +
+                        serviceDurationForAppointmentTime[1] * 60 +
+                        serviceDurationForAppointmentTime[2]) * 1000;
+
+                    const existingEnd = new Date(existingStart.getTime() + durationInMillis);
+                    existingAppointmentsInfo.push({ start: existingStart, end: existingEnd });
+
+                } catch (err) {
+                    console.error("Error processing appointment:", err);
+                }
+            }
+
+            // יצירת טווחי זמן פנויים
+            while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
+                const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
+
+                const isAvailable = existingAppointmentsInfo.every(appt =>
+                    slotEnd <= appt.start || start >= appt.end
+                );
+
+                if (isAvailable) {
+                    availableSlots.push({
+                        start: new Date(start),
+                        end: slotEnd,
+                        startTime: start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+                        endTime: slotEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                    });
+                }
+
+                start = new Date(start.getTime() + serviceDurationMinutes * 60000);
+            }
+
+            if (availableSlots.length === 0) {
+                return { message: 'No available appointments for the selected day.' };
+            }
+
+            return { availableSlots };
+
+        } else {
+            return { message: 'No appointments found for this day.' };
+        }
+
+    } catch (error) {
+        console.error('Error in getFilteredQueues:', error);
+        return { error: 'Unable to fetch filtered queues. Please try again later.' };
+    }
+}
+
+
+
+
+
 export async function openDaySchedule() {
     try {
         // שלב ראשון - קבלת כל בעלי העסקים מהטבלה professionals
@@ -483,154 +752,6 @@ export async function openDaySchedule() {
     } catch (error) {
         console.error('Error opening day schedule:', error);
         throw new Error('Error opening day schedule');
-    }
-}
-
-
-
-
-
-
-
-
-export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
-    // מערך שמות הימים בשבוע
-    const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-
-    try {
-        // קבלת פרטי העסק
-        const business = await getProfessionalAllDetails(businessName);
-        if (!business) throw new Error('Business not found.');
-
-        // קבלת משך זמן השירות
-        const serviceDuration = await getServiceDuration(businessName, serviceTypeName);
-        if (!serviceDuration) throw new Error('Service duration not found.');
-
-        // קבלת ימי החופש של בעל העסק
-        const daysOff = await getDaysOff(business.idProfessional);
-        const selectedDayNum = new Date(selectedDate).getDay();
-        const selectedDayName = dayNames[selectedDayNum];
-        const daysOffLowerCase = daysOff.map(day => day.toLowerCase());
-        if (daysOffLowerCase.includes(selectedDayName.toLowerCase())) {
-            return { message: `The selected day is a free and meetings cannot be booked. my free days is: ${daysOff} We would be happy to meet you on another day😊`, type: 'warning' };
-        }
-        // לשנות לפונקציה השולחת את היום ואת ת.ז בעל העסק ובודקת אם זמין ומחזירה אמת או שקר
-        const availableDays = await getAvailableDays(businessName);
-        const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
-        const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
-
-        // בדיקה אם היום פתוח להזמנות
-        if (!isDayAvailable) {
-            return { message: 'The selected day is not available for appointments.', type: 'warning' };
-        }
-
-
-        // קבלת שעות העבודה של העסק
-        const workingHours = await getWorkingHoursByBusinessName(business.business_name);
-        const appointments = await getAppointmentsByBusinessAndDate(business.idProfessional, selectedDate);
-
-        // המרת משך זמן השירות לדקות
-        const timeParts = serviceDuration.split(':').map(Number);
-        const serviceDurationMinutes = (timeParts[0] * 60) + timeParts[1] + (timeParts[2] / 60);
-        let availableSlots = [];
-
-        // לולאה העוברת על שעות העבודה ומייצרת טווחי זמן פנויים
-        // במקום לעבור על כל הימים, נבדוק את היום הספציפי שנבחר
-        const workingDay = workingHours.find(({ dayOfWeek }) => dayOfWeek.toUpperCase() === dayNames[selectedDayNum]);
-
-        if (!workingDay) {
-            return { message: 'The selected day is a day off and no appointments can be booked.' };
-        }
-
-        // אם מצאנו יום עבודה תואם, נמשיך
-        // הסרת ה-Z כדי למנוע בעיות אזור זמן
-        let start = new Date(`${selectedDate}T${workingDay.startTime.slice(0, 5)}:00`);
-        let end = new Date(`${selectedDate}T${workingDay.endTime.slice(0, 5)}:00`);
-
-        // נקבל מראש את כל מידע הפגישות הקיימות לייעול
-        const existingAppointmentsInfo = [];
-        for (const appointment of appointments) {
-            const { Date: existingDate, Hour: existingHour, ProfessionalServiceCode } = appointment;
-
-            // ודא שהשדה קיים ולא ריק
-            if (!existingDate || !existingHour) {
-                continue;
-            }
-
-            try {
-                // Format the date properly
-                const formattedDate = formatDate(existingDate);
-
-                // Format the hour properly - ensure it has seconds
-                const formattedHour = formatTime(existingHour);
-
-                // יצירת אובייקט Date עם תאריך ושעה מפורמטים
-                const existingStart = new Date(`${formattedDate}T${formattedHour}`);
-
-                // Check if date is valid
-                if (isNaN(existingStart.getTime())) {
-                    console.error(`Invalid date created with: ${formattedDate}T${formattedHour}`);
-                    continue;
-                }
-
-                // קבלת משך זמן הטיפול - באופן סינכרוני לטובת המבנה הקיים
-                const serviceDurationForAppointment = await getServiceDurationForAppointment(ProfessionalServiceCode);
-
-                if (!serviceDurationForAppointment || !serviceDurationForAppointment[0]?.Duration) {
-                    continue;
-                }
-
-                const serviceDurationForAppointmentTime = serviceDurationForAppointment[0].Duration.split(':').map(Number);
-                const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 +
-                    serviceDurationForAppointmentTime[1] * 60 +
-                    serviceDurationForAppointmentTime[2]) * 1000;
-
-                const existingEnd = new Date(existingStart.getTime() + durationInMillis);
-
-                existingAppointmentsInfo.push({
-                    start: existingStart,
-                    end: existingEnd
-                });
-
-            } catch (err) {
-                console.error("Error processing appointment:", err, "Data:", existingDate, existingHour);
-            }
-
-
-            while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
-                const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
-
-                // בדיקת זמינות ללא async בתוך some() שגורם לבעיות
-                // const isAvailable = !existingAppointmentsInfo.some(appt => 
-                //     start < appt.end && slotEnd > appt.start
-                // );
-                const isAvailable = existingAppointmentsInfo.every(appt =>
-                    slotEnd <= appt.start || start >= appt.end
-                );
-
-
-                if (isAvailable) {
-                    availableSlots.push({
-                        start: new Date(start),
-                        end: slotEnd,
-                        // הוספת פורמט קריא של השעות
-                        startTime: start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-                        endTime: slotEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
-                    });
-                }
-
-                start = new Date(start.getTime() + serviceDurationMinutes * 60000);
-            }
-
-            if (availableSlots.length === 0) {
-                return { message: 'No available appointments for the selected day.' };
-            }
-
-            return { availableSlots };
-        }
-    } catch (error) {
-        console.error('Error in getFilteredQueues:', error);
-        return { error: 'Unable to fetch filtered queues. Please try again later.' };
     }
 }
 
