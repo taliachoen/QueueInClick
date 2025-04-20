@@ -179,7 +179,7 @@ const InviteQueue = () => {
                                 <td>{business.phone}</td>
                                 <td>{business.cityName}</td>
                                 <td><button className="details-button" onClick={() => handleMoreDetails(business.business_name)}>More Details</button></td>
-                                <td><button className="book-button" onClick={() => handleBookAppointment(business)}>Save the date</button></td>
+                                <td><button className="book-button" onClick={() => handleBookAppointment(business)}>Search a date</button></td>
                             </tr>
                         ))}
                     </tbody>

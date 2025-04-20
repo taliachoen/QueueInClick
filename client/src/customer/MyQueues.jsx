@@ -65,11 +65,20 @@ function MyQueues() {
                         </span>
 
                         <button
-                            className="details-button"
+                            style={{
+                                fontSize: '12px', // או '0.8rem'
+                                padding: '6px 12px',
+                                backgroundColor: '#f0f0f0',
+                                color: '#333',
+                                border: '1px solid #ccc',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                            }}
                             onClick={() => handleMoreDetails(queue.businessName)}
                         >
-                            More Details
+                            More details about the business
                         </button>
+
 
                         <button
                             className="cancel-button"

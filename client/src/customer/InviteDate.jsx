@@ -51,6 +51,14 @@ const InviteDate = () => {
         applyFilters();
     }, [queues, selectedDate, filterTime]);
 
+    
+    const fetchAvailableQueues = async () => {
+        try {
+            fetchQueueData(businessDetails.business_name, type, selectedDate);
+        } catch (error) {
+            console.error("Error fetching available queues", error);
+        }
+    };
 
     useEffect(() => {
         socketRef.current = io("http://localhost:8080");
@@ -68,13 +76,6 @@ const InviteDate = () => {
 
 
 
-    const fetchAvailableQueues = async () => {
-        try {
-            fetchQueueData(businessDetails.business_name, type, selectedDate);
-        } catch (error) {
-            console.error("Error fetching available queues", error);
-        }
-    };
 
     // Fetch queue data from the server
     const fetchQueueData = async (businessName, serviceTypeCode, selectedDate) => {

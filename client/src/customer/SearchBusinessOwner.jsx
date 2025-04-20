@@ -158,8 +158,9 @@ const SearchBusinessOwner = () => {
             });
 
             console.log("🔵 Response from server:", checkResponse.data); // בדיקת נתונים שמתקבלים
+            console.log("111 Response:", checkResponse); // בדיקת נתונים שמתקבלים
 
-            if (!checkResponse.data.canCommented) {
+            if (!checkResponse.canCommented) {
                 // ❌ המשתמש *לא* יכול להגיב – עליו לחכות!
                 Swal.fire({
                     title: 'Please wait',
