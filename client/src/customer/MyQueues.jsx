@@ -30,26 +30,58 @@ function MyQueues() {
     const handleMoreDetails = (businessName) => {
         navigate(`../searchBusinessOwner`, { replace: true, state: { businessName } });
     };
-
     const cancelQueue = (queueCode) => {
-        axios.put(`http://localhost:8080/queues/cancel/${queueCode}`, {
-            customerId: user.id
-        })
-            .then(response => {
-                setQueues(queues.filter(queue => queue.QueueCode !== queueCode));
-                socket.emit("cancelAppointment", { queueCode });
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you really want to cancel this appointment?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, cancel it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios.put(`http://localhost:8080/queues/cancel/${queueCode}`, {
+                    customerId: user.id
+                })
+                    .then(response => {
+                        setQueues(queues.filter(queue => queue.QueueCode !== queueCode));
+                        socket.emit("cancelAppointment", { queueCode });
 
-                Swal.fire({
-                    title: "Your appointment was successfully canceled",
-                    text: "You can schedule a new one anytime.",
-                    icon: "success",
-                    confirmButtonText: "OK"
-                });
-            })
-            .catch(error => {
-                setError('There was an error cancelling the queue!');
-            });
+                        Swal.fire({
+                            title: "Cancelled!",
+                            text: "Your appointment was successfully canceled.",
+                            icon: "success",
+                            confirmButtonText: "OK"
+                        });
+                    })
+                    .catch(error => {
+                        setError('There was an error cancelling the queue!');
+                    });
+            }
+        });
     };
+
+    // const cancelQueue = (queueCode) => {
+    //     axios.put(`http://localhost:8080/queues/cancel/${queueCode}`, {
+    //         customerId: user.id
+    //     })
+    //         .then(response => {
+    //             setQueues(queues.filter(queue => queue.QueueCode !== queueCode));
+    //             socket.emit("cancelAppointment", { queueCode });
+
+    //             Swal.fire({
+    //                 title: "Your appointment was successfully canceled",
+    //                 text: "You can schedule a new one anytime.",
+    //                 icon: "success",
+    //                 confirmButtonText: "OK"
+    //             });
+    //         })
+    //         .catch(error => {
+    //             setError('There was an error cancelling the queue!');
+    //         });
+    // };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;

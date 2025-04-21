@@ -119,6 +119,19 @@ export async function getQueueById(id) {
     const [[queue]] = await pool.query(`select * from queues where queueCode=?`, [id]);
     return queue;
 }
+export async function updateQueueStatus1(queueCode, newStatus) {
+    try {
+        const query = `
+            UPDATE queues
+            SET Status = ?
+            WHERE QueueCode = ?
+        `;
+        await pool.query(query, [newStatus, queueCode]);
+    } catch (error) {
+        console.error('Error updating queue status:', error);
+        throw error;
+    }
+}
 
 //פונקציה המחזירה את כל התורים של לקוח ספיציפי
 export async function getQueuesByCustomer(customerId) {

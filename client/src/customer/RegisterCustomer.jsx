@@ -187,9 +187,12 @@ const RegisterCustomer = () => {
                             {formErrors.confirmPassword && <p className="error">{formErrors.confirmPassword}</p>}
                         </div>
                     )}
-
-                    <button type="submit">Register</button>
-                    <Link to="/login" className="register-button">Login</Link>
+                    <div className="button-group">
+                        <button type="submit">Register</button>
+                        <Link to="/login" className="register-button">Login</Link>
+                    </div>
+                    {/* <button type="submit">Register</button>
+                    <Link to="/login" className="register-button">Login</Link> */}
                 </div>
             </form>
         </div>

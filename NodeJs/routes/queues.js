@@ -1,5 +1,5 @@
 import express from 'express';
-import { notifyAppointmentCancelled , notifyAppointmentAdd } from "../socket.js";
+import { notifyAppointmentCancelled, notifyAppointmentAdd } from "../socket.js";
 import { postMessage } from '../database/messagesdb.js';  // ייבוא הפונקציה המתאימה להוספת הודעה
 import {
     postQueue,
@@ -13,10 +13,11 @@ import {
     updateExistQueue,
     updateEndedAppointments,
     updateQueueStatus,
+    updateQueueStatus1,
     openDaySchedule
 } from '../database/queuesdb.js';
-import { calculateAvailableSlots  } from './professionals.js';
-import {  getIidProfessionalByBusinessName } from '../database/professionalsdb.js';
+import { calculateAvailableSlots } from './professionals.js';
+import { getIidProfessionalByBusinessName } from '../database/professionalsdb.js';
 // import { io } from '../socket.js';
 const router = express.Router();
 
@@ -112,16 +113,46 @@ router.get('/allQueue/:month/:year/:userid', async (req, res) => {
 });
 
 // קבלת פגישות של לקוח מסוים
+// router.get('/:customerId', async (req, res) => {
+//     try {
+//         const { customerId } = req.params;  // קבלת id של הלקוח
+//         const queues = await getQueuesByCustomer(customerId);  // שלח לבסיס הנתונים את הבקשה לפגישות של הלקוח
+//         res.json(queues);
+//     } catch (error) {
+//         console.error('Error fetching queues for customer:', error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
 router.get('/:customerId', async (req, res) => {
     try {
-        const { customerId } = req.params;  // קבלת id של הלקוח
-        const queues = await getQueuesByCustomer(customerId);  // שלח לבסיס הנתונים את הבקשה לפגישות של הלקוח
+        const { customerId } = req.params;
+        let queues = await getQueuesByCustomer(customerId);
+        console.log("queues22222222", queues);
+        const today = new Date();
+        const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        // עדכון תורים שעברו
+        for (const queue of queues) {
+            if (queue.Date < todayDateString && queue.Status === "waiting") {
+                await updateQueueStatus1(queue.QueueCode, "finished");
+                queue.Status = "finished"; // לעדכן בזיכרון המקומי מיד
+            }
+        }
+        queues = queues.filter(queue => {
+            const queueDateString = new Date(queue.Date).toISOString().split('T')[0];
+            return queue.Status === "waiting" && queueDateString >= todayDateString;
+        });
+        console.log("queues11111", queues);
+
         res.json(queues);
     } catch (error) {
         console.error('Error fetching queues for customer:', error);
         res.status(500).json({ message: error.message });
     }
 });
+
+
+
 
 // עדכון פגישות שהסתיימו
 router.put('/updateEndedAppointments', async (req, res) => {

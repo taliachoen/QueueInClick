@@ -129,8 +129,12 @@ a.btn:hover {
 
 /* Button Styles */
 .landing-button-container {
+    /* display: flex;
+    position: relative; */
     display: flex;
     position: relative;
+    gap: 20px;
+    /* רווח בינוני בין הכפתורים */
 }
 
 #optionCust,
@@ -170,15 +174,15 @@ a.btn:hover {
 
 #logo {
     width: 100px;
-    height: auto; 
-    display: block; 
-    border-radius: 50px; 
+    height: auto;
+    display: block;
+    border-radius: 50px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-#LogoQuick{
+#LogoQuick {
     width: 25%;
-    height: 25%; 
+    height: 25%;
     /* display: block;  */
     /* border-radius: 50px; */
     margin-left: 38%;
@@ -186,10 +190,10 @@ a.btn:hover {
 }
 
 .user-icon {
-    width: 70px; 
+    width: 70px;
     height: auto;
-    border-radius: 50%; 
-    margin-top: 10px; 
+    border-radius: 50%;
+    margin-top: 10px;
 }
 
 button,

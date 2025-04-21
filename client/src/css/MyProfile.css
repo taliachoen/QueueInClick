@@ -5,8 +5,10 @@
     align-items: flex-start;
     min-height: 100vh;
     background: linear-gradient(135deg, #f3f0ff, #e9ecef);
-    padding: 40px 20px;
+    padding: 20px 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+    /* הסרת גלילה אופקית */
 }
 
 /* כרטיס פרופיל */
@@ -15,13 +17,13 @@
     max-width: 700px;
     background-color: #ffffff;
     border-radius: 16px;
-    padding: 30px;
-    box-shadow: 0 8px 20px rgba(100, 100, 111, 0.2);
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(100, 100, 111, 0.2);
     transition: all 0.3s ease-in-out;
-}
-
-.profile-card.edit-mode {
-    background-color: #f9f9ff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: auto;
 }
 
 /* כותרת */
@@ -29,11 +31,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 5px;
 }
 
 .profile-header h1 {
-    font-size: 28px;
+    font-size: 24px;
     color: #5e548e;
     display: flex;
     align-items: center;
@@ -42,14 +44,20 @@
 }
 
 /* כפתורים */
+.button-group {
+    display: flex;
+    gap: 10px;
+    /* רווחים קטנים בין כפתורים */
+}
+
 .edit-button,
 .cancel-button,
 .update-button {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border: none;
     cursor: pointer;
     border-radius: 30px;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     color: #fff;
     transition: background-color 0.3s, transform 0.2s ease-in-out;
@@ -67,7 +75,6 @@
 
 .cancel-button {
     background-color: #e63946;
-    margin-right: 10px;
 }
 
 .cancel-button:hover {
@@ -88,15 +95,7 @@
 .profile-body {
     display: grid;
     grid-template-columns: 1fr;
-    row-gap: 20px;
-}
-
-/* תוויות */
-.profile-body label {
-    font-weight: 600;
-    font-size: 16px;
-    color: #343a40;
-    margin-bottom: 6px;
+    row-gap: 10px;
 }
 
 /* שדות טקסט, פסקאות, תפריטים */
@@ -104,10 +103,10 @@
 .profile-body p,
 .city-select {
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     border: 1px solid #ccc;
     border-radius: 10px;
-    font-size: 16px;
+    font-size: 14px;
     font-family: inherit;
     box-sizing: border-box;
     transition: all 0.3s ease-in-out;
@@ -125,15 +124,8 @@
     margin: 0;
     color: #495057;
     background-color: #f8f9fa;
-    padding: 12px;
+    padding: 10px;
     border-radius: 8px;
-}
-
-/* תפריט בחירת עיר */
-.city-select {
-    appearance: none;
-    background-color: #fff;
-    cursor: pointer;
 }
 
 /* רספונסיביות */
@@ -143,6 +135,16 @@
     }
 
     .profile-header h1 {
-        font-size: 22px;
+        font-size: 20px;
+    }
+
+    .profile-body {
+        row-gap: 8px;
+    }
+
+    .edit-button,
+    .cancel-button,
+    .update-button {
+        font-size: 12px;
     }
 }

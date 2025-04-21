@@ -1,9 +1,9 @@
 import mysql from 'mysql2'
-
+//Connecting the data base to the project
 const pool = mysql.createPool(
     {
         host: "127.0.0.1",
-        password: "123talia",
+        password: "shira@123456",
         user: 'root',
         database: 'dbqueues'
     }

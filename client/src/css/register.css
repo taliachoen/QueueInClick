@@ -4,9 +4,9 @@
     gap: 1rem;
 }
 
-.register-button {
+/* .register-button {
     color: black;
-}
+} */
 
 @media (max-width: 768px) {
     .form-columns {
@@ -104,4 +104,36 @@
     #login-form {
         padding: 1rem;
     }
+}
+
+
+.register-button {
+    display: block;
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s ease;
+    margin-top: 0.5rem;
+    text-align: center;
+    text-decoration: none;
+    /* להוריד קו תחתון */
+    width: 100%;
+    /* בדיוק כמו כפתור Register */
+    box-sizing: border-box;
+}
+
+.register-button:hover {
+    background: linear-gradient(to right, #2575fc, #6a11cb);
+}
+
+.button-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    /* רווח של 10px בין הכפתורים */
+    margin-top: 1rem;
 }

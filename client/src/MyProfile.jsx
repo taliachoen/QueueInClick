@@ -136,10 +136,14 @@ const MyProfile = () => {
                     <h1><ImProfile /> {user.firstName} {user.lastName}</h1>
                     {!editMode && <button className="edit-button" onClick={handleEditToggle}>Edit</button>}
                     {editMode && (
-                        <>
+                        <div className="button-group">
                             <button className="cancel-button" onClick={handleCancelEdit}>Cancel</button>
                             <button className="update-button" onClick={handleUpdateProfile}>Update</button>
-                        </>
+                        </div>
+                        // <>
+                        //     <button className="cancel-button" onClick={handleCancelEdit}>Cancel</button>
+                        //     <button className="update-button" onClick={handleUpdateProfile}>Update</button>
+                        // </>
                     )}
                 </div>
                 <div className="profile-body">
