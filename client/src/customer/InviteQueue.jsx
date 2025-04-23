@@ -145,7 +145,7 @@ const InviteQueue = () => {
                         ))}
                     </datalist>
 
-                    {showPrompt && <p className="prompt" style={{ color: 'red' }}>Please fill all the fields to search.</p>}
+                    {/* {showPrompt && <p className="prompt" style={{ color: 'red' }}>Please fill all the fields to search.</p>} */}
 
                     <select
                         value={selectedCity}

@@ -83,12 +83,65 @@ const SearchBusinessOwner = () => {
         }
     };
 
-    const handleSearch = async (name) => {
+    // const handleSearch = async (name) => {
 
+    //     if (!name.trim()) {
+    //         alert('Please enter a business name.');
+    //         return;
+    //     }
+
+    //     try {
+    //         setIsLoading(true);
+    //         setError('');
+    //         setSearchStatus('searching');
+
+    //         const response = await axios.get(`http://localhost:8080/professionals/name/${name}`);
+    //         if (response.data) {
+    //             setBusinessDetails(response.data);
+    //             const startDate = new Date(response.data.startDate);
+    //             const formattedDate = startDate.toLocaleDateString('he-IL');
+    //             setformattedDate(formattedDate);
+    //             setSearchStatus('found');
+    //             fetchRecommendations(response.data.idProfessional);
+    //         } else {
+    //             setBusinessDetails(null);
+    //             setSearchStatus('not found');
+    //             Swal.fire({
+    //                 icon: 'info',
+    //                 title: 'Oops...',
+    //                 text: 'We couldn’t find the business you’re looking for 😢 Try a different name?',
+    //                 confirmButtonText: 'Got it!',
+    //                 confirmButtonColor: '#3085d6',
+    //             });
+    //         }
+
+    //     } catch (error) {
+    //         setError('Failed to fetch business details.');
+    //         setSearchStatus('not found');
+    //         // console.log(error);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
+
+    const handleSearch = async (name) => {
         if (!name.trim()) {
-            alert('Please enter a business name.');
+            Swal.fire({
+                icon: 'info',
+                title: 'Oops...',
+                text: 'Please enter a business name before searching.',
+                confirmButtonText: 'Got it!',
+                confirmButtonColor: '#3085d6',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
             return;
         }
+
 
         try {
             setIsLoading(true);
@@ -96,27 +149,40 @@ const SearchBusinessOwner = () => {
             setSearchStatus('searching');
 
             const response = await axios.get(`http://localhost:8080/professionals/name/${name}`);
-            if (response.data) {
-                setBusinessDetails(response.data);
-                console.log(businessDetails, "businessDetails");
-                const startDate = new Date(businessDetails.startDate);
-                const formattedDate = startDate.toLocaleDateString('he-IL'); // פורמט בעברית
-                setformattedDate(formattedDate);
-                console.log(formattedDate); //זה יציג תאריך כמו "31/03/2025"
-                setSearchStatus('found');
-                fetchRecommendations(response.data.idProfessional);
-            } else {
-                setBusinessDetails(null);
-                setSearchStatus('not found');
-            }
+
+            setBusinessDetails(response.data);
+            const startDate = new Date(response.data.startDate);
+            const formattedDate = startDate.toLocaleDateString('he-IL');
+            setformattedDate(formattedDate);
+            setSearchStatus('found');
+            fetchRecommendations(response.data.idProfessional);
+
         } catch (error) {
-            setError('Failed to fetch business details.');
+            setBusinessDetails(null);
             setSearchStatus('not found');
+            if (error.response && error.response.status === 404) {
+                // 🌸 ההודעה המתוקה שלך
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Oops...',
+                    html: 'We couldn’t find the business you’re looking for 😢 <br /> Try a different name?', // השתמשתי ב-html במקום text
+                    confirmButtonText: 'Got it!',
+                    confirmButtonColor: '#3085d6',
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
+                });
+            } else {
+                // 🛑 שגיאה כללית אחרת
+                setError('Failed to fetch business details.');
+            }
         } finally {
             setIsLoading(false);
         }
     };
-
     const fetchRecommendations = async (idProfessional) => {
         try {
             const response = await axios.get(`http://localhost:8080/comments?idProfessional=${idProfessional}`);
