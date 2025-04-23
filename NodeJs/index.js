@@ -12,9 +12,9 @@ import domains from './routes/domains.js';
 import cors from 'cors';
 import cron from 'node-cron';
 import axios from 'axios';
-import {setupSocket} from './socket.js'
-import { createServer } from 'http';  
-
+import { setupSocket } from './socket.js'
+import { createServer } from 'http';
+import pool from './database/database.js'
 const app = express();
 const server = createServer(app);
 const PORT = process.env.PORT || 8080;
@@ -31,42 +31,13 @@ app.use('/queues', queues);
 app.use('/type_service', type_services);
 app.use('/schedule', schedule);
 app.use('/domains', domains);
-import pool from './database/database.js'
 
-// פונקציה שתפתח תור חדש ליום נוסף עבור כל בעל מקצוע חדש
-// export async function openInitialScheduleForNewProfessional(professionalId) {
-//     const today = new Date();
-//     const firstAvailableDate = new Date(today.setMonth(today.getMonth() + 1)); // חודש קדימה
-//     firstAvailableDate.setDate(1); // מתחיל מה-1 לחודש החדש
 
-//     const lastAvailableDate = new Date(firstAvailableDate);
-//     lastAvailableDate.setMonth(lastAvailableDate.getMonth() + 1); // חודש קדימה
-//     lastAvailableDate.setDate(0); // יום אחרון של החודש
-
-//     const dates = [];
-//     let currentDate = new Date(firstAvailableDate);
-
-//     while (currentDate <= lastAvailableDate) {
-//         dates.push(currentDate.toISOString().split('T')[0]); 
-//         currentDate.setDate(currentDate.getDate() + 1);
-//     }
-
-//     try {
-//         const values = dates.map(date => `('${date}', ?, true)`).join(', ');
-//         await pool.query(
-//             `INSERT INTO available_days (dayDate, professionalId, isAvailable) VALUES ${values}`,
-//             Array(dates.length).fill(professionalId)
-//         );
-//         console.log(`Schedule opened from ${dates[0]} to ${dates[dates.length - 1]} for professional ${professionalId}`);
-//     } catch (error) {
-//         console.error('Error opening initial schedule:', error);
-//     }
-// };
 
 export async function openInitialScheduleForNewProfessional(professionalId) {
     const today = new Date(); // התאריך הנוכחי
     const daysInMonth = 30; // מספר הימים (הגדרנו חודש של 30 ימים)
-    const lastAvailableDate = new Date(today); 
+    const lastAvailableDate = new Date(today);
     lastAvailableDate.setDate(today.getDate() + daysInMonth); // תאריך עד 30 ימים קדימה
 
     // יצירת מערך של תאריכים מהיום ועד לתאריך של 30 ימים קדימה
@@ -104,15 +75,15 @@ const openNextDaySchedule = () => {
     const currentDate = new Date();
     const nextDay = new Date(currentDate.setDate(currentDate.getDate() + 1));
     const formattedDate = nextDay.toISOString().split('T')[0];
-    
+
     axios.post(`http://localhost:8080/queues/openDaySchedule`)
-    .then(response => {
-        console.log('Day schedule opened:', response.data);
-        console.log(`Schedule for ${formattedDate} opened successfully`);
-    })
-    .catch(error => {
-        console.error('Error opening next day schedule:', error);
-    });
+        .then(response => {
+            console.log('Day schedule opened:', response.data);
+            console.log(`Schedule for ${formattedDate} opened successfully`);
+        })
+        .catch(error => {
+            console.error('Error opening next day schedule:', error);
+        });
 };
 setupSocket(server);
 // שמירת ההגדרות של השרת

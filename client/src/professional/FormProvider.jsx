@@ -1,10 +1,7 @@
 // FormProvider.jsx
-import React, { useState, createContext, useContext } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-
+import React, { useState, createContext } from 'react';
+import { Outlet } from 'react-router-dom';
 export const FormContext = createContext();
-
-
 const FormProvider = () => {
   const [step1, setStep1] = useState({
     idProfessional: '',
@@ -37,7 +34,7 @@ const FormProvider = () => {
       Saturday: { start: '', end: '', isWorking: false },
     }
   });
-  
+
   const data = {
     step1,
     step2,
@@ -45,14 +42,12 @@ const FormProvider = () => {
     setStep1,
     setStep2,
     setStep3,
-
     fullData: {
       ...step1,
       ...step2,
       ...step3
     }
   };
-
   return (
     <FormContext.Provider value={data}>
       <Outlet />

@@ -53,7 +53,8 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-#business-table th, #business-table td {
+#business-table th,
+#business-table td {
     border: 1px solid #ddd;
     padding: 15px;
     text-align: center;
@@ -65,7 +66,8 @@
     font-weight: bold;
 }
 
-.details-button, .book-button {
+.details-button,
+.book-button {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -95,9 +97,58 @@
     font-size: 18px;
     margin-top: 20px;
 }
-#search12{
-  font-size: large;
-  font-weight: bold;
-  font-family: cursive;
-  width: 100%;
+
+#search12 {
+    font-size: large;
+    font-weight: bold;
+    font-family: cursive;
+    width: 100%;
+}
+
+
+
+.image-with-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 20px;
+    padding: 10px;
+}
+
+.searching-image {
+    width: 300px;
+    /* הגדלה משמעותית של התמונה */
+    height: 300px;
+    object-fit: contain;
+    margin-bottom: 20px;
+    /* מרווח בין התמונה לטקסט */
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+    /* הצל יהיה חזק יותר */
+    transition: transform 0.5s ease-in-out;
+    /* מעבר חלק יותר */
+}
+
+.searching-image:hover {
+    transform: rotate(180deg);
+    /* סיבוב של 180 מעלות */
+}
+
+.searching-text {
+    font-family: 'Cursive', sans-serif;
+    font-size: 22px;
+    /* גודל כתב מדויק */
+    color: #4b0082;
+    /* צבע סגול כהה */
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4);
+    /* אפקט קסם עדין */
+    transition: transform 0.3s ease-in-out;
+}
+
+.searching-text:hover {
+    transform: scale(1.1);
+    /* הגדלה עדינה של הטקסט בעת ריחוף */
 }
