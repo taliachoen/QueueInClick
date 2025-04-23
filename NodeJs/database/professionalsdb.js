@@ -5,7 +5,7 @@ export async function postProfessional(idProfessional, firstName, lastName, doma
     try {
         const [result] = await pool.query(
             `INSERT INTO professionals (idProfessional, firstName, lastName, domainCode, startDate, address, cityCode, email, passwordProff, business_name, phone) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 idProfessional,
                 firstName,

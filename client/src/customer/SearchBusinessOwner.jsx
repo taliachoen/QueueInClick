@@ -157,14 +157,14 @@ const SearchBusinessOwner = () => {
                 params: { IdProfessional: businessDetails.idProfessional, IdCustomer: userId }
             });
 
-            console.log("🔵 Response from server:", checkResponse.data); // בדיקת נתונים שמתקבלים
+            console.log("🔵 Response from server:", checkResponse.data.canComment); // בדיקת נתונים שמתקבלים
             console.log("111 Response:", checkResponse); // בדיקת נתונים שמתקבלים
 
-            if (!checkResponse.canCommented) {
+            if (!checkResponse.data.canComment) {
                 // ❌ המשתמש *לא* יכול להגיב – עליו לחכות!
                 Swal.fire({
                     title: 'Please wait',
-                    text: `You can leave another comment on ${checkResponse.data.nextAllowedDate}.`,
+                    text: `You can leave another comment on ${checkResponse.data.nextAllowedDate.da}.`,
                     icon: 'warning',
                     confirmButtonText: 'OK'
                 });

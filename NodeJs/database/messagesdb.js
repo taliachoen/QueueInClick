@@ -1,7 +1,5 @@
 import pool from './database.js'
-import {getCustomer} from './customersdb.js'
-
-
+import { getCustomer } from './customersdb.js'
 
 // עדכון פונקציה כדי להחזיר רק את ההודעות של הלקוח הספציפי
 export async function getMessagesForCustomer(customerId) {
@@ -76,7 +74,8 @@ export async function getMessage(id) {
 }
 
 export async function postMessage(queueCode, isRead, content, title, message_date) {
-    const [{ insertId }] = await pool.query(`insert into messages( queueCode,  isRead,  content, title , message_date) VALUES (?,?,?,?,?)`, [queueCode, isRead, content, title, message_date]);
+    const [{ insertId }] = await pool.query(`insert into messages( queueCode,  isRead,  content, title , message_date) VALUES (?,?,?,?,?)`,
+        [queueCode, isRead, content, title, message_date]);
     return await getCustomer(insertId);
 }
 

@@ -33,31 +33,31 @@ export const checkSlotAvailability = (appointments, startTime, endTime) => {
 };
 
 // שליפת נתונים מהדאטהבייס
-async function getAvailableDays(professionalBusinesName) {
-    try {
-        // Fetch professionalId based on business_name
-        const [professionalData] = await pool.query(
-            'SELECT idProfessional FROM professionals WHERE business_name = ?',
-            [professionalBusinesName]
-        );
+// async function getAvailableDays(professionalBusinesName) {
+//     try {
+//         // Fetch professionalId based on business_name
+//         const [professionalData] = await pool.query(
+//             'SELECT idProfessional FROM professionals WHERE business_name = ?',
+//             [professionalBusinesName]
+//         );
 
-        if (professionalData.length === 0) {
-            throw new Error('Professional not found for the provided business name.');
-        }
+//         if (professionalData.length === 0) {
+//             throw new Error('Professional not found for the provided business name.');
+//         }
 
-        const professionalId = professionalData[0].idProfessional;
+//         const professionalId = professionalData[0].idProfessional;
 
-        // Fetch available days for the professionalId
-        const [availableDays] = await pool.query(
-            'SELECT dayDate, isAvailable FROM available_days WHERE professionalId = ?',
-            [professionalId]
-        );
-        return availableDays;
-    } catch (error) {
-        console.error('Error fetching available days:', error);
-        throw new Error('Unable to fetch available days.');
-    }
-}
+//         // Fetch available days for the professionalId
+//         const [availableDays] = await pool.query(
+//             'SELECT dayDate, isAvailable FROM available_days WHERE professionalId = ?',
+//             [professionalId]
+//         );
+//         return availableDays;
+//     } catch (error) {
+//         console.error('Error fetching available days:', error);
+//         throw new Error('Unable to fetch available days.');
+//     }
+// }
 
 // פונקציה לקבלת שעות העבודה לפי שם העסק (בהתאם ל-ID של בעל המקצוע)
 async function getWorkingHoursByBusinessName(businessName) {
@@ -345,6 +345,8 @@ export async function getQueuesByFullDateAndBusinessOwner(fullDate, id) {
 
     try {
         const [queues] = await pool.query(query, [fullDate, id]);
+        console.log("queues", queues);
+        
         // Convert UTC date to local time and format to YYYY-MM-DD
         const localQueues = queues.map(queue => {
             const localDate = new Date(queue.Date);
@@ -434,157 +436,6 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
     }
 }
 
-// export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
-//     // מערך שמות הימים בשבוע
-//     const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-
-//     try {
-//         // קבלת פרטי העסק
-//         const business = await getProfessionalAllDetails(businessName);
-//         if (!business) throw new Error('Business not found.');
-
-//         // קבלת משך זמן השירות
-//         const serviceDuration = await getServiceDuration(businessName, serviceTypeName);
-//         if (!serviceDuration) throw new Error('Service duration not found.');
-
-//         // קבלת ימי החופש של בעל העסק
-//         const daysOff = await getDaysOff(business.idProfessional);
-//         const selectedDayNum = new Date(selectedDate).getDay();
-//         const selectedDayName = dayNames[selectedDayNum];
-//         const daysOffLowerCase = daysOff.map(day => day.toLowerCase());
-//         if (daysOffLowerCase.includes(selectedDayName.toLowerCase())) {
-//             return { message: `The selected day is a free and meetings cannot be booked. my free days is: ${daysOff} We would be happy to meet you on another day😊`, type: 'warning' };
-//         }
-//         // לשנות לפונקציה השולחת את היום ואת ת.ז בעל העסק ובודקת אם זמין ומחזירה אמת או שקר
-//         const availableDays = await getAvailableDays(businessName);
-//         const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
-//         const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
-//         console.log(11, availableDays, 11, formattedSelectedDate, 11, isDayAvailable);
-
-//         // בדיקה אם היום פתוח להזמנות
-//         if (!isDayAvailable) {
-//             return { message: 'The selected day is not available for appointments.', type: 'warning' };
-//         }
-
-
-//         // קבלת שעות העבודה של העסק
-//         const workingHours = await getWorkingHoursByBusinessName(business.business_name);
-//         const appointments = await getAppointmentsByBusinessAndDate(business.idProfessional, selectedDate);
-
-//         // המרת משך זמן השירות לדקות
-//         const timeParts = serviceDuration.split(':').map(Number);
-//         const serviceDurationMinutes = (timeParts[0] * 60) + timeParts[1] + (timeParts[2] / 60);
-//         let availableSlots = [];
-
-//         // לולאה העוברת על שעות העבודה ומייצרת טווחי זמן פנויים
-//         // במקום לעבור על כל הימים, נבדוק את היום הספציפי שנבחר
-//         const workingDay = workingHours.find(({ dayOfWeek }) => dayOfWeek.toUpperCase() === dayNames[selectedDayNum]);
-//         if (!workingDay) {
-//             return { message: 'The selected day is a day off and no appointments can be booked.' };
-//         }
-
-//         // אם מצאנו יום עבודה תואם, נמשיך
-//         // הסרת ה-Z כדי למנוע בעיות אזור זמן
-//         let start = new Date(`${selectedDate}T${workingDay.startTime.slice(0, 5)}:00`);
-//         let end = new Date(`${selectedDate}T${workingDay.endTime.slice(0, 5)}:00`);
-
-//         // נקבל מראש את כל מידע הפגישות הקיימות לייעול
-//         const existingAppointmentsInfo = [];
-//         console.log("existingAppointmentsInfo -- 0", existingAppointmentsInfo);
-//         console.log("appointments", appointments);
-
-//         if (appointments) {
-//             for (const appointment of appointments) {
-//                 console.log("0 -- 0", appointment);
-//                 const { Date: existingDate, Hour: existingHour, ProfessionalServiceCode } = appointment;
-
-//                 // ודא שהשדה קיים ולא ריק
-//                 if (!existingDate || !existingHour) {
-//                     continue;
-//                 }
-//                 console.log("1 -- 1");
-
-//                 try {
-//                     // Format the date properly
-//                     const formattedDate = formatDate(existingDate);
-
-//                     // Format the hour properly - ensure it has seconds
-//                     const formattedHour = formatTime(existingHour);
-
-//                     // יצירת אובייקט Date עם תאריך ושעה מפורמטים
-//                     const existingStart = new Date(`${formattedDate}T${formattedHour}`);
-
-//                     // Check if date is valid
-//                     if (isNaN(existingStart.getTime())) {
-//                         console.error(`Invalid date created with: ${formattedDate}T${formattedHour}`);
-//                         continue;
-//                     }
-
-//                     // קבלת משך זמן הטיפול - באופן סינכרוני לטובת המבנה הקיים
-//                     const serviceDurationForAppointment = await getServiceDurationForAppointment(ProfessionalServiceCode);
-
-//                     if (!serviceDurationForAppointment || !serviceDurationForAppointment[0]?.Duration) {
-//                         continue;
-//                     }
-
-//                     const serviceDurationForAppointmentTime = serviceDurationForAppointment[0].Duration.split(':').map(Number);
-//                     const durationInMillis = (serviceDurationForAppointmentTime[0] * 60 * 60 +
-//                         serviceDurationForAppointmentTime[1] * 60 +
-//                         serviceDurationForAppointmentTime[2]) * 1000;
-
-//                     const existingEnd = new Date(existingStart.getTime() + durationInMillis);
-
-//                     existingAppointmentsInfo.push({
-//                         start: existingStart,
-//                         end: existingEnd
-//                     });
-
-//                 } catch (err) {
-//                     console.error("Error processing appointment:", err, "Data:", existingDate, existingHour);
-//                 }
-
-//                 console.log("existingAppointmentsInfo", existingAppointmentsInfo);
-
-//                 while (start.getTime() + serviceDurationMinutes * 60000 <= end.getTime()) {
-//                     const slotEnd = new Date(start.getTime() + serviceDurationMinutes * 60000);
-
-//                     // בדיקת זמינות ללא async בתוך some() שגורם לבעיות
-//                     // const isAvailable = !existingAppointmentsInfo.some(appt => 
-//                     //     start < appt.end && slotEnd > appt.start
-//                     // );
-//                     const isAvailable = existingAppointmentsInfo.every(appt =>
-//                         slotEnd <= appt.start || start >= appt.end
-//                     );
-
-
-//                     if (isAvailable) {
-//                         availableSlots.push({
-//                             start: new Date(start),
-//                             end: slotEnd,
-//                             // הוספת פורמט קריא של השעות
-//                             startTime: start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-//                             endTime: slotEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
-//                         });
-//                     }
-
-//                     start = new Date(start.getTime() + serviceDurationMinutes * 60000);
-//                 }
-
-//                 if (availableSlots.length === 0) {
-//                     return { message: 'No available appointments for the selected day.' };
-//                 }
-
-//                 return { availableSlots };
-//             }
-//         }
-
-//     } catch (error) {
-//         console.error('Error in getFilteredQueues:', error);
-//         return { error: 'Unable to fetch filtered queues. Please try again later.' };
-//     }
-// }
-
-// פונקציה שתפתח את לוח הזמנים עבור היום הבא עבור כל בעל עסק
 
 export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
     const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
@@ -609,13 +460,13 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
         }
 
         // קבלת הימים הפנויים של בעל העסק
-        const availableDays = await getAvailableDays(businessName);
-        const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
-        const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
+        // const availableDays = await getAvailableDays(businessName);
+        // const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
+        // const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
 
-        if (!isDayAvailable) {
-            return { message: 'The selected day is not available for appointments.', type: 'warning' };
-        }
+        // if (!isDayAvailable) {
+        //     return { message: 'The selected day is not available for appointments.', type: 'warning' };
+        // }
 
         // קבלת שעות העבודה של העסק
         const workingHours = await getWorkingHoursByBusinessName(business.business_name);
@@ -708,65 +559,65 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
 
 
 
-export async function openDaySchedule() {
-    try {
-        // שלב ראשון - קבלת כל בעלי העסקים מהטבלה professionals
-        const professionalsResult = await pool.query('SELECT idProfessional FROM professionals');
-        console.log(professionalsResult, "professionalsResult");
+// export async function openDaySchedule() {
+//     try {
+//         // שלב ראשון - קבלת כל בעלי העסקים מהטבלה professionals
+//         const professionalsResult = await pool.query('SELECT idProfessional FROM professionals');
+//         console.log(professionalsResult, "professionalsResult");
 
-        // בדוק אם יש בעלי עסקים
-        if (!professionalsResult || !professionalsResult[0] || professionalsResult[0].length === 0) {
-            console.log('No professionals found.');
-            return;
-        }
+//         // בדוק אם יש בעלי עסקים
+//         if (!professionalsResult || !professionalsResult[0] || professionalsResult[0].length === 0) {
+//             console.log('No professionals found.');
+//             return;
+//         }
 
-        // עבור כל בעל עסק, בצע את הפעולה להוסיף את היום הבא בתור
-        for (const professional of professionalsResult[0]) {  // גישה למערך הראשון
-            const professionalId = professional.idProfessional;  // תוקן השם של השדה
+//         // עבור כל בעל עסק, בצע את הפעולה להוסיף את היום הבא בתור
+//         for (const professional of professionalsResult[0]) {  // גישה למערך הראשון
+//             const professionalId = professional.idProfessional;  // תוקן השם של השדה
 
-            // שלב שני - קבלת היום האחרון שהוזן עבור בעל העסק
-            const lastAvailableDayResult = await pool.query(
-                'SELECT dayDate FROM available_days WHERE professionalId = ? ORDER BY dayDate DESC LIMIT 1',
-                [professionalId]
-            );
+//             // שלב שני - קבלת היום האחרון שהוזן עבור בעל העסק
+//             const lastAvailableDayResult = await pool.query(
+//                 'SELECT dayDate FROM available_days WHERE professionalId = ? ORDER BY dayDate DESC LIMIT 1',
+//                 [professionalId]
+//             );
 
-            console.log(lastAvailableDayResult, "lastAvailableDayResult");
+//             console.log(lastAvailableDayResult, "lastAvailableDayResult");
 
-            // אם יש ימי עבודה קודמים, בחר את היום האחרון
-            if (lastAvailableDayResult && lastAvailableDayResult[0] && lastAvailableDayResult[0].length > 0) {
-                const lastAvailableDay = new Date(lastAvailableDayResult[0][0].dayDate);
-                const nextDay = new Date(lastAvailableDay.setDate(lastAvailableDay.getDate() + 1));
-                const formattedNextDay = nextDay.toISOString().split('T')[0];  // הגדרה אחרי החישוב של nextDay
+//             // אם יש ימי עבודה קודמים, בחר את היום האחרון
+//             if (lastAvailableDayResult && lastAvailableDayResult[0] && lastAvailableDayResult[0].length > 0) {
+//                 const lastAvailableDay = new Date(lastAvailableDayResult[0][0].dayDate);
+//                 const nextDay = new Date(lastAvailableDay.setDate(lastAvailableDay.getDate() + 1));
+//                 const formattedNextDay = nextDay.toISOString().split('T')[0];  // הגדרה אחרי החישוב של nextDay
 
-                console.log(`Next day calculated: ${formattedNextDay}`);
+//                 console.log(`Next day calculated: ${formattedNextDay}`);
 
-                // בדוק אם היום הבא כבר קיים בתור עבור בעל העסק
-                const existingDay = await pool.query(
-                    'SELECT * FROM available_days WHERE dayDate = ? AND professionalId = ?',
-                    [formattedNextDay, professionalId]
-                );
+//                 // בדוק אם היום הבא כבר קיים בתור עבור בעל העסק
+//                 const existingDay = await pool.query(
+//                     'SELECT * FROM available_days WHERE dayDate = ? AND professionalId = ?',
+//                     [formattedNextDay, professionalId]
+//                 );
 
-                console.log(existingDay, "existingDay");
+//                 console.log(existingDay, "existingDay");
 
-                // אם היום הבא לא קיים בתור, הוסף אותו
-                if (existingDay[0].length === 0) {
-                    await pool.query(
-                        'INSERT INTO available_days (dayDate, professionalId, isAvailable) VALUES (?, ?, true)',
-                        [formattedNextDay, professionalId]
-                    );
-                    console.log(`Schedule for professional ${professionalId} opened for date ${formattedNextDay}`);
-                } else {
-                    console.log(`Schedule for professional ${professionalId} already exists for date ${formattedNextDay}`);
-                }
-            } else {
-                console.log(`No available days found for professional ${professionalId}`);
-            }
-        }
-    } catch (error) {
-        console.error('Error opening day schedule:', error);
-        throw new Error('Error opening day schedule');
-    }
-}
+//                 // אם היום הבא לא קיים בתור, הוסף אותו
+//                 if (existingDay[0].length === 0) {
+//                     await pool.query(
+//                         'INSERT INTO available_days (dayDate, professionalId, isAvailable) VALUES (?, ?, true)',
+//                         [formattedNextDay, professionalId]
+//                     );
+//                     console.log(`Schedule for professional ${professionalId} opened for date ${formattedNextDay}`);
+//                 } else {
+//                     console.log(`Schedule for professional ${professionalId} already exists for date ${formattedNextDay}`);
+//                 }
+//             } else {
+//                 console.log(`No available days found for professional ${professionalId}`);
+//             }
+//         }
+//     } catch (error) {
+//         console.error('Error opening day schedule:', error);
+//         throw new Error('Error opening day schedule');
+//     }
+// }
 
 function formatTime(timeString) {
     try {

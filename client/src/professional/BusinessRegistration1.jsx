@@ -154,13 +154,6 @@ const BusinessRegistration1 = () => {
       ...formData,
       [e.target.name]: id
     });
-    // בדיקה אם תעודת הזהות קיימת
-    // const idExists = await checkIfIdExists(id);
-    // console.log("idExiststt", idExists);
-    // if (idExists) {
-    //   // לא מאפשר להמשיך אם תעודת הזהות קיימת
-    //   return;
-    // }
   };
 
   return (

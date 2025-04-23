@@ -17,7 +17,7 @@ import { getDomain } from '../database/domainsdb.js';
 import pool from '../database/database.js';
 import multer from 'multer';
 import path from 'path';
-import { openInitialScheduleForNewProfessional } from '../index.js';
+// import { openInitialScheduleForNewProfessional } from '../index.js';
 
 // פונקציות לעבודה עם תורים
 export function calculateAvailableSlots(startTime, endTime, duration) {
@@ -99,26 +99,26 @@ route.post('/registerBusiness', async (req, res) => {
         for (const service of services) {
             await postProfessionalService(professionalId, service.serviceType, service.price, service.duration);
         }
-
         for (const dayOfWeek in workingHours) {
             if (workingHours[dayOfWeek].isWorking) {
                 await postSchedule(professionalId, dayOfWeek, workingHours[dayOfWeek].start, workingHours[dayOfWeek].end);
             }
         }
-
-        try {
-            // הפעלת הפונקציה לפתיחה אוטומטית של חודש ראשון
-            await openInitialScheduleForNewProfessional(professionalId);
-        } catch (error) {
-            res.status(500).json({ message: 'Error registering professional and opening schedule.', error: error.message });
-        }
-
         res.json({ ProfessionalId: professionalId, message: 'Business registered successfully' });
     } catch (error) {
         console.error('Error registering business:', error);
         res.status(500).json({ message: error.message });
     }
 });
+
+// try {
+//     // הפעלת הפונקציה לפתיחה אוטומטית של חודש ראשון
+//     await openInitialScheduleForNewProfessional(professionalId);
+// } catch (error) {
+//     res.status(500).json({ message: 'Error registering professional and opening schedule.', error: error.message });
+// }
+
+
 
 // Get all professionals
 route.get('/', async (req, res) => {

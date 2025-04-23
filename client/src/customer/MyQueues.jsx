@@ -15,9 +15,28 @@ function MyQueues() {
     const { user } = useContext(UserContext);
     const navigate = useNavigate(); // ניווט
 
+    useEffect(() => {    
+        // האזנה לשינויים מהשרת
+        socket.on("appointmentCancelledByBusiness", (updatedQueue) => {
+            // עדכון תור בודד
+            setQueues(prevQueues =>
+                prevQueues.map(queue =>
+                    queue.QueueCode === updatedQueue.QueueCode ? updatedQueue : queue
+                )
+            );
+        });
+        return () => {
+            socket.off("appointmentCancelledByBusiness");
+        };
+    }, [user.id]);
+    
+
+
     useEffect(() => {
         axios.get(`http://localhost:8080/queues/${user.id}`)
             .then(response => {
+                console.log('hiii' , response.data, 11, user.id);
+                
                 setQueues(response.data);
                 setLoading(false);
             })
@@ -63,26 +82,6 @@ function MyQueues() {
         });
     };
 
-    // const cancelQueue = (queueCode) => {
-    //     axios.put(`http://localhost:8080/queues/cancel/${queueCode}`, {
-    //         customerId: user.id
-    //     })
-    //         .then(response => {
-    //             setQueues(queues.filter(queue => queue.QueueCode !== queueCode));
-    //             socket.emit("cancelAppointment", { queueCode });
-
-    //             Swal.fire({
-    //                 title: "Your appointment was successfully canceled",
-    //                 text: "You can schedule a new one anytime.",
-    //                 icon: "success",
-    //                 confirmButtonText: "OK"
-    //             });
-    //         })
-    //         .catch(error => {
-    //             setError('There was an error cancelling the queue!');
-    //         });
-    // };
-
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;
 
@@ -93,7 +92,7 @@ function MyQueues() {
                 {queues.map(queue => (
                     <li key={queue.QueueCode} className="queue-item">
                         <span className="queue-info">
-                            {new Date(queue.Date).toLocaleDateString()} - {queue.Hour} - {queue.Status}
+                            {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br></br> {queue.serviceName}
                         </span>
 
                         <button
@@ -104,11 +103,12 @@ function MyQueues() {
                                 color: '#333',
                                 border: '1px solid #ccc',
                                 borderRadius: '8px',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                margin: '10px'
                             }}
                             onClick={() => handleMoreDetails(queue.businessName)}
                         >
-                            More details about the business
+                            More details <br></br> about the business
                         </button>
 
 

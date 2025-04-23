@@ -1,5 +1,5 @@
 import express from 'express';
-import { notifyAppointmentCancelled, notifyAppointmentAdd } from "../socket.js";
+import { notifyAppointmentCancelled, notifyAppointmentAdd , appointmentCancelledByBusiness } from "../socket.js";
 import { postMessage } from '../database/messagesdb.js';  // ייבוא הפונקציה המתאימה להוספת הודעה
 import {
     postQueue,
@@ -14,7 +14,7 @@ import {
     updateEndedAppointments,
     updateQueueStatus,
     updateQueueStatus1,
-    openDaySchedule
+    // openDaySchedule
 } from '../database/queuesdb.js';
 import { calculateAvailableSlots } from './professionals.js';
 import { getIidProfessionalByBusinessName } from '../database/professionalsdb.js';
@@ -25,13 +25,11 @@ const router = express.Router();
 router.post('/addNewQueue', async (req, res) => {
     const { businessName, data, startTime, serviceType, customerId } = req.body;  // קבלת פרטי הפגישה
     try {
-
         const result = await postQueue(businessName, serviceType, customerId, data, startTime, 'scheduled'); // קריאה לפונקציה המוסיפה
 
         if (result) {
             const idProfessional = await getIidProfessionalByBusinessName(businessName);
             notifyAppointmentAdd(result.QueueCode, idProfessional[0].idProfessional);
-            // io.emit("newAppointment", result);
             res.status(200).json({ message: 'Queue added successfully', queue: result });
         } else {
             res.status(400).json({ message: 'Failed to add queue' });
@@ -45,22 +43,23 @@ router.post('/addNewQueue', async (req, res) => {
 
 // מבטל את כל הפגישות של יום מסוים
 router.put('/cancel/:date/:userId', async (req, res) => {
-    const { date, userId } = req.params;  // מקבל את התאריך ו-id של בעל העסק
+    const { date, userId } = req.params; 
+    
     try {
-        const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);  // שואל את כל הפגישות של אותו יום
-
+        const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);  
+        console.log("date, userId ,appointments" , date, userId, appointments );
         if (appointments.length === 0) {
             return res.status(404).json({ message: 'No appointments found for the given date.' });
         }
 
-        // עבור כל פגישה ביום זה, עדכן את הסטטוס שלה ל- "בוטלה" ושלח הודעה ללקוח
         for (const appointment of appointments) {
             await updateQueueStatus(appointment.QueueCode, 'cancelled');
-            const content = `Your appointment on ${appointment.date} at ${appointment.hour} has been canceled.`;  // תוכן ההודעה
-            const title = 'Appointment Cancellation';  // כותרת ההודעה
+            const content = `Your appointment on ${appointment.date} at ${appointment.hour} has been canceled.`; 
+            const title = 'Appointment Cancellation';  
             const queueCode = appointment.QueueCode;
             const isRead = false;
-            await postMessage(queueCode, isRead, content, title, appointment.date);  // שלח את ההודעה
+            await postMessage(queueCode, isRead, content, title, appointment.date);  
+            appointmentCancelledByBusiness(queueCode, userId);
         }
 
         res.status(200).json({ message: 'All appointments for the day have been canceled and notifications sent.' });
@@ -73,10 +72,10 @@ router.put('/cancel/:date/:userId', async (req, res) => {
 // קבלת פגישות מסוננות על פי פרמטרים
 router.get('/allAvailableQueue/byBusinessNameAndService', async (req, res) => {
     try {
-        const { businessName, serviceTypeCode, selectedDate } = req.query;  // קבלת פרמטרים של מקצוע וסוג שירות
+        const { businessName, serviceTypeCode, selectedDate } = req.query;  
         console.log("idProfessional, serviceTypeCo77", businessName, serviceTypeCode, selectedDate);
 
-        const details = await getFilteredQueues(businessName, serviceTypeCode, selectedDate);  // שלח לבסיס הנתונים את הבקשה לפגישות מסוננות
+        const details = await getFilteredQueues(businessName, serviceTypeCode, selectedDate);  
 
         if (!details) {
             return res.status(404).json({ message: 'Details not found.' });
@@ -126,23 +125,22 @@ router.get('/allQueue/:month/:year/:userid', async (req, res) => {
 router.get('/:customerId', async (req, res) => {
     try {
         const { customerId } = req.params;
+        
         let queues = await getQueuesByCustomer(customerId);
-        console.log("queues22222222", queues);
         const today = new Date();
         const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
 
         // עדכון תורים שעברו
         for (const queue of queues) {
-            if (queue.Date < todayDateString && queue.Status === "waiting") {
+            if (queue.Date < todayDateString && ( queue.Status === "waiting" ||queue.Status === "scheduled") ) {
                 await updateQueueStatus1(queue.QueueCode, "finished");
                 queue.Status = "finished"; // לעדכן בזיכרון המקומי מיד
             }
         }
         queues = queues.filter(queue => {
             const queueDateString = new Date(queue.Date).toISOString().split('T')[0];
-            return queue.Status === "waiting" && queueDateString >= todayDateString;
+            return ( queue.Status === "waiting" || queue.Status === "scheduled" )&& queueDateString >= todayDateString;
         });
-        console.log("queues11111", queues);
 
         res.json(queues);
     } catch (error) {
@@ -215,15 +213,15 @@ router.delete('/:id', async (req, res) => {
 });
 
 // פתיחת לוח זמנים ליום מסוים
-router.post('/openDaySchedule', async (req, res) => {
-    try {
-        await openDaySchedule();  // פתיחת לוח הזמנים עבור התאריך
-        res.json({ message: `Day schedule has been opened successfully.` });
-    } catch (error) {
-        console.error('Error opening day schedule:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
+// router.post('/openDaySchedule', async (req, res) => {
+//     try {
+//         await openDaySchedule();  // פתיחת לוח הזמנים עבור התאריך
+//         res.json({ message: `Day schedule has been opened successfully.` });
+//     } catch (error) {
+//         console.error('Error opening day schedule:', error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
 
 
 // קבלת כל הפגישות

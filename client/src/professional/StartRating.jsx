@@ -1,5 +1,6 @@
 import React from 'react';
 import '../css/Recommendations.css'
+
 const StarRating = ({ rating }) => {
     const maxRating = 5;
     return (

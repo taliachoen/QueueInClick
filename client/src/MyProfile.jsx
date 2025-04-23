@@ -12,7 +12,6 @@ const MyProfile = () => {
     const [updatedUser, setUpdatedUser] = useState({ ...user });
     const [cities, setCities] = useState([]);
 
-    // Fetch cities from the server
     useEffect(() => {
         axios.get('http://localhost:8080/cities')
             .then(response => {
@@ -23,7 +22,6 @@ const MyProfile = () => {
             });
     }, []);
 
-    // Update updatedUser whenever the user changes
     useEffect(() => {
         if (user) {
             setUpdatedUser({ ...user });
@@ -31,17 +29,15 @@ const MyProfile = () => {
     }, [user]);
 
 
-
-
     useEffect(() => {
         const fetchProfessional = async () => {
             try {
                 if (!user?.id) return;
                 const response = await axios.get(`http://localhost:8080/${user.userType}/${user.id}`);
-                console.log('Fetched user data:', response.data); // הוספתי הדפסה
+                console.log('Fetched user data:', response.data);
                 setUser(prevUser => ({
                     ...prevUser,
-                    ...response.data, // מוסיף לעדכון את שם העיר והתחום
+                    ...response.data, 
                 }));
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -49,11 +45,10 @@ const MyProfile = () => {
         };
 
         fetchProfessional();
-    }, [user?.id]); // יופעל כשמשתנה ה-user.id
+    }, [user?.id]); 
 
 
 
-    // Toggle edit mode and reset updatedUser to current user data
     const handleEditToggle = () => {
         setEditMode(!editMode);
         setUpdatedUser({ ...user });
@@ -63,11 +58,11 @@ const MyProfile = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === 'cityName') {
-            const selectedCity = cities.find(city => city.CityName === value);  // חפש את העיר לפי שם העיר
+            const selectedCity = cities.find(city => city.CityName === value);  
             setUpdatedUser(prevUser => ({
                 ...prevUser,
-                [name]: value,  // נשמור את שם העיר
-                cityCode: selectedCity?.CityCode || '',  // נשמור את קוד העיר
+                [name]: value,  
+                cityCode: selectedCity?.CityCode || '',  
             }));
         } else {
             setUpdatedUser(prevUser => ({
@@ -79,11 +74,10 @@ const MyProfile = () => {
     const handleUpdateProfile = async () => {
         try {
 
-            console.log("Updated User Data:", updatedUser);  // הצגת הנתונים שנשלחים לשרת
+            console.log("Updated User Data:", updatedUser);
             const userId = user.id;
             console.log("cityCode being sent:", updatedUser.cityCode);
 
-            // לוודא ש-cityCode לא ריק לפני שליחה
             if (!updatedUser.cityCode) {
                 swal("Error", "City code is required", "error");
                 return;
@@ -118,13 +112,11 @@ const MyProfile = () => {
         }
     };
 
-    // Cancel edit mode and restore the original user data
     const handleCancelEdit = () => {
         setUpdatedUser({ ...user });
         setEditMode(false);
     };
 
-    // Loading state if no user is available
     if (!user) {
         return <div>Loading...</div>;
     }
@@ -140,10 +132,6 @@ const MyProfile = () => {
                             <button className="cancel-button" onClick={handleCancelEdit}>Cancel</button>
                             <button className="update-button" onClick={handleUpdateProfile}>Update</button>
                         </div>
-                        // <>
-                        //     <button className="cancel-button" onClick={handleCancelEdit}>Cancel</button>
-                        //     <button className="update-button" onClick={handleUpdateProfile}>Update</button>
-                        // </>
                     )}
                 </div>
                 <div className="profile-body">
@@ -159,11 +147,11 @@ const MyProfile = () => {
                             <select
                                 className='city-select'
                                 name="cityCode"
-                                value={updatedUser.cityCode}  // נשלח קוד העיר
-                                onChange={handleChange}  // תעדכן את הערכים בהמשך
+                                value={updatedUser.cityCode} 
+                                onChange={handleChange} 
                             >
                                 {cities.map((city) => (
-                                    <option key={city.CityCode} value={city.CityCode}>  {/* העברת הערך של קוד העיר */}
+                                    <option key={city.CityCode} value={city.CityCode}>
                                         {city.CityName}
                                     </option>
                                 ))}
@@ -180,7 +168,7 @@ const MyProfile = () => {
                                         name="startDate"
                                         value={updatedUser.startDate ? moment(updatedUser.startDate).format('YYYY-MM-DD') : ''}
                                         onChange={handleChange}
-                                        readOnly={true}  // הוספת אטריבוט שימנע שינוי
+                                        readOnly={true}  
                                     />
                                     <label htmlFor="business_name">Business Name:</label>
                                     <input type="text" id="business_name" name="business_name" value={updatedUser.business_name} onChange={handleChange} />

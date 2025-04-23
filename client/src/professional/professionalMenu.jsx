@@ -11,8 +11,8 @@ const ProfessionalMenu = () => {
 
     useEffect(() => {
         navigate('AppointmentsPage');
-    }, []); 
-    
+    }, []);
+
     const handleLogout = () => {
         localStorage.clear();
         navigate('/landingPage');
@@ -42,7 +42,7 @@ const ProfessionalMenu = () => {
                 </button>
                 <button className={`btn ${activeButton === 'myRecommendations' ? 'active' : ''}`}
                     onClick={() => handleNavigation('myRecommendations')}>
-                    My Recommendations
+                    Rating and reviews
                 </button>
 
                 <button className="btn" onClick={handleLogout}>Logout</button>

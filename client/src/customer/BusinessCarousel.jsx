@@ -48,8 +48,7 @@ const BusinessCarousel = () => {
                         640: { slidesPerView: 1 },
                         768: { slidesPerView: 2 },
                         1024: { slidesPerView: 3 }
-                    }}
-                >
+                    }}>
                     {businesses.map((business, index) => (
                         <SwiperSlide key={index}>
                             <div className="carousel-item">
