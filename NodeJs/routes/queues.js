@@ -1,5 +1,5 @@
 import express from 'express';
-import { notifyAppointmentCancelled, notifyAppointmentAdd , appointmentCancelledByBusiness } from "../socket.js";
+import { notifyAppointmentCancelled, notifyAppointmentAdd , notifyAppointmentCancelledByBusiness } from "../socket.js";
 import { postMessage } from '../database/messagesdb.js';  // ייבוא הפונקציה המתאימה להוספת הודעה
 import {
     postQueue,
@@ -44,22 +44,20 @@ router.post('/addNewQueue', async (req, res) => {
 // מבטל את כל הפגישות של יום מסוים
 router.put('/cancel/:date/:userId', async (req, res) => {
     const { date, userId } = req.params; 
-    
+    console.log("date222" , date , userId);
     try {
         const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);  
-        console.log("date, userId ,appointments" , date, userId, appointments );
         if (appointments.length === 0) {
             return res.status(404).json({ message: 'No appointments found for the given date.' });
         }
-
         for (const appointment of appointments) {
             await updateQueueStatus(appointment.QueueCode, 'cancelled');
             const content = `Your appointment on ${appointment.date} at ${appointment.hour} has been canceled.`; 
             const title = 'Appointment Cancellation';  
             const queueCode = appointment.QueueCode;
             const isRead = false;
-            await postMessage(queueCode, isRead, content, title, appointment.date);  
-            appointmentCancelledByBusiness(queueCode, userId);
+            await postMessage(queueCode, isRead, content, title, appointment.date);
+            notifyAppointmentCancelledByBusiness(userId , queueCode);
         }
 
         res.status(200).json({ message: 'All appointments for the day have been canceled and notifications sent.' });
@@ -73,8 +71,6 @@ router.put('/cancel/:date/:userId', async (req, res) => {
 router.get('/allAvailableQueue/byBusinessNameAndService', async (req, res) => {
     try {
         const { businessName, serviceTypeCode, selectedDate } = req.query;  
-        console.log("idProfessional, serviceTypeCo77", businessName, serviceTypeCode, selectedDate);
-
         const details = await getFilteredQueues(businessName, serviceTypeCode, selectedDate);  
 
         if (!details) {

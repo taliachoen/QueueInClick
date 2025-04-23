@@ -342,17 +342,15 @@ export async function getQueuesByFullDateAndBusinessOwner(fullDate, id) {
       JOIN professionals bo ON ps.idProfessional = bo.idProfessional
       WHERE DATE(q.Date) = ? AND bo.idProfessional = ? AND q.Status IN ('waiting', 'finished', 'available', 'scheduled')
     `;
-
     try {
         const [queues] = await pool.query(query, [fullDate, id]);
-        console.log("queues", queues);
-        
         // Convert UTC date to local time and format to YYYY-MM-DD
         const localQueues = queues.map(queue => {
             const localDate = new Date(queue.Date);
             queue.Date = formatDate(localDate); // format to YYYY-MM-DD
             return queue;
         });
+        console.log("localQueues" , localQueues);
         return localQueues;
     } catch (error) {
         console.error('Error executing SQL query:', error);

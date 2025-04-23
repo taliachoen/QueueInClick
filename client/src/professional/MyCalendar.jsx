@@ -22,49 +22,42 @@ const MyCalendar = () => {
   const userId = user.id;
 
   useEffect(() => {
-    socket.on("appointmentCancelled", (data) => {
-      fetchInitialAppointments();
-      // אם התור שבוטל היה ביום שנבחר, עדכן את הרשימה
-      setSelectedDayAppointments((prevAppointments) =>
-        prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
-      );
-    });
-    return () => {
-      socket.off("appointmentCancelled");
-    };
-  }, []);
-
-  // useEffect(() => {
-  //   socket.on("appointmentCancelledByBusiness", (data) => {
-  //     fetchInitialAppointments();
-  //     setSelectedDayAppointments((prevAppointments) =>
-  //       prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
-  //     );
-  //   });
-  //   return () => {
-  //     socket.off("appointmentCancelledByBusiness");
-  //   };
-  // }, []);
-
-
-  useEffect(() => {
     // עדכון הודעת "אין תורים" אחרי שינוי בתאריך
     const filteredAppointments = appointments[selectedDay]?.filter(appointment => normalizeDate(appointment.Date) === selectedDay) || [];
     setSelectedDayAppointments(filteredAppointments);
     setNoAppointmentsMessage(filteredAppointments.length === 0 ? `No appointments for ${selectedDay}` : '');
   }, [selectedDay, appointments]); // התלויות ב-selectedDay ובappointments
 
-
   useEffect(() => {
     socket.on("appointmentAdd", (data) => {
+      console.log("New appointment added:", data);
       fetchInitialAppointments();
-      // אם התור שבוטל היה ביום שנבחר, עדכן את הרשימה
-      setSelectedDayAppointments((prevAppointments) =>
-        prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
-      );
     });
+
     return () => {
       socket.off("appointmentAdd");
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on("appointmentCancelled", (data) => {
+      console.log("Appointment cancelled:", data);
+      fetchInitialAppointments();
+    });
+
+    return () => {
+      socket.off("appointmentCancelled");
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on("appointmentCancelledByBusiness", (data) => {
+      console.log("appointment Cancelled By Business cancelled:", data);
+      fetchInitialAppointments();
+    });
+
+    return () => {
+      socket.off("appointmentCancelledByBusiness");
     };
   }, []);
 
@@ -220,10 +213,8 @@ const MyCalendar = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          // const localSelectedDay = moment(selectedDay).tz(moment.tz.guess()).format('YYYY-MM-DD');
           var date = choiceDay;
-          // console.log("check", date, "check2", selectedDay , "check3",localSelectedDay , normalizeDate(date), 55 , choiceDay);
-
+          console.log(userId, 555, date, 555);
           await axios.put(`http://localhost:8080/queues/cancel/${date}/${userId}`);
           setSelectedDayAppointments([]);
           Swal.fire('Cancelled!', 'All appointments for the day have been cancelled.', 'success');

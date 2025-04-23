@@ -13,30 +13,26 @@ function MyQueues() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { user } = useContext(UserContext);
-    const navigate = useNavigate(); // ניווט
+    const navigate = useNavigate();
 
-    useEffect(() => {    
-        // האזנה לשינויים מהשרת
-        socket.on("appointmentCancelledByBusiness", (updatedQueue) => {
-            // עדכון תור בודד
+
+    useEffect(() => {
+        socket.on("appointmentCancelledByBusiness", (data) => {
+            console.log("Appointment was canceled", data, user.id);
             setQueues(prevQueues =>
-                prevQueues.map(queue =>
-                    queue.QueueCode === updatedQueue.QueueCode ? updatedQueue : queue
-                )
+                prevQueues.filter(queue => queue.QueueCode !== data.queueCode)
             );
         });
         return () => {
             socket.off("appointmentCancelledByBusiness");
         };
-    }, [user.id]);
-    
+    }, []);
 
 
     useEffect(() => {
         axios.get(`http://localhost:8080/queues/${user.id}`)
             .then(response => {
-                console.log('hiii' , response.data, 11, user.id);
-                
+                console.log('hiii', response.data, 11, user.id);
                 setQueues(response.data);
                 setLoading(false);
             })

@@ -1,9 +1,11 @@
-import  {React , useState, useEffect, useRef, useCallback,useContext} from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import axios from 'axios';
 import '../css/MyMessages.css';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../userContex'; 
 import io from 'socket.io-client';
+
+const socket = io("http://localhost:8080"); // מוגדר פעם אחת מחוץ לקומפוננטה
 
 const MyMessages = () => {
     const [messages, setMessages] = useState([]);
@@ -11,53 +13,52 @@ const MyMessages = () => {
     const timeoutRef = useRef(null);
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
-    const socket = io("http://localhost:8080");
 
+    const fetchMessages = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/messages/${user.id}`);
+            const fetchedMessages = response.data;
+            setMessages(fetchedMessages);
 
+            const unreadMessages = fetchedMessages.filter(message => message.isRead === 0);
+            setAllRead(unreadMessages.length === 0);
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    };
 
-    useEffect(() => {    
-        // האזנה לשינויים מהשרת
-            socket.on("appointmentCancelledByBusiness", (newMsg) => {
-                if (newMsg.receiverId === user.id) {
-                    setMessages(prev => [newMsg, ...prev]);
-                    setAllRead(false);
-                }
-            });
+    useEffect(() => {
+        // קריאה ראשונית
+        fetchMessages();
+    }, [user.id]);
+
+    useEffect(() => {
+        // האזנה לאירועים מהשרת
+        socket.on("appointmentCancelledByBusiness", () => {
+            console.log("Appointment was canceled, refreshing messages...");
+            fetchMessages(); // ריענון ההודעות
+        });
+
         return () => {
             socket.off("appointmentCancelledByBusiness");
         };
     }, [user.id]);
-    
-    // Fetch messages for the logged-in user
-    useEffect(() => {
-        const fetchMessages = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8080/messages/${user.id}`);
-                const fetchedMessages = response.data;
-                setMessages(fetchedMessages);
 
-                const unreadMessages = fetchedMessages.filter(message => message.isRead === 0);
-                setAllRead(unreadMessages.length === 0);
-            } catch (error) {
-                console.error('Error fetching messages:', error);
-            }
-        };
-
-        fetchMessages();
-    }, [user.id]);
-
-    // Handle clicking the 'Business Details' button
     const handleDetailsClick = (businessName) => {
-        navigate(`../searchBusinessOwner`, { replace: true, state: { businessName } });
+        navigate(`../searchBusinessOwner`, {
+            replace: true,
+            state: { businessName }
+        });
     };
 
-    // Mark a message as read and update the state
     const markAsRead = async (messageCode) => {
         try {
             await axios.post(`http://localhost:8080/messages/${messageCode}/markAsRead`);
-            setMessages(messages.map(message =>
-                message.messageCode === messageCode ? { ...message, isRead: 1 } : message
-            ));
+            setMessages(prevMessages =>
+                prevMessages.map(message =>
+                    message.messageCode === messageCode ? { ...message, isRead: 1 } : message
+                )
+            );
         } catch (error) {
             console.error('Error updating message read status:', error);
         }
@@ -86,7 +87,7 @@ const MyMessages = () => {
                         <th>Business</th>
                         <th>Professional</th>
                         <th>Title</th>
-                        <th> Business Details</th>
+                        <th>Business Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,17 +132,12 @@ export default MyMessages;
 
 
 
-
-
-
-
-
-// import React, { useState, useEffect, useRef, useCallback,useContext} from 'react';
+// import  {React , useState, useEffect, useRef, useCallback,useContext} from 'react';
 // import axios from 'axios';
 // import '../css/MyMessages.css';
 // import { useNavigate } from 'react-router-dom';
 // import { UserContext } from '../userContex'; 
-
+// import io from 'socket.io-client';
 
 // const MyMessages = () => {
 //     const [messages, setMessages] = useState([]);
@@ -149,14 +145,28 @@ export default MyMessages;
 //     const timeoutRef = useRef(null);
 //     const { user } = useContext(UserContext);
 //     const navigate = useNavigate();
+//     const socket = io("http://localhost:8080");
 
+
+
+//     useEffect(() => {    
+//         // האזנה לשינויים מהשרת
+//             socket.on("appointmentCancelledByBusiness", () => {
+             
+//             });
+//         return () => {
+//             socket.off("appointmentCancelledByBusiness");
+//         };
+//     }, [user.id]);
+    
+//     // Fetch messages for the logged-in user
 //     useEffect(() => {
 //         const fetchMessages = async () => {
 //             try {
 //                 const response = await axios.get(`http://localhost:8080/messages/${user.id}`);
-
 //                 const fetchedMessages = response.data;
 //                 setMessages(fetchedMessages);
+
 //                 const unreadMessages = fetchedMessages.filter(message => message.isRead === 0);
 //                 setAllRead(unreadMessages.length === 0);
 //             } catch (error) {
@@ -165,25 +175,20 @@ export default MyMessages;
 //         };
 
 //         fetchMessages();
-//     }, []);
+//     }, [user.id]);
 
+//     // Handle clicking the 'Business Details' button
 //     const handleDetailsClick = (businessName) => {
 //         navigate(`../searchBusinessOwner`, { replace: true, state: { businessName } });
 //     };
 
+//     // Mark a message as read and update the state
 //     const markAsRead = async (messageCode) => {
 //         try {
-           
 //             await axios.post(`http://localhost:8080/messages/${messageCode}/markAsRead`);
-//             setMessages(response.data);
-
-//             // setMessages(messages.map(message =>
-//             //     message.messageCode === messageCode ? { ...message, isRead: 1 } : message
-//             // ));
-
-//             if (user && user.id) {
-//                 fetchMessagesForCustomer();
-//             }
+//             setMessages(messages.map(message =>
+//                 message.messageCode === messageCode ? { ...message, isRead: 1 } : message
+//             ));
 //         } catch (error) {
 //             console.error('Error updating message read status:', error);
 //         }
@@ -203,7 +208,7 @@ export default MyMessages;
 //         <div className="messages-container">
 //             <h1 className="titleMessage">Messages</h1>
 //             {allRead && <div className="all-read-message">Wonderful!! You've read all the messages.</div>}
-//             <h5>stand on the title to see the content of the message</h5>
+//             <h5>Hover over the title to see the content of the message</h5>
 //             <table className="messages-table">
 //                 <thead>
 //                     <tr>

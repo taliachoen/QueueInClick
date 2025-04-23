@@ -89,8 +89,6 @@ export async function getAllBuisnessNames() {
 }
 
 export async function getIidProfessionalByBusinessName(business_name) {
-    console.log("business_name", business_name);
-
     const [idProfessional] = await pool.query(`
          SELECT idProfessional
          FROM professionals

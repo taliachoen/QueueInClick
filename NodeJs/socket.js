@@ -1,10 +1,8 @@
 import { Server } from "socket.io";
-
 let io;
 
 export function setupSocket(server) {
     io = new Server(server, { cors: { origin: "*" } });
-
     io.on("connection", (socket) => {
         console.log("Client connected");
 
@@ -12,7 +10,6 @@ export function setupSocket(server) {
             console.log("Client disconnected");
         });
     });
-
     // שידור לכל הלקוחות כל 3 דקות
     setInterval(() => {
         if (io) {
@@ -22,8 +19,6 @@ export function setupSocket(server) {
     }, 180000); // 3 דקות
 }
 
-
-
 export function notifyAppointmentCancelled(queueCode, businessId) {
     if (io) {
         console.log(`Notifying business_${businessId} about cancellation:`, queueCode);
@@ -31,13 +26,10 @@ export function notifyAppointmentCancelled(queueCode, businessId) {
     }
 }
 
-export const appointmentCancelledByBusiness = (queueCode, userId) => {
-    io.emit("appointmentCancelledByBusiness", { queueCode, userId });
-    // io.emit("appointmentCancelledByBusiness", { date: canceledDate, userId });
-
+export const notifyAppointmentCancelledByBusiness = ( userId , queueCode) => {
+    console.log(`Notifyinggggg`);
+    io.emit("appointmentCancelledByBusiness", { userId , queueCode });
 };
-
-
 
 export function notifyAppointmentAdd(queueCode, businessId) {
     if (io) {
@@ -46,10 +38,13 @@ export function notifyAppointmentAdd(queueCode, businessId) {
     }
 }
 
-
-
-
 export { io };
+
+
+
+
+
+
 
 
 
