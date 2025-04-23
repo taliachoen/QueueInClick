@@ -12,8 +12,6 @@ import domains from './routes/domains.js';
 import cors from 'cors';
 import {setupSocket} from './socket.js'
 import { createServer } from 'http';  
-import { setupSocket } from './socket.js'
-import { createServer } from 'http';
 
 const app = express();
 const server = createServer(app);

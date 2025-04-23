@@ -124,7 +124,7 @@ export async function getProfessionalDetails(businessName, serviceType) {
 
 export async function getProfessionalAllDetails(businessName) {
     const query = `
-        SELECT p.idProfessional, p.business_name, p.firstName, p.lastName, p.phone, p.address, p.cityCode, c.cityName, ps.Duration, ps.Price
+        SELECT p.idProfessional
         FROM professionals p
         JOIN professional_services ps ON p.idProfessional = ps.idProfessional
         JOIN type_service ts ON ps.ServiceTypeCode = ts.typeCode

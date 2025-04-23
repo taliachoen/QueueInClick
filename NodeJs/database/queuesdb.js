@@ -1,9 +1,7 @@
-
 import pool from './database.js';
 import { getDaysOff } from './scheduledb.js';
 import { getProfessionalAllDetails } from './professionalsdb.js';
 import { getServiceDuration } from '../routes/professional_services.js';
-import swal from 'sweetalert';
 
 export async function getQueues() {
     const [queues] = await pool.query(`
@@ -31,33 +29,6 @@ export const checkSlotAvailability = (appointments, startTime, endTime) => {
 
     return true; // הזמן פנוי
 };
-
-// שליפת נתונים מהדאטהבייס
-// async function getAvailableDays(professionalBusinesName) {
-//     try {
-//         // Fetch professionalId based on business_name
-//         const [professionalData] = await pool.query(
-//             'SELECT idProfessional FROM professionals WHERE business_name = ?',
-//             [professionalBusinesName]
-//         );
-
-//         if (professionalData.length === 0) {
-//             throw new Error('Professional not found for the provided business name.');
-//         }
-
-//         const professionalId = professionalData[0].idProfessional;
-
-//         // Fetch available days for the professionalId
-//         const [availableDays] = await pool.query(
-//             'SELECT dayDate, isAvailable FROM available_days WHERE professionalId = ?',
-//             [professionalId]
-//         );
-//         return availableDays;
-//     } catch (error) {
-//         console.error('Error fetching available days:', error);
-//         throw new Error('Unable to fetch available days.');
-//     }
-// }
 
 // פונקציה לקבלת שעות העבודה לפי שם העסק (בהתאם ל-ID של בעל המקצוע)
 async function getWorkingHoursByBusinessName(businessName) {
@@ -87,24 +58,55 @@ async function getWorkingHoursByBusinessName(businessName) {
     }
 }
 
-async function getAppointmentsByBusinessAndDate(professionalId, selectedDate) {
+// async function getAppointmentsByBusinessAndDate(professionalId, selectedDate) {
 
-    // שליפת קוד שירות של המקצוען לפי ה-professionalId
+//     // שליפת קוד שירות של המקצוען לפי ה-professionalId
+//     const [rows] = await pool.query(`
+//         SELECT ProffServiceID FROM professional_services
+//         WHERE idProfessional = ?`, [professionalId]);
+
+//     // אם לא נמצאה תוצאה, מחזירים שגיאה
+//     if (rows.length === 0) {
+//         throw new Error('לא נמצאו שירותים עבור מקצוען זה');
+//     }
+
+//     const ProfessionalServiceCode = rows[0].ProffServiceID;
+//     console.log("aaa" , ProfessionalServiceCode);
+
+
+//     // שליפת הפגישות עבור השירות והיום המבוקש
+//     const [appointments] = await pool.query(`
+//         SELECT * FROM queues
+//         WHERE ProfessionalServiceCode = ? AND date = ? and status = ?`, [ProfessionalServiceCode, selectedDate, 'scheduled']);
+//     return appointments;
+
+
+
+
+// }
+
+async function getAppointmentsByBusinessAndDate(professionalId, selectedDate) {
+    // שליפת כל שירותי המקצוען
     const [rows] = await pool.query(`
         SELECT ProffServiceID FROM professional_services
         WHERE idProfessional = ?`, [professionalId]);
 
-    // אם לא נמצאה תוצאה, מחזירים שגיאה
     if (rows.length === 0) {
         throw new Error('לא נמצאו שירותים עבור מקצוען זה');
     }
 
-    const ProfessionalServiceCode = rows[0].ProffServiceID;
+    // יצירת מערך של כל קודי השירות
+    const serviceCodes = rows.map(row => row.ProffServiceID);
 
-    // שליפת הפגישות עבור השירות והיום המבוקש
+    // בניית placeholders לשאילתה (?,?,?... לפי אורך המערך)
+    const placeholders = serviceCodes.map(() => '?').join(',');
+
+    // שליפת התורים לכל הקודים שקשורים לתאריך
     const [appointments] = await pool.query(`
         SELECT * FROM queues
-        WHERE ProfessionalServiceCode = ? AND date = ?`, [ProfessionalServiceCode, selectedDate]);
+        WHERE ProfessionalServiceCode IN (${placeholders}) AND date = ? AND status = ?`,
+        [...serviceCodes, selectedDate, 'scheduled']
+    );
     return appointments;
 }
 
@@ -352,7 +354,7 @@ export async function getQueuesByFullDateAndBusinessOwner(fullDate, id) {
             queue.Date = formatDate(localDate); // format to YYYY-MM-DD
             return queue;
         });
-        console.log("localQueues" , localQueues);
+        console.log("localQueues", localQueues);
         return localQueues;
     } catch (error) {
         console.error('Error executing SQL query:', error);
@@ -375,85 +377,25 @@ export const updateEndedAppointments = async () => {
     }
 };
 
-// export const postQueue = async (businessName, serviceType, customerId, date, startTime, status) => {
-//     try {
-//         // שלב 1: הבאת ID של בעל העסק לפי שם העסק
-//         const [professionalResult] = await pool.query(`
-//             SELECT idProfessional 
-//             FROM professionals 
-//             WHERE business_name =  ?`, [businessName]);
-
-//         if (professionalResult.length === 0) {
-//             throw new Error('Business not found');
-//         }
-
-//         const professionalId = professionalResult[0].idProfessional;
-//         const [serviceCode] = await pool.query(`
-//             SELECT typeCode 
-//             FROM type_service 
-//             WHERE typeName = ?`, [serviceType]);
-
-//         // שלב 2: הבאת קוד השירות מהטבלה professional_services לפי שם השירות ו-ID בעל העסק
-//         const [serviceResult] = await pool.query(`
-//             SELECT ProffServiceID 
-//             FROM professional_services 
-//             WHERE ServiceTypeCode = ? AND idProfessional = ?`, [serviceCode[0].typeCode, professionalId]);
-
-//         if (serviceResult.length === 0) {
-//             throw new Error('Service not found for this business');
-//         }
-
-//         if (!(startTime instanceof Date)) {
-//             startTime = new Date(startTime);  // Convert if necessary
-//         }
-
-//         const startFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}:00`;
-//         console.log(5454, serviceResult[0].ProffServiceID, customerId, date, startFormatted, status);
-
-//         // שלב 3: הכנסת התור לטבלה queues
-//         const [result] = await pool.query(`
-//             INSERT INTO queues (ProfessionalServiceCode, CustomerCode, Date, Hour, Status)
-//             VALUES (?, ?, ?, ?, ?)`, [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
-//         console.log(77);
-
-//         if (result.affectedRows === 0) {
-//             return null; // אם ההוספה נכשלה
-//         }
-//         console.log(88);
-
-//         return {
-//             QueueCode: result.insertId,
-//             ProfessionalServiceCode: serviceResult[0].ProffServiceID,
-//             CustomerCode: customerId,
-//             Date: date,
-//             StartTime: startFormatted,
-//             Status: status
-//         };
-
-//     } catch (error) {
-//         console.error('Error in postQueue:', error);
-//         throw error;
-//     }
-// }
-
 export const postQueue = async (businessName, serviceType, customerId, date, startTime, status) => {
     try {
+        // שלב 1: הבאת ID של בעל העסק לפי שם העסק
         const [professionalResult] = await pool.query(`
             SELECT idProfessional 
             FROM professionals 
-            WHERE business_name = ?`, [businessName]);
+            WHERE business_name =  ?`, [businessName]);
 
         if (professionalResult.length === 0) {
             throw new Error('Business not found');
         }
 
         const professionalId = professionalResult[0].idProfessional;
-
         const [serviceCode] = await pool.query(`
             SELECT typeCode 
             FROM type_service 
             WHERE typeName = ?`, [serviceType]);
 
+        // שלב 2: הבאת קוד השירות מהטבלה professional_services לפי שם השירות ו-ID בעל העסק
         const [serviceResult] = await pool.query(`
             SELECT ProffServiceID 
             FROM professional_services 
@@ -464,29 +406,22 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
         }
 
         if (!(startTime instanceof Date)) {
-            startTime = new Date(startTime);
+            startTime = new Date(startTime);  // Convert if necessary
         }
 
         const startFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}:00`;
+        console.log(5454, serviceResult[0].ProffServiceID, customerId, date, startFormatted, status);
 
-        // ✅ בדיקה אם כבר קיים תור בכל סטטוס שהוא לא cancelled
-        const [existingQueue] = await pool.query(`
-            SELECT QueueCode FROM queues
-            WHERE ProfessionalServiceCode = ?
-              AND Date = ?
-              AND Hour = ?
-              AND Status IN ('available', 'scheduled', 'waiting')`,
-            [serviceResult[0].ProffServiceID, date, startFormatted]);
-
-        if (existingQueue.length > 0) {
-            throw new Error('This appointment time is already taken.');
-        }
-
-        // ✅ אם פנוי לגמרי – מוסיפים חדש
+        // שלב 3: הכנסת התור לטבלה queues
         const [result] = await pool.query(`
             INSERT INTO queues (ProfessionalServiceCode, CustomerCode, Date, Hour, Status)
-            VALUES (?, ?, ?, ?, ?)`,
-            [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
+            VALUES (?, ?, ?, ?, ?)`, [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
+        console.log(77);
+
+        if (result.affectedRows === 0) {
+            return null; // אם ההוספה נכשלה
+        }
+        console.log(88);
 
         return {
             QueueCode: result.insertId,
@@ -501,26 +436,90 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
         console.error('Error in postQueue:', error);
         throw error;
     }
-};
+}
 
+// export const postQueue = async (businessName, serviceType, customerId, date, startTime, status) => {
+//     try {
+//         const [professionalResult] = await pool.query(`
+//             SELECT idProfessional 
+//             FROM professionals 
+//             WHERE business_name = ?`, [businessName]);
 
+//         if (professionalResult.length === 0) {
+//             throw new Error('Business not found');
+//         }
+
+//         const professionalId = professionalResult[0].idProfessional;
+
+//         const [serviceCode] = await pool.query(`
+//             SELECT typeCode 
+//             FROM type_service 
+//             WHERE typeName = ?`, [serviceType]);
+
+//         const [serviceResult] = await pool.query(`
+//             SELECT ProffServiceID 
+//             FROM professional_services 
+//             WHERE ServiceTypeCode = ? AND idProfessional = ?`, [serviceCode[0].typeCode, professionalId]);
+
+//         if (serviceResult.length === 0) {
+//             throw new Error('Service not found for this business');
+//         }
+
+//         if (!(startTime instanceof Date)) {
+//             startTime = new Date(startTime);
+//         }
+
+//         const startFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}:00`;
+
+//         // ✅ בדיקה אם כבר קיים תור בכל סטטוס שהוא לא cancelled
+//         const [existingQueue] = await pool.query(`
+//             SELECT QueueCode FROM queues
+//             WHERE ProfessionalServiceCode = ?
+//               AND Date = ?
+//               AND Hour = ?
+//               AND Status IN ('available', 'scheduled', 'waiting')`,
+//             [serviceResult[0].ProffServiceID, date, startFormatted]);
+
+//         if (existingQueue.length > 0) {
+//             throw new Error('This appointment time is already taken.');
+//         }
+
+//         // ✅ אם פנוי לגמרי – מוסיפים חדש
+//         const [result] = await pool.query(`
+//             INSERT INTO queues (ProfessionalServiceCode, CustomerCode, Date, Hour, Status)
+//             VALUES (?, ?, ?, ?, ?)`,
+//             [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
+
+//         return {
+//             QueueCode: result.insertId,
+//             ProfessionalServiceCode: serviceResult[0].ProffServiceID,
+//             CustomerCode: customerId,
+//             Date: date,
+//             StartTime: startFormatted,
+//             Status: status
+//         };
+
+//     } catch (error) {
+//         console.error('Error in postQueue:', error);
+//         throw error;
+//     }
+// };
 
 
 
 export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
     const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-
     try {
-        // קבלת פרטי העסק
-        const business = await getProfessionalAllDetails(businessName);
-        if (!business) throw new Error('Business not found.');
+        // קבלת ת.ז בעל העסק
+        const idProfessional = await getProfessionalAllDetails(businessName);
+        if (!idProfessional) throw new Error('Business not found.');
 
         // קבלת משך זמן השירות
         const serviceDuration = await getServiceDuration(businessName, serviceTypeName);
         if (!serviceDuration) throw new Error('Service duration not found.');
 
         // קבלת ימי החופש של בעל העסק
-        const daysOff = await getDaysOff(business.idProfessional);
+        const daysOff = await getDaysOff(idProfessional.idProfessional);
         const selectedDayNum = new Date(selectedDate).getDay();
         const selectedDayName = dayNames[selectedDayNum];
         const daysOffLowerCase = daysOff.map(day => day.toLowerCase());
@@ -529,25 +528,19 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
             return { message: `The selected day is a free day, meetings cannot be booked. My free days are: ${daysOff.join(", ")}. We would be happy to meet you on another day😊`, type: 'warning' };
         }
 
-        // קבלת הימים הפנויים של בעל העסק
-        // const availableDays = await getAvailableDays(businessName);
-        // const formattedSelectedDate = new Date(selectedDate).toISOString().split('T')[0];
-        // const isDayAvailable = availableDays.some(day => day.isAvailable && new Date(day.dayDate).toISOString().split('T')[0] === formattedSelectedDate);
-
-        // if (!isDayAvailable) {
-        //     return { message: 'The selected day is not available for appointments.', type: 'warning' };
-        // }
-
         // קבלת שעות העבודה של העסק
-        const workingHours = await getWorkingHoursByBusinessName(business.business_name);
-        const appointments = await getAppointmentsByBusinessAndDate(business.idProfessional, selectedDate);
+        const workingHours = await getWorkingHoursByBusinessName(businessName);
+
+        //קבלת פגישות קיימות
+        const appointments = await getAppointmentsByBusinessAndDate(idProfessional.idProfessional, selectedDate);
 
         // המרת משך זמן השירות לדקות
         const timeParts = serviceDuration.split(':').map(Number);
         const serviceDurationMinutes = (timeParts[0] * 60) + timeParts[1] + (timeParts[2] / 60);
+
         let availableSlots = [];
 
-        // חיפוש יום העבודה המתאים
+        // חיפוש יום העבודה המתאים - חופש
         const workingDay = workingHours.find(({ dayOfWeek }) => dayOfWeek.toUpperCase() === dayNames[selectedDayNum]);
         if (!workingDay) {
             return { message: 'The selected day is a day off and no appointments can be booked.' };
@@ -563,12 +556,17 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
             for (const appointment of appointments) {
                 const { Date: existingDate, Hour: existingHour, ProfessionalServiceCode } = appointment;
                 if (!existingDate || !existingHour) continue;
+                console.log(111, existingDate, existingHour, ProfessionalServiceCode);
 
                 try {
                     // Format the date and hour properly
                     const formattedDate = formatDate(existingDate);
                     const formattedHour = formatTime(existingHour);
-                    const existingStart = new Date(`${formattedDate}T${formattedHour}`);
+                    // const existingStart = new Date(`${formattedDate}T${formattedHour}`);
+                    const baseDate = new Date(existingDate);
+                    const [hour, minute, second] = existingHour.split(':').map(Number);
+                    baseDate.setHours(hour, minute, second || 0, 0);
+                    const existingStart = new Date(baseDate);
 
                     if (isNaN(existingStart.getTime())) continue;
 
@@ -582,8 +580,7 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
                         serviceDurationForAppointmentTime[2]) * 1000;
 
                     const existingEnd = new Date(existingStart.getTime() + durationInMillis);
-                    existingAppointmentsInfo.push({ start: existingStart, end: existingEnd });
-
+                    existingAppointmentsInfo.push({ start: existingStart, end: existingEnd });                   
                 } catch (err) {
                     console.error("Error processing appointment:", err);
                 }
@@ -624,70 +621,6 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
         return { error: 'Unable to fetch filtered queues. Please try again later.' };
     }
 }
-
-
-
-
-
-// export async function openDaySchedule() {
-//     try {
-//         // שלב ראשון - קבלת כל בעלי העסקים מהטבלה professionals
-//         const professionalsResult = await pool.query('SELECT idProfessional FROM professionals');
-//         console.log(professionalsResult, "professionalsResult");
-
-//         // בדוק אם יש בעלי עסקים
-//         if (!professionalsResult || !professionalsResult[0] || professionalsResult[0].length === 0) {
-//             console.log('No professionals found.');
-//             return;
-//         }
-
-//         // עבור כל בעל עסק, בצע את הפעולה להוסיף את היום הבא בתור
-//         for (const professional of professionalsResult[0]) {  // גישה למערך הראשון
-//             const professionalId = professional.idProfessional;  // תוקן השם של השדה
-
-//             // שלב שני - קבלת היום האחרון שהוזן עבור בעל העסק
-//             const lastAvailableDayResult = await pool.query(
-//                 'SELECT dayDate FROM available_days WHERE professionalId = ? ORDER BY dayDate DESC LIMIT 1',
-//                 [professionalId]
-//             );
-
-//             console.log(lastAvailableDayResult, "lastAvailableDayResult");
-
-//             // אם יש ימי עבודה קודמים, בחר את היום האחרון
-//             if (lastAvailableDayResult && lastAvailableDayResult[0] && lastAvailableDayResult[0].length > 0) {
-//                 const lastAvailableDay = new Date(lastAvailableDayResult[0][0].dayDate);
-//                 const nextDay = new Date(lastAvailableDay.setDate(lastAvailableDay.getDate() + 1));
-//                 const formattedNextDay = nextDay.toISOString().split('T')[0];  // הגדרה אחרי החישוב של nextDay
-
-//                 console.log(`Next day calculated: ${formattedNextDay}`);
-
-//                 // בדוק אם היום הבא כבר קיים בתור עבור בעל העסק
-//                 const existingDay = await pool.query(
-//                     'SELECT * FROM available_days WHERE dayDate = ? AND professionalId = ?',
-//                     [formattedNextDay, professionalId]
-//                 );
-
-//                 console.log(existingDay, "existingDay");
-
-//                 // אם היום הבא לא קיים בתור, הוסף אותו
-//                 if (existingDay[0].length === 0) {
-//                     await pool.query(
-//                         'INSERT INTO available_days (dayDate, professionalId, isAvailable) VALUES (?, ?, true)',
-//                         [formattedNextDay, professionalId]
-//                     );
-//                     console.log(`Schedule for professional ${professionalId} opened for date ${formattedNextDay}`);
-//                 } else {
-//                     console.log(`Schedule for professional ${professionalId} already exists for date ${formattedNextDay}`);
-//                 }
-//             } else {
-//                 console.log(`No available days found for professional ${professionalId}`);
-//             }
-//         }
-//     } catch (error) {
-//         console.error('Error opening day schedule:', error);
-//         throw new Error('Error opening day schedule');
-//     }
-// }
 
 function formatTime(timeString) {
     try {

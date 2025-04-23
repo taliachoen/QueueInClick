@@ -72,7 +72,6 @@ router.get('/allAvailableQueue/byBusinessNameAndService', async (req, res) => {
     try {
         const { businessName, serviceTypeCode, selectedDate } = req.query;  
         const details = await getFilteredQueues(businessName, serviceTypeCode, selectedDate);  
-
         if (!details) {
             return res.status(404).json({ message: 'Details not found.' });
         }

@@ -158,7 +158,6 @@ const SearchBusinessOwner = () => {
             });
 
             console.log("🔵 Response from server:", checkResponse.data.canComment); // בדיקת נתונים שמתקבלים
-            console.log("111 Response:", checkResponse); // בדיקת נתונים שמתקבלים
 
             if (!checkResponse.data.canComment) {
                 // ❌ המשתמש *לא* יכול להגיב – עליו לחכות!
