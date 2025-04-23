@@ -43,10 +43,7 @@ function App() {
             <Route path="inviteQueue" element={<InviteQueue />} />
             <Route path="inviteDate" element={<InviteDate />} />
           </Route>
-
-
-
-            <Route path="/BusinessRegistration" element={<FormProvider />} >
+          <Route path="/BusinessRegistration" element={<FormProvider />} >
             <Route path="step1" element={<BusinessRegistration1 />} />
             <Route path="step2" element={<BusinessRegistrationStep2 />} />
             <Route path="step3" element={<BusinessRegistrationStep3 />} />
@@ -57,7 +54,7 @@ function App() {
             <Route path="myCalendar" element={<MyCalendar />} />
             <Route path="myRecommendations" element={<Recommendations />} />
           </Route>
-          <Route path="*" element={<Navigate to="/landingPage" />} /> 
+          <Route path="*" element={<Navigate to="/landingPage" />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>

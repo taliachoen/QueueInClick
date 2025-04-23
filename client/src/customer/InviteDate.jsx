@@ -81,7 +81,9 @@ const InviteDate = () => {
 
             if (response.data && response.data.message) {
                 const { message, type } = response.data;
-                swal(message, "", type);
+                setTimeout(() => {
+                    swal(message, "", type);
+                }, 2000);
             }
             // If response contains availableSlots, set them
             if (response.data && Array.isArray(response.data.availableSlots)) {
@@ -91,7 +93,9 @@ const InviteDate = () => {
                 setQueues([]);
             }
         } catch (error) {
-            swal("Error", "An error occurred while fetching queues details", "error");
+            setTimeout(() => {
+                swal("Error", "An error occurred while fetching queues details", "error");
+            }, 1000);
             console.error('Error fetching queue data:', error);
             setQueues([]);
         }
@@ -105,7 +109,9 @@ const InviteDate = () => {
             });
             setBusinessDetails(response.data);
         } catch (error) {
-            swal("Error", "An error occurred while fetching business details", "error");
+            setTimeout(() => {
+                swal("Error", "An error occurred while fetching business details", "error");
+            }, 1000);
             console.error('Error fetching business details:', error);
         }
     };
@@ -127,7 +133,9 @@ const InviteDate = () => {
                 navigate('../MyQueues');
             });
         } catch (error) {
-            swal("Error", "An error occurred while booking the queue", "error");
+            setTimeout(() => {
+                swal("Error", "An error occurred while booking the queue", "error");
+            }, 1000);
             console.error('Error updating queue:', error);
         }
     };
@@ -183,10 +191,10 @@ const InviteDate = () => {
 
     return (
         <div id="queue-list">
-                <button id='back-button' onClick={() => 
-                    navigate('../inviteQueue')
-                }>
-                    ← Back to Businesses
+            <button id='back-button' onClick={() =>
+                navigate('../inviteQueue')
+            }>
+                ← Back to Businesses
             </button>
             <h2 id="sort-title">Sort by Date:</h2>
             <div className="date-filter">
@@ -229,14 +237,25 @@ const InviteDate = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {displayedQueues.map((queue, index) => (
-                            <tr key={index}>
-                                <td>{new Date(queue.start).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}</td>
-                                <td><button className="book-button" onClick={() => handleConfirmQueue(index)}>Confirm queue</button></td>
+                        {displayedQueues.length > 0 ? (
+                            displayedQueues.map((queue, index) => (
+                                <tr key={index}>
+                                    <td>{new Date(queue.start).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}</td>
+                                    <td>
+                                        <button className="book-button" onClick={() => handleConfirmQueue(index)}>Confirm queue</button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="2" style={{ padding: '20px', textAlign: 'center', color: '#000' }}>
+                                    No Available queues in this day
+                                </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
+
 
                 {currentPage > 1 && (
                     <button className="load-more-button" onClick={handlePreviousPage}>Previous</button>

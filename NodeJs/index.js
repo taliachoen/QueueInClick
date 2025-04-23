@@ -12,6 +12,8 @@ import domains from './routes/domains.js';
 import cors from 'cors';
 import {setupSocket} from './socket.js'
 import { createServer } from 'http';  
+import { setupSocket } from './socket.js'
+import { createServer } from 'http';
 
 const app = express();
 const server = createServer(app);
@@ -36,4 +38,73 @@ setupSocket(server);
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+
+
+
+
+
+
+
+
+
+
+// import pool from './database/database.js'
+
+
+
+// export async function openInitialScheduleForNewProfessional(professionalId) {
+//     const today = new Date(); // התאריך הנוכחי
+//     const daysInMonth = 30; // מספר הימים (הגדרנו חודש של 30 ימים)
+//     const lastAvailableDate = new Date(today);
+//     lastAvailableDate.setDate(today.getDate() + daysInMonth); // תאריך עד 30 ימים קדימה
+
+    //     // יצירת מערך של תאריכים מהיום ועד לתאריך של 30 ימים קדימה
+    //     const dates = [];
+    //     let currentDate = today;
+    //     while (currentDate <= lastAvailableDate) {
+    //         dates.push(currentDate.toISOString().split('T')[0]);
+    //         currentDate.setDate(currentDate.getDate() + 1); // עובר ליום הבא
+    //     }
+
+    //     try {
+    //         const values = dates.map(date => `('${date}', ?, true)`).join(', ');
+    //         await pool.query(
+    //             `INSERT INTO available_days (dayDate, professionalId, isAvailable) VALUES ${values}`,
+    //             Array(dates.length).fill(professionalId)
+    //         );
+    //         console.log(`Schedule opened from ${dates[0]} to ${dates[dates.length - 1]} for professional ${professionalId}`);
+    //     } catch (error) {
+    //         console.error('Error opening initial schedule:', error);
+    //     }
+    // };
+
+
+
+    // // משימה מתוזמנת שתרוץ כל יום ב-00:00
+    // cron.schedule('52 13 * * *', () => {
+    //     console.log('Job triggered at 00:00!');
+    //     openNextDaySchedule();
+    // });
+
+
+
+// // פונקציה שפותחת את היום הבא
+// const openNextDaySchedule = () => {
+//     const currentDate = new Date();
+//     const nextDay = new Date(currentDate.setDate(currentDate.getDate() + 1));
+//     const formattedDate = nextDay.toISOString().split('T')[0];
+
+//     axios.post(`http://localhost:8080/queues/openDaySchedule`)
+//     .then(response => {
+//         console.log('Day schedule opened:', response.data);
+//         console.log(`Schedule for ${formattedDate} opened successfully`);
+//     })
+//     .catch(error => {
+//         console.error('Error opening next day schedule:', error);
+//     });
+// };
+
+
+
 

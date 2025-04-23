@@ -344,6 +344,8 @@ export async function getQueuesByFullDateAndBusinessOwner(fullDate, id) {
     `;
     try {
         const [queues] = await pool.query(query, [fullDate, id]);
+        console.log("queues", queues);
+
         // Convert UTC date to local time and format to YYYY-MM-DD
         const localQueues = queues.map(queue => {
             const localDate = new Date(queue.Date);
@@ -373,25 +375,85 @@ export const updateEndedAppointments = async () => {
     }
 };
 
+// export const postQueue = async (businessName, serviceType, customerId, date, startTime, status) => {
+//     try {
+//         // שלב 1: הבאת ID של בעל העסק לפי שם העסק
+//         const [professionalResult] = await pool.query(`
+//             SELECT idProfessional 
+//             FROM professionals 
+//             WHERE business_name =  ?`, [businessName]);
+
+//         if (professionalResult.length === 0) {
+//             throw new Error('Business not found');
+//         }
+
+//         const professionalId = professionalResult[0].idProfessional;
+//         const [serviceCode] = await pool.query(`
+//             SELECT typeCode 
+//             FROM type_service 
+//             WHERE typeName = ?`, [serviceType]);
+
+//         // שלב 2: הבאת קוד השירות מהטבלה professional_services לפי שם השירות ו-ID בעל העסק
+//         const [serviceResult] = await pool.query(`
+//             SELECT ProffServiceID 
+//             FROM professional_services 
+//             WHERE ServiceTypeCode = ? AND idProfessional = ?`, [serviceCode[0].typeCode, professionalId]);
+
+//         if (serviceResult.length === 0) {
+//             throw new Error('Service not found for this business');
+//         }
+
+//         if (!(startTime instanceof Date)) {
+//             startTime = new Date(startTime);  // Convert if necessary
+//         }
+
+//         const startFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}:00`;
+//         console.log(5454, serviceResult[0].ProffServiceID, customerId, date, startFormatted, status);
+
+//         // שלב 3: הכנסת התור לטבלה queues
+//         const [result] = await pool.query(`
+//             INSERT INTO queues (ProfessionalServiceCode, CustomerCode, Date, Hour, Status)
+//             VALUES (?, ?, ?, ?, ?)`, [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
+//         console.log(77);
+
+//         if (result.affectedRows === 0) {
+//             return null; // אם ההוספה נכשלה
+//         }
+//         console.log(88);
+
+//         return {
+//             QueueCode: result.insertId,
+//             ProfessionalServiceCode: serviceResult[0].ProffServiceID,
+//             CustomerCode: customerId,
+//             Date: date,
+//             StartTime: startFormatted,
+//             Status: status
+//         };
+
+//     } catch (error) {
+//         console.error('Error in postQueue:', error);
+//         throw error;
+//     }
+// }
+
 export const postQueue = async (businessName, serviceType, customerId, date, startTime, status) => {
     try {
-        // שלב 1: הבאת ID של בעל העסק לפי שם העסק
         const [professionalResult] = await pool.query(`
             SELECT idProfessional 
             FROM professionals 
-            WHERE business_name =  ?`, [businessName]);
+            WHERE business_name = ?`, [businessName]);
 
         if (professionalResult.length === 0) {
             throw new Error('Business not found');
         }
 
         const professionalId = professionalResult[0].idProfessional;
+
         const [serviceCode] = await pool.query(`
             SELECT typeCode 
             FROM type_service 
             WHERE typeName = ?`, [serviceType]);
 
-        // שלב 2: הבאת קוד השירות מהטבלה professional_services לפי שם השירות ו-ID בעל העסק
         const [serviceResult] = await pool.query(`
             SELECT ProffServiceID 
             FROM professional_services 
@@ -402,22 +464,29 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
         }
 
         if (!(startTime instanceof Date)) {
-            startTime = new Date(startTime);  // Convert if necessary
+            startTime = new Date(startTime);
         }
 
         const startFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}:00`;
-        console.log(5454, serviceResult[0].ProffServiceID, customerId, date, startFormatted, status);
 
-        // שלב 3: הכנסת התור לטבלה queues
+        // ✅ בדיקה אם כבר קיים תור בכל סטטוס שהוא לא cancelled
+        const [existingQueue] = await pool.query(`
+            SELECT QueueCode FROM queues
+            WHERE ProfessionalServiceCode = ?
+              AND Date = ?
+              AND Hour = ?
+              AND Status IN ('available', 'scheduled', 'waiting')`,
+            [serviceResult[0].ProffServiceID, date, startFormatted]);
+
+        if (existingQueue.length > 0) {
+            throw new Error('This appointment time is already taken.');
+        }
+
+        // ✅ אם פנוי לגמרי – מוסיפים חדש
         const [result] = await pool.query(`
             INSERT INTO queues (ProfessionalServiceCode, CustomerCode, Date, Hour, Status)
-            VALUES (?, ?, ?, ?, ?)`, [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
-        console.log(77);
-
-        if (result.affectedRows === 0) {
-            return null; // אם ההוספה נכשלה
-        }
-        console.log(88);
+            VALUES (?, ?, ?, ?, ?)`,
+            [serviceResult[0].ProffServiceID, customerId, date, startFormatted, status]);
 
         return {
             QueueCode: result.insertId,
@@ -432,7 +501,10 @@ export const postQueue = async (businessName, serviceType, customerId, date, sta
         console.error('Error in postQueue:', error);
         throw error;
     }
-}
+};
+
+
+
 
 
 export async function getFilteredQueues(businessName, serviceTypeName, selectedDate) {
