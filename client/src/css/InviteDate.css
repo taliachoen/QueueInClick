@@ -221,6 +221,20 @@
     max-width: 1200px;
 }
 
+#back-button {
+    background-color: #9bbbe7;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#back-button:hover {
+    background-color: #ccc;
+}
+
 /* Title Styles */
 #sort-title {
     text-align: center;

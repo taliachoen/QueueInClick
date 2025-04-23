@@ -31,12 +31,23 @@ export function notifyAppointmentCancelled(queueCode, businessId) {
     }
 }
 
+export const appointmentCancelledByBusiness = (queueCode, userId) => {
+    io.emit("appointmentCancelledByBusiness", { queueCode, userId });
+    // io.emit("appointmentCancelledByBusiness", { date: canceledDate, userId });
+
+};
+
+
+
 export function notifyAppointmentAdd(queueCode, businessId) {
     if (io) {
         console.log(`Notifying business_${businessId} about added:`, queueCode);
         io.emit("appointmentAdd", { queueCode });
     }
 }
+
+
+
 
 export { io };
 

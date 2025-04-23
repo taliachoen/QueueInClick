@@ -3,6 +3,7 @@ import axios from 'axios';
 import '../css/MyMessages.css';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../userContex'; 
+import io from 'socket.io-client';
 
 const MyMessages = () => {
     const [messages, setMessages] = useState([]);
@@ -10,7 +11,23 @@ const MyMessages = () => {
     const timeoutRef = useRef(null);
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
+    const socket = io("http://localhost:8080");
 
+
+
+    useEffect(() => {    
+        // האזנה לשינויים מהשרת
+            socket.on("appointmentCancelledByBusiness", (newMsg) => {
+                if (newMsg.receiverId === user.id) {
+                    setMessages(prev => [newMsg, ...prev]);
+                    setAllRead(false);
+                }
+            });
+        return () => {
+            socket.off("appointmentCancelledByBusiness");
+        };
+    }, [user.id]);
+    
     // Fetch messages for the logged-in user
     useEffect(() => {
         const fetchMessages = async () => {
@@ -38,7 +55,6 @@ const MyMessages = () => {
     const markAsRead = async (messageCode) => {
         try {
             await axios.post(`http://localhost:8080/messages/${messageCode}/markAsRead`);
-            // Update the state locally to reflect the change
             setMessages(messages.map(message =>
                 message.messageCode === messageCode ? { ...message, isRead: 1 } : message
             ));
@@ -103,6 +119,13 @@ const MyMessages = () => {
 };
 
 export default MyMessages;
+
+
+
+
+
+
+
 
 
 

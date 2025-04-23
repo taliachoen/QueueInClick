@@ -46,8 +46,6 @@ export async function postType_service(typeName, domainCode) {
 }
 
 
-
-
 // פונקציה למחיקת סוג טיפול לפי מספר זיהוי
 export async function deleteType_service(typeCode) {
     await pool.query(`DELETE FROM type_service WHERE typeCode = ?`, [typeCode]);

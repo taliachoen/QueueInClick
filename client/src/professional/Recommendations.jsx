@@ -21,8 +21,6 @@ const Recommendations = () => {
                             queueCode: comment.queueCode,
                             idProfessional: comment.idProfessional,
                             idCustomer: comment.idCustomer,
-                            // nameCustomer: `${comment.firstName} ${comment.lastName}`,
-                            // nameCustomer: comment.firstName + comment.lastName, 
                             rating: comment.rating,
                             content: comment.content,
                             comments_date: new Date(comment.comments_date).toLocaleDateString('en-GB'),

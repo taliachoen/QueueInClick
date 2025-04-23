@@ -44,6 +44,11 @@ function App() {
             <Route path="inviteDate" element={<InviteDate />} />
           </Route>
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 646eccb23bbb20f9e385c24cb077e8c832f21c87
             <Route path="/BusinessRegistration" element={<FormProvider />} >
             <Route path="step1" element={<BusinessRegistration1 />} />
             <Route path="step2" element={<BusinessRegistrationStep2 />} />

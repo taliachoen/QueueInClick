@@ -18,6 +18,7 @@ const MyCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [freeDays, setFreeDays] = useState([]);
+  const [choiceDay, setChoiceDay] = useState(selectedDay);
   const userId = user.id;
 
   useEffect(() => {
@@ -28,11 +29,23 @@ const MyCalendar = () => {
         prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
       );
     });
-
     return () => {
       socket.off("appointmentCancelled");
     };
   }, []);
+
+  // useEffect(() => {
+  //   socket.on("appointmentCancelledByBusiness", (data) => {
+  //     fetchInitialAppointments();
+  //     setSelectedDayAppointments((prevAppointments) =>
+  //       prevAppointments.filter((queue) => queue.QueueCode !== data.queueCode)
+  //     );
+  //   });
+  //   return () => {
+  //     socket.off("appointmentCancelledByBusiness");
+  //   };
+  // }, []);
+
 
   useEffect(() => {
     // עדכון הודעת "אין תורים" אחרי שינוי בתאריך
@@ -90,8 +103,6 @@ const MyCalendar = () => {
   useEffect(() => {
     const fetchFreeDays = async () => {
       try {
-        console.log("userIduserId" , userId);
-        
         const response = await axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`);
         if (Array.isArray(response.data.daysOff)) {
           setFreeDays(response.data.daysOff);
@@ -171,8 +182,9 @@ const MyCalendar = () => {
   const handleDaySelection = (day) => {
     // הפוך את היום שנבחר לפורמט תאריך סטנדרטי (YYYY-MM-DD)
     const selectedDate = normalizeDate(day);
+    setChoiceDay(selectedDate);
     // המרת היום שנבחר לפורמט המתאים לאזור הזמן המקומי של המשתמש
-    const localSelectedDay = moment(selectedDate).tz(moment.tz.guess()).format('YYYY-MM-DD');
+    // const localSelectedDay = moment(selectedDate).tz(moment.tz.guess()).format('YYYY-MM-DD');
     // התאמת חודש ושנה שנבחרו
     const month = day.getMonth() + 1;
     const year = day.getFullYear();
@@ -198,7 +210,6 @@ const MyCalendar = () => {
       Swal.fire('No Appointments', 'There are no appointments to cancel for this day.', 'info');
       return;
     }
-
     Swal.fire({
       title: 'Are you sure?',
       text: 'This will cancel all appointments for the selected day.',
@@ -209,8 +220,9 @@ const MyCalendar = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const localSelectedDay = moment(selectedDay).tz(moment.tz.guess()).format('YYYY-MM-DD');
-          var date = localSelectedDay;
+          // const localSelectedDay = moment(selectedDay).tz(moment.tz.guess()).format('YYYY-MM-DD');
+          var date = choiceDay;
+          // console.log("check", date, "check2", selectedDay , "check3",localSelectedDay , normalizeDate(date), 55 , choiceDay);
 
           await axios.put(`http://localhost:8080/queues/cancel/${date}/${userId}`);
           setSelectedDayAppointments([]);
@@ -271,7 +283,7 @@ const MyCalendar = () => {
       <div className="selected-day-appointments">
         {selectedDay && (
           <div>
-            <h3>Appointments for {selectedDay}</h3>
+            {/* <h3>Appointments for {selectedDay}</h3> */}
             <button onClick={cancelWorkday} className="cancel-workday-button">Cancel Workday</button>
             <div className="appointments-list">
               {selectedDayAppointments.length > 0 ? (

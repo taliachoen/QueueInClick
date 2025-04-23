@@ -19,7 +19,6 @@ const InviteDate = () => {
     const { businessDetails: businessDetailsFromState, type } = state || {};
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
-    // const socket = io("http://localhost:8080");
     const socketRef = useRef(null);
 
 
@@ -73,10 +72,6 @@ const InviteDate = () => {
         };
     }, [fetchAvailableQueues]);
 
-
-
-
-
     // Fetch queue data from the server
     const fetchQueueData = async (businessName, serviceTypeCode, selectedDate) => {
         try {
@@ -86,9 +81,8 @@ const InviteDate = () => {
 
             if (response.data && response.data.message) {
                 const { message, type } = response.data;
-                swal(message, "", type);  // Show message with SweetAlert
+                swal(message, "", type);
             }
-
             // If response contains availableSlots, set them
             if (response.data && Array.isArray(response.data.availableSlots)) {
                 setQueues(response.data.availableSlots);
@@ -99,7 +93,7 @@ const InviteDate = () => {
         } catch (error) {
             swal("Error", "An error occurred while fetching queues details", "error");
             console.error('Error fetching queue data:', error);
-            setQueues([]); // Reset queues on error
+            setQueues([]);
         }
     };
 
@@ -189,6 +183,11 @@ const InviteDate = () => {
 
     return (
         <div id="queue-list">
+                <button id='back-button' onClick={() => 
+                    navigate('../inviteQueue')
+                }>
+                    ← Back to Businesses
+            </button>
             <h2 id="sort-title">Sort by Date:</h2>
             <div className="date-filter">
                 <label htmlFor="select-date">Search by Date:</label>
@@ -198,6 +197,7 @@ const InviteDate = () => {
                     value={selectedDate}
                     onChange={handleDateChange}
                     min={new Date().toISOString().split('T')[0]}
+                    max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                 />
                 <label htmlFor="select-time">Filter by Time:</label>
                 <select id="select-time" value={filterTime} onChange={handleFilterTimeChange}>
