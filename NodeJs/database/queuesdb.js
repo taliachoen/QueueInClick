@@ -354,7 +354,6 @@ export async function getQueuesByFullDateAndBusinessOwner(fullDate, id) {
             queue.Date = formatDate(localDate); // format to YYYY-MM-DD
             return queue;
         });
-        console.log("localQueues", localQueues);
         return localQueues;
     } catch (error) {
         console.error('Error executing SQL query:', error);
@@ -580,7 +579,7 @@ export async function getFilteredQueues(businessName, serviceTypeName, selectedD
                         serviceDurationForAppointmentTime[2]) * 1000;
 
                     const existingEnd = new Date(existingStart.getTime() + durationInMillis);
-                    existingAppointmentsInfo.push({ start: existingStart, end: existingEnd });                   
+                    existingAppointmentsInfo.push({ start: existingStart, end: existingEnd });
                 } catch (err) {
                     console.error("Error processing appointment:", err);
                 }

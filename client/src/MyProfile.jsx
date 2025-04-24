@@ -23,6 +23,7 @@ const MyProfile = () => {
     }, []);
 
     useEffect(() => {
+        console.log("user" , user);
         if (user) {
             setUpdatedUser({ ...user });
         }

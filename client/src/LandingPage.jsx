@@ -60,7 +60,7 @@ const LandingPage = () => {
                     <button type="button" onClick={() => setShowCustomerOptions(!showCustomerOptions)}>Customer</button>
                     {showCustomerOptions && <DropdownCust options={customerOptions} onSelect={handleNavigate} />}
                     <button type="button" onClick={() => setShowProfessionalOptions(!showProfessionalOptions)}>Professional</button>
-                    {showProfessionalOptions && <DropdownPorff  options={professionalOptions} onSelect={handleNavigate} />}
+                    {showProfessionalOptions && <DropdownPorff options={professionalOptions} onSelect={handleNavigate} />}
                 </div>
             </header>
             <div className="landing-main-content">
@@ -93,13 +93,19 @@ const LandingPage = () => {
                 </Section>
 
             </div>
-
             <footer className="landing-footer">
-                <p>All rights reserved to Shira Rosen and Talia Cohen.</p>
+                <p>© 2025 Shira Rosen and Talia Cohen. All rights reserved.</p>
                 <ul>
-                    <li><a href="#"><FontAwesomeIcon icon={faTwitterSquare} /></a></li>
-                    <li><a href="#"><FontAwesomeIcon icon={faFacebookSquare} /></a></li>
-                    <li><a href="#"><FontAwesomeIcon icon={faSnapchatSquare} /></a></li>
+                    <li className='lili'>
+                        <a href="https://github.com/taliachoen" target="_blank" rel="noopener noreferrer">
+                            GitHub - Talia
+                        </a>
+                    </li>
+                    <li className='lili'>
+                        <a href="https://github.com/shiraros" target="_blank" rel="noopener noreferrer">
+                            GitHub - Shira
+                        </a>
+                    </li>
                 </ul>
             </footer>
         </div>

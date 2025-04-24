@@ -17,7 +17,7 @@ import {
     // openDaySchedule
 } from '../database/queuesdb.js';
 import { calculateAvailableSlots } from './professionals.js';
-import { getIidProfessionalByBusinessName } from '../database/professionalsdb.js';
+import { getIidProfessionalByBusinessName , getProfessionalById} from '../database/professionalsdb.js';
 // import { io } from '../socket.js';
 const router = express.Router();
 
@@ -50,13 +50,17 @@ router.put('/cancel/:date/:userId', async (req, res) => {
         if (appointments.length === 0) {
             return res.status(404).json({ message: 'No appointments found for the given date.' });
         }
+        const professional =await getProfessionalById(userId);
         for (const appointment of appointments) {
+            console.log( "professionalprofessional" , professional);
+            
             await updateQueueStatus(appointment.QueueCode, 'cancelled');
-            const content = `Your appointment on ${appointment.date} at ${appointment.hour} has been canceled.`; 
+            const content = `Your appointment on ${appointment.Date} at ${appointment.Hour} for ${professional.business_name} to ${appointment.serviceTypeName} has been canceled.`; 
             const title = 'Appointment Cancellation';  
             const queueCode = appointment.QueueCode;
             const isRead = false;
-            await postMessage(queueCode, isRead, content, title, appointment.date);
+            const today = new Date();
+            await postMessage(queueCode, isRead, content, title, today);            
             notifyAppointmentCancelledByBusiness(userId , queueCode);
         }
 
