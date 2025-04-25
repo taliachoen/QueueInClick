@@ -20,7 +20,6 @@ const SearchBusinessOwner = () => {
     const { user } = useContext(UserContext);
     const userId = user?.id || null;
     const [hasUserCommented, setHasUserCommented] = useState(false);
-    //const [searchField, setSearchField] = useState('');
     const [businessName, setBusinessName] = useState([]);
     const [filteredBusinessNames, setFilteredBusinessNames] = useState([]);
     const [businessDetails, setBusinessDetails] = useState(null);
@@ -227,9 +226,13 @@ const SearchBusinessOwner = () => {
 
             if (!checkResponse.data.canComment) {
                 // ❌ המשתמש *לא* יכול להגיב – עליו לחכות!
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1); // מוסיף יום אחד לתאריך הנוכחי
+                const formattedTomorrow = tomorrow.toISOString().split('T')[0]; // פורמט התאריך לפורמט YYYY-MM-DD
+
                 Swal.fire({
                     title: 'Please wait',
-                    text: `You can leave another comment on ${checkResponse.data.nextAllowedDate.da}.`,
+                    text: `You can leave another comment on ${formattedTomorrow}.`,
                     icon: 'warning',
                     confirmButtonText: 'OK'
                 });

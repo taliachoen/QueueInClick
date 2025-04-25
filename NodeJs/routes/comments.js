@@ -111,6 +111,38 @@ route.post('/', async (req, res) => {
 
 
 // Delete a comment by ID
+
+
+// route.post('/', async (req, res) => {
+//     try {
+//         const { queueCode, idCustomer, idProfessional, rating, content, comments_date } = req.body;
+
+//         // נוודא שכל השדות לא חסרים
+//         if (!idCustomer || !idProfessional || !rating || !content || !queueCode) {
+//             return res.status(400).json({ message: "Missing required fields" });
+//         }
+
+//         // קבל את התאריך הנוכחי בפורמט YYYY-MM-DD
+//         const currentDate = new Date();
+//         const formattedDate = currentDate.toISOString().split('T')[0]; // פורמט תאריך YYYY-MM-DD
+
+//         // בדוק אם כבר קיימת תגובה מאותו משתמש באותו יום
+//         const existingComment = await getComment(idCustomer, idProfessional);
+//         if (existingComment && existingComment.comments_date === formattedDate) {
+//             return res.status(400).json({ message: "You have already commented on this professional today." });
+//         }
+
+//         // הוסף את התגובה החדשה
+//         const newComment = await postComment(queueCode, idCustomer, idProfessional, rating, content, formattedDate);
+
+//         // החזר את התגובה שנשמרה
+//         res.status(201).json(newComment);
+//     } catch (error) {
+//         console.error('Server error:', error);
+//         res.status(500).json({ message: "Internal server error", error: error.message });
+//     }
+// });
+
 route.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
