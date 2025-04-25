@@ -32,7 +32,6 @@ function MyQueues() {
     useEffect(() => {
         axios.get(`http://localhost:8080/queues/${user.id}`)
             .then(response => {
-                console.log('hiii', response.data, 11, user.id);
                 setQueues(response.data);
                 setLoading(false);
             })

@@ -44,6 +44,7 @@ const Login = () => {
                 .then((response) => {
                     if (response.status === 200) {
                         const user = response.data;
+                        console.log("useruser" , user);
 
                         // Prepare user context data depending on user type
                         const userContextData = userType === 'customer'
@@ -192,6 +193,11 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
+
+
 
 
 

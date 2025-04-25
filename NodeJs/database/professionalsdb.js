@@ -136,9 +136,6 @@ export async function getProfessionalAllDetails(businessName) {
 }
 
 export async function getProfessionalById(id) {
-    console.log("shirshir")
-    // const [[professional]] = await pool.query(`SELECT * FROM professional_view where idProfessional=?`, [id]);
-    // return professional;
     const query = `
         SELECT 
             p.idProfessional, 
@@ -159,9 +156,6 @@ export async function getProfessionalById(id) {
         WHERE p.idProfessional = ?
     `;
     const [rows] = await pool.query(query, [id]);
-
-    console.log("Query result:", rows);
-
     return rows.length ? rows[0] : null;
 }
 

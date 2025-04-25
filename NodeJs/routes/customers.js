@@ -18,7 +18,7 @@ route.post('/login', async (req, res) => {
 
     try {
         const user = await getCustomerByEmailAndPassword(email, password);
-
+        
         if (user) {
             const userContextData = {
                 idCustomer: user.idCustomer,
@@ -26,10 +26,11 @@ route.post('/login', async (req, res) => {
                 lastName: user.lastName,
                 email: user.email,
                 cityCode: user.cityCode,
-                cityName: user.cityName,
+                cityName: user.CityName,
                 address: user.address,
                 phone: user.phone
             };
+            console.log("useruseruser", user , userContextData);
             res.status(200).json(userContextData);
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
