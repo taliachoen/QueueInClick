@@ -1,3 +1,5 @@
+
+
 // import React, { useContext, useEffect, useState } from 'react';
 // import axios from 'axios';
 // import Swal from 'sweetalert2';
@@ -32,6 +34,7 @@
 //     useEffect(() => {
 //         axios.get(`http://localhost:8080/queues/${user.id}`)
 //             .then(response => {
+//                 console.log('hiii', response.data, 11, user.id);
 //                 setQueues(response.data);
 //                 setLoading(false);
 //             })
@@ -77,6 +80,26 @@
 //         });
 //     };
 
+//     const handleAddToCalendar = (queue) => {
+//         const title = encodeURIComponent(queue.serviceName); // שם השירות
+
+//         const date = new Date(queue.Date);
+//         const [hour, minute] = queue.Hour.split(':');
+//         date.setHours(hour, minute);
+
+//         const start = date.toISOString().replace(/[-:]|\.\d{3}/g, '');
+//         const endDate = new Date(date.getTime() + 30 * 60000); // 30 דקות תור
+//         const end = endDate.toISOString().replace(/[-:]|\.\d{3}/g, '');
+
+//         const details = encodeURIComponent(`Business: ${queue.businessName}`);
+//         const location = encodeURIComponent(queue.businessName); // או אם יש לך כתובת, תשתמשי בה
+
+//         const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+
+//         window.open(url, "_blank");
+//     };
+
+
 //     if (loading) return <div>Loading...</div>;
 //     if (error) return <div>{error}</div>;
 
@@ -113,6 +136,21 @@
 //                         >
 //                             Cancel
 //                         </button>
+//                         <button
+//                             style={{
+//                                 fontSize: '12px',
+//                                 padding: '6px 12px',
+//                                 backgroundColor: '#4285F4',
+//                                 color: 'white',
+//                                 border: 'none',
+//                                 borderRadius: '8px',
+//                                 cursor: 'pointer',
+//                                 margin: '10px'
+//                             }}
+//                             onClick={() => handleAddToCalendar(queue)}
+//                         >
+//                             Add to Google Calendar
+//                         </button>
 //                     </li>
 //                 ))}
 //             </ul>
@@ -122,12 +160,11 @@
 
 // export default MyQueues;
 
-
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { UserContext } from '../userContex';
-import { useNavigate } from 'react-router-dom'; // שימוש בנווט
+import { useNavigate } from 'react-router-dom';
 import '../css/MyQueues.css';
 import io from "socket.io-client";
 
@@ -135,15 +172,16 @@ const socket = io("http://localhost:8080");
 
 function MyQueues() {
     const [queues, setQueues] = useState([]);
+    const [pastQueues, setPastQueues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showPastQueues, setShowPastQueues] = useState(false);
+    const [visiblePastQueues, setVisiblePastQueues] = useState(10);
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
 
-
     useEffect(() => {
         socket.on("appointmentCancelledByBusiness", (data) => {
-            console.log("Appointment was canceled", data, user.id);
             setQueues(prevQueues =>
                 prevQueues.filter(queue => queue.QueueCode !== data.queueCode)
             );
@@ -151,13 +189,11 @@ function MyQueues() {
         return () => {
             socket.off("appointmentCancelledByBusiness");
         };
-    }, []);
-
+    }, [user.id]);
 
     useEffect(() => {
         axios.get(`http://localhost:8080/queues/${user.id}`)
             .then(response => {
-                console.log('hiii', response.data, 11, user.id);
                 setQueues(response.data);
                 setLoading(false);
             })
@@ -167,9 +203,41 @@ function MyQueues() {
             });
     }, [user.id]);
 
+    const fetchPastQueues = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/queues/past/${user.id}`);
+            setPastQueues(response.data);
+            setShowPastQueues(true);
+        } catch (error) {
+            console.error('Error fetching past queues:', error);
+            Swal.fire('Error', 'Could not fetch past appointments.', 'error');
+        }
+    };
+
+    const loadMorePastQueues = () => {
+        setVisiblePastQueues(prev => prev + 10);
+    };
+
     const handleMoreDetails = (businessName) => {
         navigate(`../searchBusinessOwner`, { replace: true, state: { businessName } });
     };
+
+    const handleAddToCalendar = (queue) => {
+        const calendarUrl = `https://calendar.google.com/calendar/r/eventedit?text=${encodeURIComponent(queue.serviceName)}&dates=${formatDateForCalendar(queue.Date, queue.Hour)}&details=${encodeURIComponent('Appointment with ' + queue.businessName)}`;
+        window.open(calendarUrl, '_blank');
+    };
+
+    const formatDateForCalendar = (date, time) => {
+        const [hours, minutes] = time.split(':');
+        const appointmentDate = new Date(date);
+        appointmentDate.setHours(hours);
+        appointmentDate.setMinutes(minutes);
+        const start = appointmentDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const endDate = new Date(appointmentDate.getTime() + 60 * 60 * 1000); // +1 hour
+        const end = endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        return `${start}/${end}`;
+    };
+
     const cancelQueue = (queueCode) => {
         Swal.fire({
             title: 'Are you sure?',
@@ -203,84 +271,95 @@ function MyQueues() {
         });
     };
 
-    const handleAddToCalendar = (queue) => {
-        const title = encodeURIComponent(queue.serviceName); // שם השירות
-
-        const date = new Date(queue.Date);
-        const [hour, minute] = queue.Hour.split(':');
-        date.setHours(hour, minute);
-
-        const start = date.toISOString().replace(/[-:]|\.\d{3}/g, '');
-        const endDate = new Date(date.getTime() + 30 * 60000); // 30 דקות תור
-        const end = endDate.toISOString().replace(/[-:]|\.\d{3}/g, '');
-
-        const details = encodeURIComponent(`Business: ${queue.businessName}`);
-        const location = encodeURIComponent(queue.businessName); // או אם יש לך כתובת, תשתמשי בה
-
-        const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
-
-        window.open(url, "_blank");
-    };
-
-
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;
 
     return (
         <div className="my-queues">
+            {showPastQueues && <div className="blur-background" onClick={() => setShowPastQueues(false)} />}
+
             <h2>My Queues</h2>
+
+            <button
+                className="show-past-queues-button"
+                onClick={fetchPastQueues}
+            >
+                Show Past Appointments
+            </button>
+
             <ul className="queue-list">
                 {queues.map(queue => (
                     <li key={queue.QueueCode} className="queue-item">
                         <span className="queue-info">
-                            {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br></br> {queue.serviceName}
+                            {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br /> {queue.serviceName}
                         </span>
 
-                        <button
-                            style={{
-                                fontSize: '12px', // או '0.8rem'
-                                padding: '6px 12px',
-                                backgroundColor: '#f0f0f0',
-                                color: '#333',
-                                border: '1px solid #ccc',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                margin: '10px'
-                            }}
-                            onClick={() => handleMoreDetails(queue.businessName)}
-                        >
-                            More details <br></br> about the business
-                        </button>
+                        <div className="button-group">
+                            <button
+                                className="details-button"
+                                onClick={() => handleMoreDetails(queue.businessName)}
+                            >
+                                More Details
+                            </button>
 
+                            {new Date(queue.Date) >= new Date() && (
+                                <button
+                                    className="calendar-button"
+                                    onClick={() => handleAddToCalendar(queue)}
+                                >
+                                    Add to Google Calendar
+                                </button>
+                            )}
 
-                        <button
-                            className="cancel-button"
-                            onClick={() => cancelQueue(queue.QueueCode)}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            style={{
-                                fontSize: '12px',
-                                padding: '6px 12px',
-                                backgroundColor: '#4285F4',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                margin: '10px'
-                            }}
-                            onClick={() => handleAddToCalendar(queue)}
-                        >
-                            Add to Google Calendar
-                        </button>
+                            <button
+                                className="cancel-button"
+                                onClick={() => cancelQueue(queue.QueueCode)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </li>
                 ))}
             </ul>
+
+            {/* Drawer for Past Queues */}
+            <div className={`drawer ${showPastQueues ? 'open' : ''}`}>
+                <div className="drawer-header">
+                    <h3>Past Appointments</h3>
+                    <button className="close-button" onClick={() => setShowPastQueues(false)}>
+                        &times;
+                    </button>
+                </div>
+                <ul className="queue-list">
+                    {pastQueues.slice(0, visiblePastQueues).map(queue => (
+                        <li key={queue.QueueCode} className="queue-item">
+                            <span className="queue-info">
+                                {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br /> {queue.serviceName}
+                            </span>
+
+                            <div className="button-group">
+                                <button
+                                    className="details-button"
+                                    onClick={() => handleMoreDetails(queue.businessName)}
+                                >
+                                    More Details
+                                </button>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+                {visiblePastQueues < pastQueues.length && (
+                    <button
+                        className="load-more-button"
+                        onClick={loadMorePastQueues}
+                    >
+                        Load More
+                    </button>
+                )}
+            </div>
         </div>
     );
 }
 
 export default MyQueues;
-
 

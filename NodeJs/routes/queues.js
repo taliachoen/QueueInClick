@@ -1,5 +1,5 @@
 import express from 'express';
-import { notifyAppointmentCancelled, notifyAppointmentAdd , notifyAppointmentCancelledByBusiness } from "../socket.js";
+import { notifyAppointmentCancelled, notifyAppointmentAdd, notifyAppointmentCancelledByBusiness } from "../socket.js";
 import { postMessage } from '../database/messagesdb.js';  // ייבוא הפונקציה המתאימה להוספת הודעה
 import {
     postQueue,
@@ -17,7 +17,7 @@ import {
     // openDaySchedule
 } from '../database/queuesdb.js';
 import { calculateAvailableSlots } from './professionals.js';
-import { getIidProfessionalByBusinessName , getProfessionalById} from '../database/professionalsdb.js';
+import { getIidProfessionalByBusinessName, getProfessionalById } from '../database/professionalsdb.js';
 // import { io } from '../socket.js';
 const router = express.Router();
 
@@ -43,25 +43,25 @@ router.post('/addNewQueue', async (req, res) => {
 
 // מבטל את כל הפגישות של יום מסוים
 router.put('/cancel/:date/:userId', async (req, res) => {
-    const { date, userId } = req.params; 
-    console.log("date222" , date , userId);
+    const { date, userId } = req.params;
+    console.log("date222", date, userId);
     try {
-        const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);  
+        const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);
         if (appointments.length === 0) {
             return res.status(404).json({ message: 'No appointments found for the given date.' });
         }
-        const professional =await getProfessionalById(userId);
+        const professional = await getProfessionalById(userId);
         for (const appointment of appointments) {
-            console.log( "professionalprofessional" , professional);
-            
+            console.log("professionalprofessional", professional);
+
             await updateQueueStatus(appointment.QueueCode, 'cancelled');
-            const content = `Your appointment on ${appointment.Date} at ${appointment.Hour} for ${professional.business_name} to ${appointment.serviceTypeName} has been canceled.`; 
-            const title = 'Appointment Cancellation';  
+            const content = `Your appointment on ${appointment.Date} at ${appointment.Hour} for ${professional.business_name} to ${appointment.serviceTypeName} has been canceled.`;
+            const title = 'Appointment Cancellation';
             const queueCode = appointment.QueueCode;
             const isRead = false;
             const today = new Date();
-            await postMessage(queueCode, isRead, content, title, today);            
-            notifyAppointmentCancelledByBusiness(userId , queueCode);
+            await postMessage(queueCode, isRead, content, title, today);
+            notifyAppointmentCancelledByBusiness(userId, queueCode);
         }
 
         res.status(200).json({ message: 'All appointments for the day have been canceled and notifications sent.' });
@@ -74,8 +74,8 @@ router.put('/cancel/:date/:userId', async (req, res) => {
 // קבלת פגישות מסוננות על פי פרמטרים
 router.get('/allAvailableQueue/byBusinessNameAndService', async (req, res) => {
     try {
-        const { businessName, serviceTypeCode, selectedDate } = req.query;  
-        const details = await getFilteredQueues(businessName, serviceTypeCode, selectedDate);  
+        const { businessName, serviceTypeCode, selectedDate } = req.query;
+        const details = await getFilteredQueues(businessName, serviceTypeCode, selectedDate);
         if (!details) {
             return res.status(404).json({ message: 'Details not found.' });
         }
@@ -124,21 +124,21 @@ router.get('/allQueue/:month/:year/:userid', async (req, res) => {
 router.get('/:customerId', async (req, res) => {
     try {
         const { customerId } = req.params;
-        
+
         let queues = await getQueuesByCustomer(customerId);
         const today = new Date();
         const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
 
         // עדכון תורים שעברו
         for (const queue of queues) {
-            if (queue.Date < todayDateString && ( queue.Status === "waiting" ||queue.Status === "scheduled") ) {
+            if (queue.Date < todayDateString && (queue.Status === "waiting" || queue.Status === "scheduled")) {
                 await updateQueueStatus1(queue.QueueCode, "finished");
                 queue.Status = "finished"; // לעדכן בזיכרון המקומי מיד
             }
         }
         queues = queues.filter(queue => {
             const queueDateString = new Date(queue.Date).toISOString().split('T')[0];
-            return ( queue.Status === "waiting" || queue.Status === "scheduled" )&& queueDateString >= todayDateString;
+            return (queue.Status === "waiting" || queue.Status === "scheduled") && queueDateString >= todayDateString;
         });
 
         res.json(queues);
@@ -149,6 +149,25 @@ router.get('/:customerId', async (req, res) => {
 });
 
 
+router.get('/past/:customerId', async (req, res) => {
+    try {
+        const { customerId } = req.params;
+
+        const queues = await getQueuesByCustomer(customerId);
+        const today = new Date();
+        const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+        console.log("past ques", queues);
+        const pastQueues = queues.filter(queue => {
+            const queueDateString = new Date(queue.Date).toISOString().split('T')[0];
+            return queue.Status === "waiting" || queue.Status === "scheduled" || queue.Status === "available" && queueDateString < todayDateString;
+        });
+
+        res.json(pastQueues);
+    } catch (error) {
+        console.error('Error fetching past queues for customer:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
 
 
 // עדכון פגישות שהסתיימו

@@ -18,7 +18,7 @@ route.post('/login', async (req, res) => {
 
     try {
         const user = await getCustomerByEmailAndPassword(email, password);
-        
+
         if (user) {
             const userContextData = {
                 idCustomer: user.idCustomer,
@@ -26,11 +26,11 @@ route.post('/login', async (req, res) => {
                 lastName: user.lastName,
                 email: user.email,
                 cityCode: user.cityCode,
-                cityName: user.CityName,
+                cityName: user.cityName,
                 address: user.address,
                 phone: user.phone
             };
-            console.log("useruseruser", user , userContextData);
+            console.log("useruseruser", user, userContextData);
             res.status(200).json(userContextData);
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
@@ -87,6 +87,7 @@ route.get('/:customerId', async (req, res) => {
         res.status(500).json({ messege: error.messege })
     }
 });
+
 
 //הכנסת לקוח חדש  
 route.post('/', async (req, res) => {

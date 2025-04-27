@@ -23,7 +23,7 @@ const MyProfile = () => {
     }, []);
 
     useEffect(() => {
-        console.log("user" , user);
+        console.log("user", user);
         if (user) {
             setUpdatedUser({ ...user });
         }
@@ -38,7 +38,7 @@ const MyProfile = () => {
                 console.log('Fetched user data:', response.data);
                 setUser(prevUser => ({
                     ...prevUser,
-                    ...response.data, 
+                    ...response.data,
                 }));
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -46,7 +46,7 @@ const MyProfile = () => {
         };
 
         fetchProfessional();
-    }, [user?.id]); 
+    }, [user?.id]);
 
 
 
@@ -59,11 +59,11 @@ const MyProfile = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === 'cityName') {
-            const selectedCity = cities.find(city => city.CityName === value);  
+            const selectedCity = cities.find(city => city.CityName === value);
             setUpdatedUser(prevUser => ({
                 ...prevUser,
-                [name]: value,  
-                cityCode: selectedCity?.CityCode || '',  
+                [name]: value,
+                cityCode: selectedCity?.CityCode || '',
             }));
         } else {
             setUpdatedUser(prevUser => ({
@@ -148,8 +148,8 @@ const MyProfile = () => {
                             <select
                                 className='city-select'
                                 name="cityCode"
-                                value={updatedUser.cityCode} 
-                                onChange={handleChange} 
+                                value={updatedUser.cityCode}
+                                onChange={handleChange}
                             >
                                 {cities.map((city) => (
                                     <option key={city.CityCode} value={city.CityCode}>
@@ -169,7 +169,7 @@ const MyProfile = () => {
                                         name="startDate"
                                         value={updatedUser.startDate ? moment(updatedUser.startDate).format('YYYY-MM-DD') : ''}
                                         onChange={handleChange}
-                                        readOnly={true}  
+                                        readOnly={true}
                                     />
                                     <label htmlFor="business_name">Business Name:</label>
                                     <input type="text" id="business_name" name="business_name" value={updatedUser.business_name} onChange={handleChange} />
