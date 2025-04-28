@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../userContex';
 import '../css/InviteDate.css';
-import swal from 'sweetalert';
+import Swal from 'sweetalert2';
 import io from "socket.io-client";
 import { useRef } from 'react';
 
@@ -81,9 +81,19 @@ const InviteDate = () => {
 
             if (response.data && response.data.message) {
                 const { message, type } = response.data;
-                setTimeout(() => {
-                    swal(message, "", type);
-                }, 2000);
+                Swal.fire({
+                    icon: type,
+                    title: 'Oops...',
+                    html: message,
+                    confirmButtonText: 'Got it!',
+                    confirmButtonColor: '#3085d6',
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
+                });
             }
             // If response contains availableSlots, set them
             if (response.data && Array.isArray(response.data.availableSlots)) {
@@ -93,9 +103,19 @@ const InviteDate = () => {
                 setQueues([]);
             }
         } catch (error) {
-            setTimeout(() => {
-                swal("Error", "An error occurred while fetching queues details", "error");
-            }, 1000);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: 'An error occurred while fetching queues details.',
+                confirmButtonText: 'Try Again',
+                confirmButtonColor: '#e74c3c',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
             console.error('Error fetching queue data:', error);
             setQueues([]);
         }
@@ -109,9 +129,19 @@ const InviteDate = () => {
             });
             setBusinessDetails(response.data);
         } catch (error) {
-            setTimeout(() => {
-                swal("Error", "An error occurred while fetching business details", "error");
-            }, 1000);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: 'An error occurred while fetching business details.',
+                confirmButtonText: 'Try Again',
+                confirmButtonColor: '#e74c3c',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
             console.error('Error fetching business details:', error);
         }
     };
@@ -129,13 +159,36 @@ const InviteDate = () => {
 
             socketRef.current.emit("newAppointment", response.data);
 
-            swal("Success", "Queue booked successfully!", "success").then(() => {
+            // Display success message with animation
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                html: 'Queue booked successfully!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            }).then(() => {
                 navigate('../MyQueues');
             });
         } catch (error) {
-            setTimeout(() => {
-                swal("Error", "An error occurred while booking the queue", "error");
-            }, 1000);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: 'An error occurred while booking the queue.',
+                confirmButtonText: 'Try Again',
+                confirmButtonColor: '#e74c3c',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
             console.error('Error updating queue:', error);
         }
     };

@@ -1,7 +1,7 @@
 // export default CustomerMenu;
 import React, { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../userContex';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import icon from '../image/logo.png';
 import '../css/customerMenu.css';
 
@@ -9,6 +9,13 @@ const CustomerMenu = () => {
   const [activeButton, setActiveButton] = useState('myQueues');
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname.split('/').pop(); // ניקח את שם הדף מהנתיב
+    setActiveButton(path);
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.clear();
