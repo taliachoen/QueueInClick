@@ -19,7 +19,7 @@ export async function getDaysOff(userId) {
       AND startTime != '00:00:00'
       AND endTime != '00:00:00';
     `, [userId]);
-    
+        
     // מערך שמקשר בין שמות הימים למספרים
     const dayMap = {
       'Sunday': 0,

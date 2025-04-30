@@ -3,73 +3,15 @@ import { notifyAppointmentCancelled, notifyAppointmentAdd, notifyAppointmentCanc
 import { postMessage } from '../database/messagesdb.js';  // ייבוא הפונקציה המתאימה להוספת הודעה
 import {
     postQueue,
-    getQueues,
-    getQueueById,
     getQueuesByDateAndBusinessOwner,
     getQueuesByFullDateAndBusinessOwner,
     cancelQueueByCode,
     getFilteredQueues,
     getQueuesByCustomer,
-    updateExistQueue,
-    updateEndedAppointments,
     updateQueueStatus,
-    updateQueueStatus1,
-    // openDaySchedule
 } from '../database/queuesdb.js';
-import { calculateAvailableSlots } from './professionals.js';
 import { getIidProfessionalByBusinessName, getProfessionalById } from '../database/professionalsdb.js';
-// import { io } from '../socket.js';
 const router = express.Router();
-
-// הוספת פגישה חדשה
-router.post('/addNewQueue', async (req, res) => {
-    const { businessName, data, startTime, serviceType, customerId } = req.body;  // קבלת פרטי הפגישה
-    try {
-        const result = await postQueue(businessName, serviceType, customerId, data, startTime, 'scheduled'); // קריאה לפונקציה המוסיפה
-
-        if (result) {
-            const idProfessional = await getIidProfessionalByBusinessName(businessName);
-            notifyAppointmentAdd(result.QueueCode, idProfessional[0].idProfessional);
-            res.status(200).json({ message: 'Queue added successfully', queue: result });
-        } else {
-            res.status(400).json({ message: 'Failed to add queue' });
-        }
-
-    } catch (error) {
-        console.error('Error booking appointment:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// מבטל את כל הפגישות של יום מסוים
-router.put('/cancel/:date/:userId', async (req, res) => {
-    const { date, userId } = req.params;
-    console.log("date222", date, userId);
-    try {
-        const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);
-        if (appointments.length === 0) {
-            return res.status(404).json({ message: 'No appointments found for the given date.' });
-        }
-        const professional = await getProfessionalById(userId);
-        for (const appointment of appointments) {
-            console.log("professionalprofessional", professional);
-
-            await updateQueueStatus(appointment.QueueCode, 'cancelled');
-            const content = `Your appointment on ${appointment.Date} at ${appointment.Hour} for ${professional.business_name} to ${appointment.serviceTypeName} has been canceled.`;
-            const title = 'Appointment Cancellation';
-            const queueCode = appointment.QueueCode;
-            const isRead = false;
-            const today = new Date();
-            await postMessage(queueCode, isRead, content, title, today);
-            notifyAppointmentCancelledByBusiness(userId, queueCode);
-        }
-
-        res.status(200).json({ message: 'All appointments for the day have been canceled and notifications sent.' });
-    } catch (error) {
-        console.error('Error canceling appointments:', error);
-        res.status(500).json({ message: 'Error canceling appointments.' });
-    }
-});
 
 // קבלת פגישות מסוננות על פי פרמטרים
 router.get('/allAvailableQueue/byBusinessNameAndService', async (req, res) => {
@@ -110,17 +52,7 @@ router.get('/allQueue/:month/:year/:userid', async (req, res) => {
     }
 });
 
-// קבלת פגישות של לקוח מסוים
-// router.get('/:customerId', async (req, res) => {
-//     try {
-//         const { customerId } = req.params;  // קבלת id של הלקוח
-//         const queues = await getQueuesByCustomer(customerId);  // שלח לבסיס הנתונים את הבקשה לפגישות של הלקוח
-//         res.json(queues);
-//     } catch (error) {
-//         console.error('Error fetching queues for customer:', error);
-//         res.status(500).json({ message: error.message });
-//     }
-// });
+//מחזיר את כל התורים של לקוח ספציפי
 router.get('/:customerId', async (req, res) => {
     try {
         const { customerId } = req.params;
@@ -128,11 +60,10 @@ router.get('/:customerId', async (req, res) => {
         let queues = await getQueuesByCustomer(customerId);
         const today = new Date();
         const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
-
         // עדכון תורים שעברו
         for (const queue of queues) {
-            if (queue.Date < todayDateString && (queue.Status === "waiting" || queue.Status === "scheduled")) {
-                await updateQueueStatus1(queue.QueueCode, "finished");
+            if (new Date(queue.Date) < new Date(todayDateString) && (queue.Status === "waiting" || queue.Status === "scheduled")) {
+                await updateQueueStatus(queue.QueueCode, "finished");
                 queue.Status = "finished"; // לעדכן בזיכרון המקומי מיד
             }
         }
@@ -148,7 +79,7 @@ router.get('/:customerId', async (req, res) => {
     }
 });
 
-
+//קבלת כל התורים של לקוח שעברו
 router.get('/past/:customerId', async (req, res) => {
     try {
         const { customerId } = req.params;
@@ -156,7 +87,6 @@ router.get('/past/:customerId', async (req, res) => {
         const queues = await getQueuesByCustomer(customerId);
         const today = new Date();
         const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
-        console.log("past ques", queues);
         const pastQueues = queues.filter(queue => {
             const queueDateString = new Date(queue.Date).toISOString().split('T')[0];
             return queue.Status === "waiting" || queue.Status === "scheduled" || queue.Status === "available" && queueDateString < todayDateString;
@@ -169,18 +99,54 @@ router.get('/past/:customerId', async (req, res) => {
     }
 });
 
-
-// עדכון פגישות שהסתיימו
-router.put('/updateEndedAppointments', async (req, res) => {
+// הוספת פגישה חדשה
+router.post('/addNewQueue', async (req, res) => {
+    const { businessName, data, startTime, serviceType, customerId } = req.body;  // קבלת פרטי הפגישה
     try {
-        await updateEndedAppointments();  // עדכן פגישות שהסתיימו
-        res.json({ message: 'Ended appointments updated successfully' });
+        const result = await postQueue(businessName, serviceType, customerId, data, startTime, 'scheduled'); // קריאה לפונקציה המוסיפה
+
+        if (result) {
+            const idProfessional = await getIidProfessionalByBusinessName(businessName);
+            notifyAppointmentAdd(result.QueueCode, idProfessional[0].idProfessional);
+            res.status(200).json({ message: 'Queue added successfully', queue: result });
+        } else {
+            res.status(400).json({ message: 'Failed to add queue' });
+        }
+
     } catch (error) {
-        console.error('Error updating ended appointments:', error);
+        console.error('Error booking appointment:', error);
         res.status(500).json({ message: error.message });
     }
 });
 
+// מבטל את כל הפגישות של יום מסוים
+router.put('/cancel/:date/:userId', async (req, res) => {
+    const { date, userId } = req.params;
+    try {
+        const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);
+        if (appointments.length === 0) {
+            return res.status(404).json({ message: 'No appointments found for the given date.' });
+        }
+        const professional = await getProfessionalById(userId);
+        for (const appointment of appointments) {
+            await updateQueueStatus(appointment.QueueCode, 'cancelled');
+            const content = `Your appointment on ${appointment.Date} at ${appointment.Hour} for ${professional.business_name} to ${appointment.serviceTypeName} has been canceled.`;
+            const title = 'Appointment Cancellation';
+            const queueCode = appointment.QueueCode;
+            const isRead = false;
+            const today = new Date();
+            await postMessage(queueCode, isRead, content, title, today);
+            notifyAppointmentCancelledByBusiness(userId, queueCode);
+        }
+
+        res.status(200).json({ message: 'All appointments for the day have been canceled and notifications sent.' });
+    } catch (error) {
+        console.error('Error canceling appointments:', error);
+        res.status(500).json({ message: 'Error canceling appointments.' });
+    }
+});
+
+//ביטול תור מסוים
 router.put("/cancel/:queueCode", async (req, res) => {
     const { queueCode } = req.params;
     try {
@@ -189,6 +155,7 @@ router.put("/cancel/:queueCode", async (req, res) => {
         // חיפוש התור לפי קוד התור
         const appointment = queues.find(queue => queue.QueueCode == queueCode);
         const result = await cancelQueueByCode(queueCode);
+        await updateQueueStatus(queueCode, 'cancelled');
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Queue not found" });
         }
@@ -204,107 +171,6 @@ router.put("/cancel/:queueCode", async (req, res) => {
         if (!res.headersSent) {
             res.status(500).json({ message: "Error cancelling appointment" });
         }
-    }
-});
-
-// עדכון פגישה קיימת
-router.put('/update/:QueueCode', async (req, res) => {
-    try {
-        const { QueueCode } = req.params;  // קבלת קוד הפגישה
-        const { customerId, Status } = req.body;  // קבלת פרטי הלקוח וסטטוס הפגישה
-        await updateExistQueue(QueueCode, customerId, Status);  // עדכון הפגישה
-        res.json({ message: 'Queue updated successfully' });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
-
-// מחיקת פגישה לפי מזהה
-router.delete('/:id', async (req, res) => {
-    try {
-        const { id } = req.params;  // קבלת מזהה הפגישה
-        const Queue = await deleteQueue(id);  // מחיקת הפגישה
-        res.json({ Queue, message: 'Queue deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// פתיחת לוח זמנים ליום מסוים
-// router.post('/openDaySchedule', async (req, res) => {
-//     try {
-//         await openDaySchedule();  // פתיחת לוח הזמנים עבור התאריך
-//         res.json({ message: `Day schedule has been opened successfully.` });
-//     } catch (error) {
-//         console.error('Error opening day schedule:', error);
-//         res.status(500).json({ message: error.message });
-//     }
-// });
-
-
-// קבלת כל הפגישות
-router.get('/appointments', async (req, res) => {
-    try {
-        const appointments = await getQueues();  // קבלת כל הפגישות
-        res.json(appointments);
-    } catch (error) {
-        console.error('Error fetching appointments:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// קבלת פגישות לפי מזהה מקצוען
-router.get('/appointments/professional/:professionalId', async (req, res) => {
-    const { professionalId } = req.params;  // קבלת מזהה המקצוען
-
-    try {
-        const appointments = await getQueueById(professionalId);  // קבלת הפגישות של המקצוען
-        res.json(appointments);
-    } catch (error) {
-        console.error('Error fetching appointments for professional:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// חישוב זמינות פגישות עבור יום מסוים
-router.get('/appointments/available-slots/:professionalId/:date', async (req, res) => {
-    const { professionalId, date } = req.params;  // קבלת מזהה המקצוען ותאריך
-
-    try {
-        const appointments = await getQueueById(professionalId);  // קבלת הפגישות של המקצוען
-        const dayAppointments = appointments.filter(appointment => {
-            const appointmentDate = new Date(appointment.startTime);
-            const targetDate = new Date(date);
-            return appointmentDate.toDateString() === targetDate.toDateString();
-        });
-
-        const availableSlots = calculateAvailableSlots(dayAppointments, req.query.duration);  // חישוב הזמנים הפנויים
-
-        res.json(availableSlots);
-    } catch (error) {
-        console.error('Error fetching available slots:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// חישוב זמינות פגישות עבור חודש הבא
-router.get('/appointments/available-slots/nextMonth/:professionalId', async (req, res) => {
-    const { professionalId } = req.params;  // קבלת מזהה המקצוען
-
-    try {
-        const appointments = await getQueueById(professionalId);  // קבלת הפגישות של המקצוען
-        const nextMonthAppointments = appointments.filter(appointment => {
-            const appointmentDate = new Date(appointment.startTime);
-            const nextMonth = new Date();
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            return appointmentDate.getMonth() === nextMonth.getMonth();
-        });
-
-        const availableSlots = calculateAvailableSlots(nextMonthAppointments, req.query.duration);  // חישוב הזמנים הפנויים
-        res.json(availableSlots);
-    } catch (error) {
-        console.error('Error fetching available slots for next month:', error);
-        res.status(500).json({ message: error.message });
     }
 });
 
