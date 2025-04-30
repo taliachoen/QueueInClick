@@ -1,4 +1,4 @@
-# QueueInQlick
+# QueueInClick
 A modern appointment scheduling system for service-based businesses.
 
 ## 🧭 Overview

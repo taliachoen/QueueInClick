@@ -139,12 +139,18 @@ function MyQueues() {
                 Show Past Appointments
             </button>
 
-            <ul className="queue-list">
-                {queues.map(queue => (
-                    <li key={queue.QueueCode} className="queue-item">
-                        <span className="queue-info">
-                            {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br /> {queue.serviceName}
-                        </span>
+            {queues.length === 0 ? (
+                <div className="image-with-text">
+                    <h3 className="searching-text">No upcoming queues yet! 💫</h3>
+                    <img src="/robot-searching.png" alt="Robot Searching" className="searching-image" />
+                </div>
+            ) : (
+                <ul className="queue-list">
+                    {queues.map(queue => (
+                        <li key={queue.QueueCode} className="queue-item">
+                            <span className="queue-info">
+                                {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br /> {queue.serviceName}
+                            </span>
 
                             <div className="button-group">
                                 <button
@@ -163,19 +169,23 @@ function MyQueues() {
                                     </button>
                                 )}
 
-                                <button
-                                    className="cancel-button"
-                                    onClick={() => cancelQueue(queue.QueueCode)}
-                                >
-                                    Cancel
-                                </button>
+                                {isCancelableQueue(queue.Date) ? (
+                                    <button
+                                        className="cancel-button"
+                                        onClick={() => cancelQueue(queue.QueueCode)}>
+                                        Cancel
+                                    </button>
+                                ) : (
+                                    <p className="cancel-info">
+                                        Appointments can only be <br /> canceled at least 2 days in advance.
+                                    </p>
+                                )}
+
                             </div>
                         </li>
                     ))}
-                </ul>
-            
+                </ul>)}
 
-            {/* Drawer for Past Queues */}
             <div className={`drawer ${showPastQueues ? 'open' : ''}`}>
                 <div className="drawer-header">
                     <h3>Past Appointments</h3>

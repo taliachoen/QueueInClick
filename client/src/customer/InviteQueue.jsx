@@ -74,10 +74,10 @@ const InviteQueue = () => {
                 title: 'please fill all the fields',
                 text: 'add domain and sub-domain before the search!',
                 showClass: {
-                    popup: 'animate__animated animate__fadeInDown'  // הוספת האנימציה
+                    popup: 'animate__animated animate__fadeInDown' 
                 },
                 hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp'  // הוספת האנימציה כשזה נעלם
+                    popup: 'animate__animated animate__fadeOutUp' 
                 },
                 confirmButtonText: 'Got it!',
                 confirmButtonColor: '#3085d6'
