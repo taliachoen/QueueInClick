@@ -20,7 +20,7 @@ export const getCustomerByEmailAndPassword = async (email, password) => {
         return rows.length > 0 ? rows[0] : null;
     } catch (error) {
         console.error('Error fetching customer by email and password:', error);
-        throw error; // כעת השרת ידע שהייתה שגיאה ויוכל לטפל בה
+        throw error; 
     }
 };
 
@@ -34,5 +34,5 @@ export async function updateCustomer(customerID, customerData) {
     const { firstName, lastName, address, cityCode, email, phone } = customerData;
     const query = 'UPDATE customers SET firstName = ?, lastName = ?, address = ?, cityCode = ?, email = ?, phone = ? WHERE idCustomer = ?';
     await pool.query(query, [firstName, lastName, address, cityCode, email, phone, customerID]);
-    return await getCustomer(customerID); // Return the updated customer data
+    return await getCustomer(customerID);
 }

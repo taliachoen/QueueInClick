@@ -71,6 +71,15 @@ const MyCalendar = () => {
     return normalizedDate;  // מחזיר בפורמט YYYY-MM-DD
   };
 
+  const isCancelableDay = () => {
+    const today = moment().startOf('day');
+    const tomorrow = moment().add(1, 'day').startOf('day');
+    const selected = moment(choiceDay).startOf('day');
+
+    return selected.isAfter(tomorrow);
+  };
+
+
   // פונקציה להמיר תאריך ליום בשבוע
   const getDayName = (date) => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -97,6 +106,7 @@ const MyCalendar = () => {
     const fetchFreeDays = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`);
+
         if (Array.isArray(response.data.daysOff)) {
           setFreeDays(response.data.daysOff);
         } else {
@@ -266,16 +276,21 @@ const MyCalendar = () => {
           tileClassName={tileClassName}
           tileContent={tileContent}
         />
-
       </div>
-
-
 
       <div className="selected-day-appointments">
         {selectedDay && (
           <div>
-            {/* <h3>Appointments for {selectedDay}</h3> */}
-            <button onClick={cancelWorkday} className="cancel-workday-button">Cancel Workday</button>
+            {isCancelableDay() ? (
+              <button className="cancel-day-button" onClick={cancelWorkday}>
+                Cancel Workday
+              </button>
+            ) : (
+              <p style={{ color: 'gray', fontStyle: 'italic' }}>
+                Workdays can only be canceled at least 2 days in advance.
+              </p>
+            )}
+
             <div className="appointments-list">
               {selectedDayAppointments.length > 0 ? (
                 selectedDayAppointments.map((appointment, index) => (

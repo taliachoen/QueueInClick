@@ -1,4 +1,3 @@
-
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -51,6 +50,20 @@ function MyQueues() {
             console.error('Error fetching past queues:', error);
             Swal.fire('Error', 'Could not fetch past appointments.', 'error');
         }
+    };
+
+    const isCancelableQueue = (queueDate) => {
+        const today = new Date();
+        const appointmentDate = new Date(queueDate);
+
+        // אפס את השעות לצורך השוואה לפי תאריך בלבד
+        today.setHours(0, 0, 0, 0);
+        appointmentDate.setHours(0, 0, 0, 0);
+
+        const diffInTime = appointmentDate.getTime() - today.getTime();
+        const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+        return diffInDays >= 2;
     };
 
     const loadMorePastQueues = () => {
@@ -126,52 +139,12 @@ function MyQueues() {
                 Show Past Appointments
             </button>
 
-            {/* <ul className="queue-list">
+            <ul className="queue-list">
                 {queues.map(queue => (
                     <li key={queue.QueueCode} className="queue-item">
                         <span className="queue-info">
                             {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br /> {queue.serviceName}
                         </span>
-
-                        <div className="button-group">
-                            <button
-                                className="details-button"
-                                onClick={() => handleMoreDetails(queue.businessName)}
-                            >
-                                More Details
-                            </button>
-
-                            {new Date(queue.Date) >= new Date() && (
-                                <button
-                                    className="calendar-button"
-                                    onClick={() => handleAddToCalendar(queue)}
-                                >
-                                    Add to Google Calendar
-                                </button>
-                            )}
-
-                            <button
-                                className="cancel-button"
-                                onClick={() => cancelQueue(queue.QueueCode)}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </li>
-                ))}
-            </ul> */}
-            {queues.length === 0 ? (
-                <div className="image-with-text">
-                    <h3 className="searching-text">No upcoming queues yet! 💫</h3>
-                    <img src="/robot-searching.png" alt="Robot Searching" className="searching-image" />
-                </div>
-            ) : (
-                <ul className="queue-list">
-                    {queues.map(queue => (
-                        <li key={queue.QueueCode} className="queue-item">
-                            <span className="queue-info">
-                                {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br /> {queue.serviceName}
-                            </span>
 
                             <div className="button-group">
                                 <button
@@ -200,7 +173,7 @@ function MyQueues() {
                         </li>
                     ))}
                 </ul>
-            )}
+            
 
             {/* Drawer for Past Queues */}
             <div className={`drawer ${showPastQueues ? 'open' : ''}`}>
@@ -214,7 +187,7 @@ function MyQueues() {
                     {pastQueues.slice(0, visiblePastQueues).map(queue => (
                         <li key={queue.QueueCode} className="queue-item">
                             <span className="queue-info">
-                                {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} <br /> {queue.serviceName}
+                                {new Date(queue.Date).toLocaleDateString()} | {queue.Hour} | <br /> {queue.serviceName}
                             </span>
 
                             <div className="button-group">
