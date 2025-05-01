@@ -44,7 +44,7 @@ const Login = () => {
                 .then((response) => {
                     if (response.status === 200) {
                         const user = response.data;
-                        console.log("useruser" , user);
+                        console.log("useruser", user);
 
                         // Prepare user context data depending on user type
                         const userContextData = userType === 'customer'
@@ -155,7 +155,7 @@ const Login = () => {
         <div id="login-container">
             <form id="login-form" onSubmit={handleSubmitLogin}>
                 <button onClick={handleGoBack} id="back-button" style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', marginBottom: '10px' }}>
-                    🔙 
+                    🔙
                 </button>
 
                 <h1>Login</h1>
@@ -223,7 +223,7 @@ export default Login;
 //         password: '',
 //     });
 //     const [formErrors, setFormErrors] = useState({});
-//     const [userType, setUserType] = useState('customer');  
+//     const [userType, setUserType] = useState('customer');
 
 //     useEffect(() => {
 //         const queryParams = new URLSearchParams(location.search);

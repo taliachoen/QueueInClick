@@ -69,13 +69,19 @@ const InviteQueue = () => {
 
     const fetchBusinesses = () => {
         if (!searchField || !searchSecondaryField) {
-            setTimeout(() => {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'please fill all the fields',
-                    text: 'add domain and sub-domain before the search!',
-                });
-            }, 1500);
+            Swal.fire({
+                icon: 'warning',
+                title: 'please fill all the fields',
+                text: 'add domain and sub-domain before the search!',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown' 
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp' 
+                },
+                confirmButtonText: 'Got it!',
+                confirmButtonColor: '#3085d6'
+            });
             setShowPrompt(true);
             return;
         } else {
