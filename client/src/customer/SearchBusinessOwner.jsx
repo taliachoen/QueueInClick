@@ -82,46 +82,6 @@ const SearchBusinessOwner = () => {
         }
     };
 
-    // const handleSearch = async (name) => {
-
-    //     if (!name.trim()) {
-    //         alert('Please enter a business name.');
-    //         return;
-    //     }
-
-    //     try {
-    //         setIsLoading(true);
-    //         setError('');
-    //         setSearchStatus('searching');
-
-    //         const response = await axios.get(`http://localhost:8080/professionals/name/${name}`);
-    //         if (response.data) {
-    //             setBusinessDetails(response.data);
-    //             const startDate = new Date(response.data.startDate);
-    //             const formattedDate = startDate.toLocaleDateString('he-IL');
-    //             setformattedDate(formattedDate);
-    //             setSearchStatus('found');
-    //             fetchRecommendations(response.data.idProfessional);
-    //         } else {
-    //             setBusinessDetails(null);
-    //             setSearchStatus('not found');
-    //             Swal.fire({
-    //                 icon: 'info',
-    //                 title: 'Oops...',
-    //                 text: 'We couldn’t find the business you’re looking for 😢 Try a different name?',
-    //                 confirmButtonText: 'Got it!',
-    //                 confirmButtonColor: '#3085d6',
-    //             });
-    //         }
-
-    //     } catch (error) {
-    //         setError('Failed to fetch business details.');
-    //         setSearchStatus('not found');
-    //         // console.log(error);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
 
     const handleSearch = async (name) => {
         if (!name.trim()) {

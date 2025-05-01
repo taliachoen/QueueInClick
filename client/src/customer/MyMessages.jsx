@@ -14,10 +14,39 @@ const MyMessages = () => {
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
 
+    // const fetchMessages = async () => {
+    //     try {
+    //         const response = await axios.get(`http://localhost:8080/messages/${user.id}`);
+    //         const fetchedMessages = response.data;
+    //         setMessages(fetchedMessages);
+
+    //         const unreadMessages = fetchedMessages.filter(message => message.isRead === 0);
+    //         setAllRead(unreadMessages.length === 0);
+    //     } catch (error) {
+    //         console.error('Error fetching messages:', error);
+    //     }
+    // };
     const fetchMessages = async () => {
         try {
             const response = await axios.get(`http://localhost:8080/messages/${user.id}`);
             const fetchedMessages = response.data;
+
+            // הוספת הודעות תזכורת לתורים הקרובים
+            const upcomingQueues = await axios.get(`http://localhost:8080/queues/upcoming/${user.id}`);
+            upcomingQueues.data.forEach(queue => {
+                const reminderMessage = {
+                    messageCode: `reminder-${queue.QueueCode}`,
+                    isRead: 0,
+                    message_date: new Date(),
+                    customer_name: user.name,
+                    business_name: queue.businessName,
+                    professional_name: queue.serviceName,
+                    title: `Reminder: Your appointment with ${queue.businessName} is in 2 days!`,
+                    content: `Don't forget! You have an appointment for ${queue.serviceName} at ${queue.Hour} on ${queue.Date}.`
+                };
+                fetchedMessages.push(reminderMessage); // הוספת ההודעה החדשה
+            });
+
             setMessages(fetchedMessages);
 
             const unreadMessages = fetchedMessages.filter(message => message.isRead === 0);
@@ -26,6 +55,7 @@ const MyMessages = () => {
             console.error('Error fetching messages:', error);
         }
     };
+
 
     useEffect(() => {
         // קריאה ראשונית
@@ -77,42 +107,6 @@ const MyMessages = () => {
     return (
         <div className="messages-container">
             <h1 className="titleMessage">Messages</h1>
-            {/* <table className="messages-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Customer</th>
-                        <th>Business</th>
-                        <th>Professional</th>
-                        <th>Title</th>
-                        <th>Business Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {messages.map(message => (
-                        <tr
-                            key={message.messageCode}
-                            className={message.isRead === 0 ? 'unread-message' : ''}
-                            onMouseEnter={() => handleMouseEnter(message.messageCode)}
-                            onMouseLeave={handleMouseLeave}
-                        >
-                            <td>{new Date(message.message_date).toLocaleDateString()}</td>
-                            <td>{message.customer_name}</td>
-                            <td>{message.business_name}</td>
-                            <td>{message.professional_name}</td>
-                            <td className="tooltip">
-                                {message.title}
-                                <span className="tooltiptext">{message.content}</span>
-                            </td>
-                            <td>
-                                <button id="moreDetails" onClick={() => handleDetailsClick(message.business_name)}>
-                                    Business Details
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table> */}
             {messages.length === 0 ? (
                 <div className="image-with-text">
                     <h3 className="searching-text">No messages found ✉️</h3>

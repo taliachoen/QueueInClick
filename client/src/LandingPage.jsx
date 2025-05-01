@@ -57,9 +57,26 @@ const LandingPage = () => {
         <div className='landing-page'>
             <header className="landing-header">
                 <div className="landing-button-container">
-                    <button type="button" onClick={() => setShowCustomerOptions(!showCustomerOptions)}>Customer</button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setShowCustomerOptions(!showCustomerOptions);
+                            setShowProfessionalOptions(false);
+                        }}
+                    >
+                        Customer
+                    </button>
                     {showCustomerOptions && <DropdownCust options={customerOptions} onSelect={handleNavigate} />}
-                    <button type="button" onClick={() => setShowProfessionalOptions(!showProfessionalOptions)}>Professional</button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setShowProfessionalOptions(!showProfessionalOptions);
+                            setShowCustomerOptions(false);
+                        }}
+                    >
+                        Professional
+                    </button>
                     {showProfessionalOptions && <DropdownPorff options={professionalOptions} onSelect={handleNavigate} />}
                 </div>
             </header>
@@ -91,7 +108,6 @@ const LandingPage = () => {
                         </li>
                     </ul>
                 </Section>
-
             </div>
             <footer className="landing-footer">
                 <p>© 2025 Shira Rosen and Talia Cohen. All rights reserved.</p>

@@ -9,6 +9,7 @@ import {
     getFilteredQueues,
     getQueuesByCustomer,
     updateQueueStatus,
+    getUpcomingQueuesForCustomer,
 } from '../database/queuesdb.js';
 import { getIidProfessionalByBusinessName, getProfessionalById } from '../database/professionalsdb.js';
 const router = express.Router();
@@ -173,5 +174,23 @@ router.put("/cancel/:queueCode", async (req, res) => {
         }
     }
 });
+
+
+// הוספת route בשרת שמחזיר את התורים הקרובים
+// ודא שה-Route של ה-GET מוגדר כראוי בצד השרת
+router.get('/upcoming/:customerId', async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        console.log("cow")
+        // קריאה לפונקציה שתשיב את התורים הקרובים של הלקוח
+        const upcomingQueues = await getUpcomingQueuesForCustomer(customerId);
+        res.json(upcomingQueues);
+    } catch (error) {
+        console.error('Error fetching upcoming queues for customer:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 
 export default router;

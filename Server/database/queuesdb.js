@@ -413,4 +413,29 @@ export async function updateQueueStatus(queueCode, newStatus) {
         throw error;
     }
 }
+// פונקציה שמחזירה את התורים הקרובים של הלקוח
+export async function getUpcomingQueuesForCustomer(customerId) {
+    try {
+        console.log("milk");
+        const query = `
+        SELECT 
+        q.QueueCode, 
+        q.Date, 
+        q.Hour, 
+        p.business_name AS businessName, 
+        t.typeName AS serviceName
+        FROM queues q
+        JOIN professional_services ps ON q.ProfessionalServiceCode = ps.ProffServiceID
+        JOIN professionals p ON ps.idProfessional = p.idProfessional
+        JOIN type_service t ON ps.ServiceTypeCode = t.typeCode
+        WHERE q.CustomerCode = ?
+        AND q.Status != 'cancelled'
+        AND DATEDIFF(q.Date, CURDATE()) BETWEEN 1 AND 3`;
+        const [queues] = await pool.query(query, [customerId]);
+        return queues;
+    } catch (error) {
+        console.error('Error fetching upcoming queues for customer:', error);
+        throw error;
+    }
+}
 
