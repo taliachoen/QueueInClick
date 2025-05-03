@@ -209,10 +209,10 @@ const MyCalendar = () => {
 
 
   const cancelWorkday = async () => {
-    if (selectedDayAppointments.length === 0) {
-      Swal.fire('No Appointments', 'There are no appointments to cancel for this day.', 'info');
-      return;
-    }
+    // if (selectedDayAppointments.length === 0) {
+    //   Swal.fire('No Appointments', 'There are no appointments to cancel for this day.', 'info');
+    //   return;
+    // }
     Swal.fire({
       title: 'Are you sure?',
       text: 'This will cancel all appointments for the selected day.',

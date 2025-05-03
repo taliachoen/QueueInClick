@@ -10,6 +10,7 @@ import {
     getQueuesByCustomer,
     updateQueueStatus,
     getUpcomingQueuesForCustomer,
+    cancelInAvailableDays,
 } from '../database/queuesdb.js';
 import { getIidProfessionalByBusinessName, getProfessionalById } from '../database/professionalsdb.js';
 const router = express.Router();
@@ -90,7 +91,7 @@ router.get('/past/:customerId', async (req, res) => {
         const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
         const pastQueues = queues.filter(queue => {
             const queueDateString = new Date(queue.Date).toISOString().split('T')[0];
-            return queue.Status === "waiting" || queue.Status === "scheduled" || queue.Status === "available" && queueDateString < todayDateString;
+            return queue.Status === "finished" && queueDateString < todayDateString;
         });
 
         res.json(pastQueues);
@@ -125,21 +126,23 @@ router.put('/cancel/:date/:userId', async (req, res) => {
     const { date, userId } = req.params;
     try {
         const appointments = await getQueuesByFullDateAndBusinessOwner(date, userId);
-        if (appointments.length === 0) {
-            return res.status(404).json({ message: 'No appointments found for the given date.' });
-        }
+        // if (appointments.length === 0) {
+        //     return res.status(404).json({ message: 'No appointments found for the given date.' });
+        // }
+        await cancelInAvailableDays(userId, date);
         const professional = await getProfessionalById(userId);
-        for (const appointment of appointments) {
-            await updateQueueStatus(appointment.QueueCode, 'cancelled');
-            const content = `Your appointment on ${appointment.Date} at ${appointment.Hour} for ${professional.business_name} to ${appointment.serviceTypeName} has been canceled.`;
-            const title = 'Appointment Cancellation';
-            const queueCode = appointment.QueueCode;
-            const isRead = false;
-            const today = new Date();
-            await postMessage(queueCode, isRead, content, title, today);
-            notifyAppointmentCancelledByBusiness(userId, queueCode);
+        if (appointments.length != 0) {
+            for (const appointment of appointments) {
+                await updateQueueStatus(appointment.QueueCode, 'cancelled');
+                const content = `Your appointment on ${appointment.Date} at ${appointment.Hour} for ${professional.business_name} to ${appointment.serviceTypeName} has been canceled.`;
+                const title = 'Appointment Cancellation';
+                const queueCode = appointment.QueueCode;
+                const isRead = false;
+                const today = new Date();
+                await postMessage(queueCode, isRead, content, title, today);
+                notifyAppointmentCancelledByBusiness(userId, queueCode);
+            }
         }
-
         res.status(200).json({ message: 'All appointments for the day have been canceled and notifications sent.' });
     } catch (error) {
         console.error('Error canceling appointments:', error);
