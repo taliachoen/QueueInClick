@@ -6,6 +6,7 @@ import { FormContext } from './FormProvider';
 
 // קומפוננטה להרשמת עסק
 const BusinessRegistration1 = () => {
+  const apiUrl = process.env.REACT_APP_API_URL;
   const { step1, setStep1 } = useContext(FormContext);
   const [formData, setFormData] = useState(step1);
   const [cities, setCities] = useState([]);
@@ -24,7 +25,7 @@ const BusinessRegistration1 = () => {
   // פונקציה לטעינת רשימת הערים
   const fetchCities = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/cities');
+      const response = await axios.get(`${apiUrl}/cities`);
       setCities(response.data);
     } catch (error) {
       console.error('Error fetching cities:', error);
@@ -34,7 +35,7 @@ const BusinessRegistration1 = () => {
   // פונקציה לטעינת רשימת התחומים
   const fetchDomains = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/domains');
+      const response = await axios.get(`${apiUrl}/domains`);
       setDomains(response.data);
     } catch (error) {
       console.error('Error fetching domains:', error);
@@ -44,7 +45,7 @@ const BusinessRegistration1 = () => {
   // פונקציה לטעינת שמות העסקים הקיימים
   const fetchBuisnessName = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/professionals/business_name');
+      const response = await axios.get(`${apiUrl}/professionals/business_name`);
       setBusinessName(response.data);
     } catch (error) {
       console.error('Error fetching business names:', error);
@@ -54,7 +55,7 @@ const BusinessRegistration1 = () => {
   // פונקציה לבדוק אם תעודת הזהות קיימת
   const checkIfIdExists = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:8080/professionals/id_check/${id}`);
+      const response = await axios.get(`${apiUrl}/professionals/id_check/${id}`);
       console.log("response.data" , response.data);
       if (response.data) {
         return true;

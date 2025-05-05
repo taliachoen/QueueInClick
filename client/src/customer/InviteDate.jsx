@@ -8,6 +8,7 @@ import io from "socket.io-client";
 import { useRef } from 'react';
 
 const InviteDate = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const [queues, setQueues] = useState([]);
     const [filteredQueues, setFilteredQueues] = useState([]);
     const [businessDetails, setBusinessDetails] = useState(null);
@@ -60,7 +61,7 @@ const InviteDate = () => {
     };
 
     useEffect(() => {
-        socketRef.current = io("http://localhost:8080");
+        socketRef.current = io(`${apiUrl}`);
 
         socketRef.current.on("refreshAvailableQueues", () => {
             console.log("Received refreshAvailableQueues from server");
@@ -75,7 +76,7 @@ const InviteDate = () => {
     // Fetch queue data from the server
     const fetchQueueData = async (businessName, serviceTypeCode, selectedDate) => {
         try {
-            const response = await axios.get('http://localhost:8080/queues/allAvailableQueue/byBusinessNameAndService', {
+            const response = await axios.get(`${apiUrl}/queues/allAvailableQueue/byBusinessNameAndService`, {
                 params: { businessName, serviceTypeCode, selectedDate }
             });
 
@@ -124,7 +125,7 @@ const InviteDate = () => {
     // Fetch business details
     const fetchBusinessDetails = async (businessName, serviceType) => {
         try {
-            const response = await axios.get('http://localhost:8080/professionals/details/ByNameAndService', {
+            const response = await axios.get(`${apiUrl}/professionals/details/ByNameAndService`, {
                 params: { businessName, serviceType }
             });
             setBusinessDetails(response.data);
@@ -149,7 +150,7 @@ const InviteDate = () => {
     // Confirm queue booking
     const handleConfirmQueue = async (QueueNumber) => {
         try {
-            const response = await axios.post(`http://localhost:8080/queues/addNewQueue`, {
+            const response = await axios.post(`${apiUrl}/queues/addNewQueue`, {
                 businessName: businessDetails.business_name,
                 data: selectedDate,
                 startTime: displayedQueues[QueueNumber].start,

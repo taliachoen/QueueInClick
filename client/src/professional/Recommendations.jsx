@@ -5,6 +5,7 @@ import '../css/Recommendations.css';
 import StarRating from './StartRating';
 
 const Recommendations = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const { user } = useContext(UserContext);
     const userId = user.id;
     const [comments, setComments] = useState([]);
@@ -13,7 +14,7 @@ const Recommendations = () => {
     useEffect(() => {
         const fetchComments = () => {
             console.log("Fetching comments for user ID:", userId);
-            axios.get(`http://localhost:8080/comments?idProfessional=${userId}`)
+            axios.get(`${apiUrl}/comments?idProfessional=${userId}`)
                 .then((response) => {
                     if (response.data && response.data.length) {
                         const fetchedRecommendations = response.data.map(comment => ({
@@ -39,7 +40,7 @@ const Recommendations = () => {
 
         const fetchAverageRating = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/comments/rating/${userId}`);
+                const response = await axios.get(`${apiUrl}/comments/rating/${userId}`);
                 setAverageRating(response.data.averageRating);
             } catch (error) {
                 console.error("Error fetching average rating:", error);

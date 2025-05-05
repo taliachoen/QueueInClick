@@ -5,6 +5,7 @@ import '../css/InviteQueue.css';
 import Swal from 'sweetalert2';
 
 const InviteQueue = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const [businesses, setBusinesses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchField, setSearchField] = useState('');
@@ -38,7 +39,7 @@ const InviteQueue = () => {
     }, [location.state]);
 
     const fetchCities = () => {
-        axios.get('http://localhost:8080/cities')
+        axios.get(`${apiUrl}/cities`)
             .then(response => {
                 setCities(response.data);
             })
@@ -48,7 +49,7 @@ const InviteQueue = () => {
     };
 
     const fetchFields = () => {
-        axios.get('http://localhost:8080/domains/names')
+        axios.get(`${apiUrl}/domains/names`)
             .then(response => {
                 setFields(response.data);
             })
@@ -58,7 +59,7 @@ const InviteQueue = () => {
     };
 
     const fetchSecondaryFields = (domain) => {
-        axios.get(`http://localhost:8080/type_service/${domain}`)
+        axios.get(`${apiUrl}/type_service/${domain}`)
             .then(response => {
                 setSecondaryFields(response.data);
             })
@@ -89,7 +90,7 @@ const InviteQueue = () => {
         }
 
         setLoading(true);
-        axios.get(`http://localhost:8080/professionals/type_service/${searchField}/${searchSecondaryField}`, {})
+        axios.get(`${apiUrl}/professionals/type_service/${searchField}/${searchSecondaryField}`, {})
             .then(response => {
                 setBusinesses(response.data);
                 setLoading(false);

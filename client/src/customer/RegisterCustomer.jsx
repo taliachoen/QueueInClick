@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { UserContext } from "../userContex";
 
 const RegisterCustomer = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const navigate = useNavigate();
     const { setUser } = useContext(UserContext)
     const [formErrors, setFormErrors] = useState({});
@@ -24,7 +25,7 @@ const RegisterCustomer = () => {
 
     useEffect(() => {
         // Fetch cities from the server
-        axios.get("http://localhost:8080/cities")
+        axios.get(`${apiUrl}/cities`)
             .then(response => {
                 setCities(response.data);
             })
@@ -53,7 +54,7 @@ const RegisterCustomer = () => {
         const errors = validate(formUserData);
         setFormErrors(errors);
         if (Object.keys(errors).length === 0) {
-            axios.post("http://localhost:8080/customers", formUserData)
+            axios.post(`${apiUrl}/customers`, formUserData)
                 .then((response) => {
                     if (response.status === 201) {
                         const userContextData = {

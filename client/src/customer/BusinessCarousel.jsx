@@ -9,6 +9,7 @@ import 'swiper/css/pagination';
 import '../css/BusinessCarousel.css';
 
 const BusinessCarousel = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const [businesses, setBusinesses] = useState([]);
     // const [isLoading, setIsLoading] = useState(false);
     // const [error, setError] = useState('');
@@ -20,7 +21,7 @@ const BusinessCarousel = () => {
     const fetchBusinessNames = async () => {
         try {
             // setIsLoading(true);
-            const response = await axios.get('http://localhost:8080/professionals/');
+            const response = await axios.get(`${apiUrl}/professionals/`);
             setBusinesses(response.data);
         } catch (error) {
             console.error('Failed to load business names.');

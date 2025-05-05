@@ -6,7 +6,8 @@ import Swal from 'sweetalert2';
 import '../css/MyCalendar.css';
 import moment from 'moment-timezone';
 import io from "socket.io-client";
-const socket = io("http://localhost:8080");
+const apiUrl = process.env.REACT_APP_API_URL;
+const socket = io(`${apiUrl}`);
 
 const MyCalendar = () => {
   const { user } = useContext(UserContext);
@@ -105,7 +106,7 @@ const MyCalendar = () => {
   useEffect(() => {
     const fetchFreeDays = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/schedule/daysOfWeek/${userId}`);
+        const response = await axios.get(`${apiUrl}/schedule/daysOfWeek/${userId}`);
 
         if (Array.isArray(response.data.daysOff)) {
           setFreeDays(response.data.daysOff);
@@ -130,7 +131,7 @@ const MyCalendar = () => {
 
   const fetchAppointmentsFromServer = async (year, month) => {
     try {
-      const response = await axios.get(`http://localhost:8080/queues/allQueue/${month}/${year}/${userId}`);
+      const response = await axios.get(`${apiUrl}/queues/allQueue/${month}/${year}/${userId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -225,7 +226,7 @@ const MyCalendar = () => {
         try {
           var date = choiceDay;
           console.log(userId, 555, date, 555);
-          await axios.put(`http://localhost:8080/queues/cancel/${date}/${userId}`);
+          await axios.put(`${apiUrl}/queues/cancel/${date}/${userId}`);
           setSelectedDayAppointments([]);
           Swal.fire('Cancelled!', 'All appointments for the day have been cancelled.', 'success');
         } catch (error) {

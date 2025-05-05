@@ -4,8 +4,9 @@ import '../css/MyMessages.css';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../userContex';
 import io from 'socket.io-client';
+const apiUrl = process.env.REACT_APP_API_URL;
 
-const socket = io("http://localhost:8080"); // מוגדר פעם אחת מחוץ לקומפוננטה
+const socket = io(`${apiUrl}`); // מוגדר פעם אחת מחוץ לקומפוננטה
 
 const MyMessages = () => {
     const [messages, setMessages] = useState([]);
@@ -14,25 +15,13 @@ const MyMessages = () => {
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
 
-    // const fetchMessages = async () => {
-    //     try {
-    //         const response = await axios.get(`http://localhost:8080/messages/${user.id}`);
-    //         const fetchedMessages = response.data;
-    //         setMessages(fetchedMessages);
-
-    //         const unreadMessages = fetchedMessages.filter(message => message.isRead === 0);
-    //         setAllRead(unreadMessages.length === 0);
-    //     } catch (error) {
-    //         console.error('Error fetching messages:', error);
-    //     }
-    // };
     const fetchMessages = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/messages/${user.id}`);
+            const response = await axios.get(`${apiUrl}/messages/${user.id}`);
             const fetchedMessages = response.data;
 
             // הוספת הודעות תזכורת לתורים הקרובים
-            const upcomingQueues = await axios.get(`http://localhost:8080/queues/upcoming/${user.id}`);
+            const upcomingQueues = await axios.get(`${apiUrl}/queues/upcoming/${user.id}`);
             upcomingQueues.data.forEach(queue => {
                 const reminderMessage = {
                     messageCode: `reminder-${queue.QueueCode}`,
@@ -83,7 +72,7 @@ const MyMessages = () => {
 
     const markAsRead = async (messageCode) => {
         try {
-            await axios.post(`http://localhost:8080/messages/${messageCode}/markAsRead`);
+            await axios.post(`${apiUrl}/messages/${messageCode}/markAsRead`);
             setMessages(prevMessages =>
                 prevMessages.map(message =>
                     message.messageCode === messageCode ? { ...message, isRead: 1 } : message

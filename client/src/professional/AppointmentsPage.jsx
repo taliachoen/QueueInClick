@@ -5,6 +5,7 @@ import '../css/AppointmentsPage.css';
 import { UserContext } from '../userContex';
 
 const AppointmentsPage = () => {
+  const apiUrl = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
   const [currentDate, setCurrentDate] = useState(new Date()); // Default to current date
@@ -24,7 +25,7 @@ const AppointmentsPage = () => {
   const fetchAppointments = async () => {
     try {
       const formattedDate = formatDate(currentDate); // Format the date for the server
-      const response = await axios.get(`http://localhost:8080/queues/date/${formattedDate}/${userid}`); // Fetch appointments from server
+      const response = await axios.get(`${apiUrl}/queues/date/${formattedDate}/${userid}`); // Fetch appointments from server
       const filteredAppointments = filterAppointments(response.data); // Filter appointments based on current time and viewPastAppointments state
       setAppointments(filteredAppointments); // Update appointments list
     } catch (error) {

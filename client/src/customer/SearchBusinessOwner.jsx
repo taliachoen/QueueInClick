@@ -8,6 +8,7 @@ import BusinessCarousel from './BusinessCarousel'; // יבוא הקומפוננ�
 import Swal from 'sweetalert2';
 
 const SearchBusinessOwner = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const location = useLocation();
     const [searchField, setSearchField] = useState(location.state?.businessName || '');
 
@@ -57,7 +58,7 @@ const SearchBusinessOwner = () => {
     const fetchBusinessNames = async () => {
         try {
             setIsLoading(true);
-            const response = await axios.get(`http://localhost:8080/professionals/business_name`);
+            const response = await axios.get(`${apiUrl}/professionals/business_name`);
             setBusinessName(response.data);
             setFilteredBusinessNames(response.data);
         } catch (error) {
@@ -107,7 +108,7 @@ const SearchBusinessOwner = () => {
             setError('');
             setSearchStatus('searching');
 
-            const response = await axios.get(`http://localhost:8080/professionals/name/${name}`);
+            const response = await axios.get(`${apiUrl}/professionals/name/${name}`);
 
             setBusinessDetails(response.data);
             const startDate = new Date(response.data.startDate);
@@ -144,7 +145,7 @@ const SearchBusinessOwner = () => {
     };
     const fetchRecommendations = async (idProfessional) => {
         try {
-            const response = await axios.get(`http://localhost:8080/comments?idProfessional=${idProfessional}`);
+            const response = await axios.get(`${apiUrl}/comments?idProfessional=${idProfessional}`);
             console.log(response.data);
             const fetchedRecommendations = response.data.map(comment => ({
                 commentCode: comment.commentCode,
@@ -178,7 +179,7 @@ const SearchBusinessOwner = () => {
 
         try {
             // 🔹 בדיקת האם מותר להגיב
-            const checkResponse = await axios.get('http://localhost:8080/comments/check', {
+            const checkResponse = await axios.get(`${apiUrl}/comments/check`, {
                 params: { IdProfessional: businessDetails.idProfessional, IdCustomer: userId }
             });
 
@@ -212,7 +213,7 @@ const SearchBusinessOwner = () => {
             };
 
             console.log('Sending new comment:', newComment);
-            await axios.post('http://localhost:8080/comments', newComment);
+            await axios.post(`${apiUrl}/comments`, newComment);
 
             // איפוס טופס לאחר שליחה
             setUserRating(0);

@@ -7,13 +7,14 @@ import moment from 'moment-timezone';
 import swal from 'sweetalert';
 
 const MyProfile = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const { user, setUser } = useContext(UserContext);
     const [editMode, setEditMode] = useState(false);
     const [updatedUser, setUpdatedUser] = useState({ ...user });
     const [cities, setCities] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:8080/cities')
+        axios.get(`${apiUrl}/cities`)
             .then(response => {
                 setCities(response.data);
             })
@@ -34,7 +35,7 @@ const MyProfile = () => {
         const fetchProfessional = async () => {
             try {
                 if (!user?.id) return;
-                const response = await axios.get(`http://localhost:8080/${user.userType}/${user.id}`);
+                const response = await axios.get(`${apiUrl}/${user.userType}/${user.id}`);
                 console.log('Fetched user data:', response.data);
                 setUser(prevUser => ({
                     ...prevUser,
@@ -99,7 +100,7 @@ const MyProfile = () => {
 
             console.log("Data sent to backend:", updatedUserData);
 
-            const response = await axios.put(`http://localhost:8080/${user.userType}/${userId}`, updatedUserData);
+            const response = await axios.put(`${apiUrl}/${user.userType}/${userId}`, updatedUserData);
             swal("Success", "Profile updated successfully", "success");
             setEditMode(false);
             setUser(prevUser => ({

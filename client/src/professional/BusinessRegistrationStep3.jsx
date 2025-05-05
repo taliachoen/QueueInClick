@@ -17,6 +17,7 @@ const daysOfWeek = [
 ];
 
 const BusinessRegistrationStep3 = () => {
+  const apiUrl = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
   const { step3, setStep3, step1, step2 } = useContext(FormContext);
   const [workingHours, setWorkingHours] = useState(step3.workingHours);
@@ -108,7 +109,7 @@ const BusinessRegistrationStep3 = () => {
       const formData = { step1, step2, passwordProff, workingHours: formattedWorkingHours };
       console.log("Submitting Data:", formData);
 
-      const response = await axios.post('http://localhost:8080/professionals/registerBusiness', formData, {
+      const response = await axios.post(`${apiUrl}/professionals/registerBusiness`, formData, {
         headers: { 'Content-Type': 'application/json' },
       });
 

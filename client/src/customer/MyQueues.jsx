@@ -5,8 +5,9 @@ import { UserContext } from '../userContex';
 import { useNavigate } from 'react-router-dom';
 import '../css/MyQueues.css';
 import io from "socket.io-client";
+const apiUrl = process.env.REACT_APP_API_URL;
 
-const socket = io("http://localhost:8080");
+const socket = io(`${apiUrl}`);
 
 function MyQueues() {
     const [queues, setQueues] = useState([]);
@@ -30,7 +31,7 @@ function MyQueues() {
     }, [user.id]);
 
     useEffect(() => {
-        axios.get(`http://localhost:8080/queues/${user.id}`)
+        axios.get(`${apiUrl}/queues/${user.id}`)
             .then(response => {
                 setQueues(response.data);
                 setLoading(false);
@@ -43,7 +44,7 @@ function MyQueues() {
 
     const fetchPastQueues = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/queues/past/${user.id}`);
+            const response = await axios.get(`${apiUrl}/queues/past/${user.id}`);
             setPastQueues(response.data);
             setShowPastQueues(true);
         } catch (error) {
@@ -102,7 +103,7 @@ function MyQueues() {
             cancelButtonText: 'No, keep it'
         }).then((result) => {
             if (result.isConfirmed) {
-                axios.put(`http://localhost:8080/queues/cancel/${queueCode}`, {
+                axios.put(`${apiUrl}/queues/cancel/${queueCode}`, {
                     customerId: user.id
                 })
                     .then(response => {

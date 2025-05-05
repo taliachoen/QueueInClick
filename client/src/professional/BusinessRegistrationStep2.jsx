@@ -5,6 +5,7 @@ import '../css/BusinessRegistrationStep2.css';
 import { FormContext } from './FormProvider';
 
 const BusinessRegistrationStep2 = () => {
+  const apiUrl = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
   const { step2, setStep2, step1 } = useContext(FormContext);
   const [formData, setFormData] = useState(step2);
@@ -22,7 +23,7 @@ const BusinessRegistrationStep2 = () => {
   const fetchServiceTypes = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8080/type_service/type/${formDataStep1.domainCode}`);
+      const response = await axios.get(`${apiUrl}/type_service/type/${formDataStep1.domainCode}`);
       if (response.data) {
         setServiceTypes(response.data);
       } else {
@@ -76,7 +77,7 @@ const BusinessRegistrationStep2 = () => {
       return;
     }
     try {
-      const response = await axios.post('http://localhost:8080/type_service', {
+      const response = await axios.post(`${apiUrl}/type_service`, {
         typeName: newServiceType,
         domainCode: formDataStep1.domainCode,
       });
