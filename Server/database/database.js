@@ -15,6 +15,10 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME
 }).promise();
 
+pool.getConnection()
+  .then(() => console.log('✅ Connected to MySQL successfully!'))
+  .catch(err => console.error('❌ Failed to connect to MySQL:', err));
+
 export default pool;
 
 
