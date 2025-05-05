@@ -15,7 +15,7 @@ import { createServer } from 'http';
 
 const app = express();
 const server = createServer(app);
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.DB_PORT || 28098;
 app.use(express.json());
 app.use(cors());
 app.use('/customers', customers);
