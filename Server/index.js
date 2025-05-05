@@ -28,8 +28,7 @@ app.use('/queues', queues);
 app.use('/type_service', type_services);
 app.use('/schedule', schedule);
 app.use('/domains', domains);
-
-
+  
 
 setupSocket(server);
 // שמירת ההגדרות של השרת
