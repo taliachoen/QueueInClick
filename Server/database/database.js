@@ -33,7 +33,8 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     ssl: {
         rejectUnauthorized: false
-    }
+      },
+      connectTimeout: 10000 
 }).promise();
 
 pool.getConnection()
