@@ -1,67 +1,69 @@
 # QueueInClick
-A modern appointment scheduling system for service-based businesses.
 
-## 🧭 Overview
+A full-stack appointment scheduling platform for service-based businesses (salons, clinics, beauty parlors), with separate experiences for business owners and customers.
 
-QueueInQlick is a web-based platform that simplifies appointment scheduling and management for service providers such as salons, clinics, and beauty parlors. It offers dedicated interfaces for business owners and customers, enhancing efficiency and customer satisfaction.
+**Tech:** React · Node.js · Express · MySQL · Socket.IO
 
-## ✨ Key Features
+<!-- Add screenshots here, e.g.: ![Landing page](docs/landing.png) -->
 
-### For Business Owners
-- Manage business profile and offered services
-- View and filter upcoming appointments
-- Set working hours and block specific days
-- Automatically notify clients when days are blocked
-- View client reviews and average ratings
+## Features
 
-### For Customers
-- Explore service providers and their offerings
-- Book, view, or cancel appointments
-- Track appointment history and status
-- Submit ratings and written reviews
+**For business owners**
+- Multi-step business registration and profile management
+- Manage offered services (duration, pricing)
+- Set working hours and block specific days, with automatic customer notifications
+- Calendar view of upcoming appointments
+- View customer reviews and average rating
 
-## 🛠️ Tech Stack
+**For customers**
+- Search and browse service providers by domain and city
+- Book, view and cancel appointments based on real-time availability
+- Appointment history and in-app messages
+- Rate and review providers
 
-**Frontend**: React, JavaScript, HTML5, CSS3, Axios  
-**Backend**: Node.js, Express (RESTful API)  
-**Database**: MySQL  
-**Dev Tools**: Visual Studio Code
+## Architecture
 
-## 🧩 System Architecture
+```
+client/   React app (React Router, Axios, Socket.IO client)
+Server/   Node.js + Express REST API
+  ├── routes/     REST endpoints (queues, schedules, professionals, customers, ...)
+  ├── database/   MySQL data-access layer (mysql2 connection pool)
+  └── socket.js   Real-time notifications via Socket.IO
+```
 
-- **Client**: React web app (browser-based)
-- **Server**: Node.js + Express for logic and API
-- **Database**: MySQL for persistent storage
+Socket.IO pushes real-time updates to connected clients: when an appointment is booked or cancelled, available slots refresh instantly for everyone viewing them.
 
-## 🔑 Core Functionality
-
-- 🔐 User authentication and profile management  
-- 🛎️ Service management (add/edit/delete services, duration, pricing)  
-- 📆 Calendar-based schedule configuration and appointment overview  
-- ⏰ Real-time appointment booking and availability checks  
-- 💬 Customer reviews and star rating system  
-- 🔔 Notifications for schedule changes
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-- Node.js (v14+)
-- MySQL (v8+)
-- npm or yarn
+- Node.js 18+
+- MySQL 8+
 
-### Installation
-
+### 1. Clone
 ```bash
-# Clone the repository
-git clone https://github.com/taliachoen/QueueInClick
-cd queueinqlick
+git clone https://github.com/taliachoen/QueueInClick.git
+cd QueueInClick
+```
 
-# Install backend dependencies
-cd server
-node index.js
+### 2. Server
+```bash
+cd Server
+npm install
+cp .env.example .env   # fill in your MySQL connection details
+npm run dev            # or: npm start
+```
 
-# Install frontend dependencies
+### 3. Client
+```bash
 cd ../client
 npm install
+cp .env.example .env   # set REACT_APP_API_URL to the server URL
+npm start
+```
 
+The client runs on http://localhost:3000.
 
+## Author
+
+**Talia Cohen** – Full Stack Developer
+[GitHub](https://github.com/taliachoen) · taliachoen1@gmail.com
